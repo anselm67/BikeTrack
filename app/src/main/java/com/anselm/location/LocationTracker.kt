@@ -25,36 +25,37 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 
-private const val CHANNEL_ID = "ForegroundServiceChannel";
+private const val CHANNEL_ID = "ForegroundServiceChannel"
 
 class LocationTracker: Service() {
-    private var fusedLocationClient: FusedLocationProviderClient? = null;
+    private var fusedLocationClient: FusedLocationProviderClient? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand")
-        startLocationTracker();
-        return START_STICKY;
+        startLocationTracker()
+        return START_STICKY
     }
 
     override fun onDestroy() {
-        super.onDestroy();
-        stopLocationTracker();
+        super.onDestroy()
+        stopLocationTracker()
     }
 
-    private var locationFlow: Flow<Location>? = null;
+    private var locationFlow: Flow<Location>? = null
+
     @SuppressLint("MissingPermission")
     private fun setupLocationFlow() {
         locationFlow = callbackFlow {
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    Log.d(TAG, "Location ${locationResult.lastLocation}");
+                    Log.d(TAG, "Location ${locationResult.lastLocation}")
                     locationResult.lastLocation?.let { location ->
                         trySendBlocking(location)
                             .onFailure { e -> Log.e(TAG, "Failed to send location", e) }
                     }
                 }
                 override fun onLocationAvailability(locationAvailability: LocationAvailability) {
-                    Log.d(TAG, "Location availability $locationAvailability");
+                    Log.d(TAG, "Location availability $locationAvailability")
                 }
             }
 
@@ -65,10 +66,10 @@ class LocationTracker: Service() {
                 ).build(),
                 locationCallback,
                 Looper.getMainLooper()
-            );
+            )
 
             awaitClose {
-                fusedLocationClient?.removeLocationUpdates(locationCallback);
+                fusedLocationClient?.removeLocationUpdates(locationCallback)
             }
         }
 
@@ -76,31 +77,31 @@ class LocationTracker: Service() {
 
     @SuppressLint("MissingPermission")
     private fun startLocationTracker() {
-        Log.d(TAG, "startLocationTracker");
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        createNotificationChannel();
+        Log.d(TAG, "startLocationTracker")
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        createNotificationChannel()
         val notification = Notification.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle("Biking")
             .setContentText("Location tracker is running")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOnlyAlertOnce(true)
             .setWhen(System.currentTimeMillis())
-            .build();
+            .build()
 
-        startForeground(1, notification);
+        startForeground(1, notification)
     }
 
     private fun stopLocationTracker() {
-        Log.d(TAG, "stopLocationTracker");
-        fusedLocationClient = null;
-        stopForeground(STOP_FOREGROUND_REMOVE);
+        Log.d(TAG, "stopLocationTracker")
+        fusedLocationClient = null
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
     inner class TrackerBinder : Binder() {
         fun getFlow(): Flow<Location>? = this@LocationTracker.locationFlow
     }
 
     override fun onBind(intent: Intent?): IBinder {
-        assert( fusedLocationClient != null);
+        assert( fusedLocationClient != null)
         setupLocationFlow()
         return TrackerBinder()
     }

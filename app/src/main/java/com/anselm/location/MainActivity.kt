@@ -27,11 +27,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -66,32 +69,32 @@ data class Sample(
     val distance: Double,
     val climb: Double,
     val descent: Double,
-);
+)
 
 class MainActivity : ComponentActivity() {
-    private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>;
+    private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
-    private val isFlowAvailable = mutableStateOf(false);
+    private val isFlowAvailable = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val isGranted = mutableStateOf(false);
+        val isGranted = mutableStateOf(false)
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
                 isGranted.value = it.all { it.value }
                 Log.d(TAG, "isGranted ${isGranted.value}")
                 if ( ! isGranted.value ) {
-                    toast("Permission is required for this application.");
+                    toast("Permission is required for this application.")
                 } else {
-                    startService(Intent(this, LocationTracker::class.java));
-                    connect();
+                    startService(Intent(this, LocationTracker::class.java))
+                    connect()
                 }
         }
-        isGranted.value = requestPermissions();
+        isGranted.value = requestPermissions()
         if ( isGranted.value ) {
             startService(Intent(this, LocationTracker::class.java))
-            connect();
+            connect()
         }
         setContent {
             LocationTheme {
@@ -102,6 +105,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     if ( isGranted.value && isFlowAvailable.value ) {
                         LocationDisplay()
+                    } else if ( isGranted.value ) {
+                        LoadingDisplay()
                     } else {
                         PermissionPrompt()
                     }
@@ -122,28 +127,28 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.FOREGROUND_SERVICE,
         Manifest.permission.FOREGROUND_SERVICE_LOCATION,
         Manifest.permission.POST_NOTIFICATIONS,
-    );
+    )
 
     private fun checkPermissions(): Boolean {
         return allPermissions.all {
             ActivityCompat.checkSelfPermission(
                 this,
                 it
-            ) == PackageManager.PERMISSION_GRANTED;
+            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun requestPermissions(): Boolean {
         if ( ! checkPermissions() ) {
-            Log.d(TAG, "Launch permission prompt.");
-            locationPermissionLauncher.launch(allPermissions);
-            return false;
+            Log.d(TAG, "Launch permission prompt.")
+            locationPermissionLauncher.launch(allPermissions)
+            return false
         } else {
-            return true;
+            return true
         }
     }
 
-    private var lastSample: Sample? = null;
+    private var lastSample: Sample? = null
 
     private fun firstSample(location: Location): Sample {
         this.lastSample = Sample(
@@ -157,23 +162,23 @@ class MainActivity : ComponentActivity() {
             distance = 0.0,
             climb = 0.0,
             descent = 0.0,
-        );
-        return this.lastSample!!;
+        )
+        return this.lastSample!!
     }
 
-    private var sumSpeed = 0.0f;
-    private var sumAltitude = 0.0;
-    private var sampleCount = 0;
+    private var sumSpeed = 0.0f
+    private var sumAltitude = 0.0
+    private var sampleCount = 0
 
     private fun update(location: Location): Sample {
         // This really can't happen.
         if ( lastSample == null ) {
-            throw Exception("No sample available");
+            throw Exception("No sample available")
         }
-        this.sampleCount += 1;
-        this.sumSpeed += location.speed;
-        this.sumAltitude += location.altitude;
-        val verticalDistance = location.altitude - lastSample!!.location.altitude;
+        this.sampleCount += 1
+        this.sumSpeed += location.speed
+        this.sumAltitude += location.altitude
+        val verticalDistance = location.altitude - lastSample!!.location.altitude
         return Sample(
             location = location,
             minSpeed = min(location.speed, lastSample!!.minSpeed),
@@ -185,26 +190,26 @@ class MainActivity : ComponentActivity() {
             distance = lastSample!!.distance + location.distanceTo(lastSample!!.location),
             climb = if ( verticalDistance > 0 ) lastSample!!.climb + verticalDistance else lastSample!!.climb,
             descent = if ( verticalDistance < 0 ) lastSample!!.descent - verticalDistance else lastSample!!.descent,
-        );
+        )
     }
 
     private fun onLocation(location: Location): Sample {
-        return if (lastSample == null) firstSample(location) else update(location);
+        return if (lastSample == null) firstSample(location) else update(location)
     }
 
-    private var flow: StateFlow<Location?>? = null;
+    private var flow: StateFlow<Location?>? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             flow = (service as LocationTracker.TrackerBinder).getFlow()!!
                 .stateIn(CoroutineScope(Dispatchers.Main), SharingStarted.Eagerly, null)
             isFlowAvailable.value = true
-            Log.d(TAG, "onServiceConnected ${flow}");
+            Log.d(TAG, "onServiceConnected ${flow}")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             Log.d(TAG, "onServiceDisconnected")
-            isFlowAvailable.value = false;
-            flow = null;
+            isFlowAvailable.value = false
+            flow = null
         }
     }
     private fun connect() {
@@ -213,8 +218,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun disconnect() {
-        unbindService(serviceConnection);
-        flow = null;
+        unbindService(serviceConnection)
+        flow = null
     }
 
     private val applicationScope = CoroutineScope(SupervisorJob())
@@ -245,7 +250,7 @@ class MainActivity : ComponentActivity() {
                     style = MaterialTheme.typography.displaySmall
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
-                content();
+                content()
             }
             Spacer(modifier = Modifier.padding(8.dp))
         }
@@ -253,8 +258,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun LocationDisplay() {
-        Log.d(TAG, "LocationDisplay")
-        val location = flow?.collectAsState()?.value ?: return;
+        val location = flow?.collectAsState()?.value ?: return
         val sample = onLocation(location)
 
         Column (
@@ -280,7 +284,7 @@ class MainActivity : ComponentActivity() {
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     Text(
-                        text = "%.2f".format(location!!.speed * 3.6),
+                        text = "%.2f".format(location.speed * 3.6),
                         style = MaterialTheme.typography.displayLarge,
                     )
                 }
@@ -320,10 +324,10 @@ class MainActivity : ComponentActivity() {
 
                 ) {
                     Text(
-                        "Coordinates: %.2f / %.2f".format(location!!.latitude, location!!.longitude)
+                        "Coordinates: %.2f / %.2f".format(location.latitude, location.longitude)
                     )
-                    Text("Accuracy: %.2f".format(location!!.accuracy))
-                    Text("Bearing: %.2f".format(location!!.bearing))
+                    Text("Accuracy: %.2f".format(location.accuracy))
+                    Text("Bearing: %.2f".format(location.bearing))
                     Text("Sample Count: %d".format(sampleCount))
                 }
             }
@@ -350,7 +354,7 @@ class MainActivity : ComponentActivity() {
             Button(
                 onClick = {
                     Log.d(TAG, "Launch permission prompt.")
-                    locationPermissionLauncher.launch(allPermissions);
+                    locationPermissionLauncher.launch(allPermissions)
                 },
             ) {
                 Text("Grant Permissions")
@@ -358,6 +362,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    private fun LoadingDisplay() {
+        Column (
+            modifier = Modifier
+                .padding(8.dp, 8.dp)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.width(96.dp),
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeWidth = 7.dp
+            )
+            Text(
+                text = "Loading...",
+                style = MaterialTheme.typography.titleSmall,
+            )
+        }
+    }
 }
 
 
