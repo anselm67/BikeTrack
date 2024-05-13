@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,19 +20,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -41,28 +36,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.anselm.location.ui.theme.LocationTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.DurationUnit
@@ -85,18 +81,16 @@ class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     private val isFlowAvailable = mutableStateOf(false)
+    private val isGranted = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val isGranted = mutableStateOf(false)
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
                 isGranted.value = it.all { it.value }
                 Log.d(TAG, "isGranted ${isGranted.value}")
-                if ( ! isGranted.value ) {
-                    toast("Permission is required for this application.")
-                } else {
+                if ( isGranted.value ) {
                     startService(Intent(this, LocationTracker::class.java))
                     connect()
                 }
@@ -108,19 +102,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             LocationTheme {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    if ( isGranted.value && isFlowAvailable.value ) {
-                        MainScreen()
-                    } else if ( isGranted.value ) {
-                        LoadingDisplay()
-                    } else {
-                        PermissionPrompt()
-                    }
-                }
+                MainScreen()
             }
         }
     }
@@ -159,7 +141,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private var lastSample: Sample? = null
-    private var startTime = 0L;
+    private var startTime = 0L
 
     private var sumSpeed = 0.0f
     private var sumAltitude = 0.0
@@ -186,7 +168,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun reset() {
-        this.lastSample = null;
+        this.lastSample = null
     }
 
     private fun update(location: Location): Sample {
@@ -229,11 +211,9 @@ class MainActivity : ComponentActivity() {
             flow = (service as LocationTracker.TrackerBinder).getFlow()!!
                 .stateIn(CoroutineScope(Dispatchers.Main), SharingStarted.Eagerly, null)
             isFlowAvailable.value = true
-            Log.d(TAG, "onServiceConnected ${flow}")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            Log.d(TAG, "onServiceDisconnected")
             isFlowAvailable.value = false
             flow = null
         }
@@ -248,13 +228,6 @@ class MainActivity : ComponentActivity() {
         flow = null
     }
 
-    private val applicationScope = CoroutineScope(SupervisorJob())
-    private fun toast(msg: String) {
-        applicationScope.launch(Dispatchers.Main) {
-            Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
-        }
-    }
-
     @Composable
     fun WithHeader(title: String, content: @Composable () -> Unit) {
         Surface (
@@ -266,8 +239,8 @@ class MainActivity : ComponentActivity() {
         ) {
             Column (
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.secondary))
                     .padding(8.dp),
             ){
                 Text(
@@ -287,7 +260,7 @@ class MainActivity : ComponentActivity() {
         val location = flow?.collectAsState()?.value
         if ( location == null ) {
             LoadingDisplay()
-            return;
+            return
         }
         val sample = onLocation(location)
         Column (
@@ -352,6 +325,12 @@ class MainActivity : ComponentActivity() {
                         Text(
                             text = "%.2f".format(sample.climb),
                             style = MaterialTheme.typography.displayLarge,
+                        )
+                    }
+                    Row {
+                        Text(
+                            text = "%.2f".format(location.altitude),
+                            style = MaterialTheme.typography.displaySmall,
                         )
                     }
                     Row {
@@ -436,13 +415,13 @@ class MainActivity : ComponentActivity() {
         }
     }
     @Composable
-    private fun MainScreen() {
+    private fun DisplayScreen() {
         Column (
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 32.dp)
                 .verticalScroll(rememberScrollState())
-        ) { ->
+        ) {
             LocationDisplay()
             Row (
                 modifier = Modifier.fillMaxWidth(),
@@ -462,6 +441,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun MainScreen() {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    title = {
+                        Text(
+                            text = getString(R.string.app_name),
+                            maxLines = 1,
+                        )
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Column(modifier = Modifier.padding(innerPadding)) {
+                if (isGranted.value && isFlowAvailable.value) {
+                    DisplayScreen()
+                } else if (isGranted.value) {
+                    LoadingDisplay()
+                } else {
+                    PermissionPrompt()
+                }
+            }
+        }
+    }
 }
 
 
