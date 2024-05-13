@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -338,9 +340,9 @@ class MainActivity : ComponentActivity() {
     private fun PermissionPrompt() {
         Column (
             modifier = Modifier
-                .padding(8.dp, 8.dp)
+                .padding(16.dp, 32.dp)
                 .fillMaxHeight(),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
         ) {
             Text(
                 text = "Permissions are required.",
@@ -349,12 +351,18 @@ class MainActivity : ComponentActivity() {
             Text(
                 text = "In order to use this application, you must grant it location permission" +
                         " while using the app.",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.bodyMedium,
             )
             Button(
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .align(Alignment.CenterHorizontally),
                 onClick = {
-                    Log.d(TAG, "Launch permission prompt.")
-                    locationPermissionLauncher.launch(allPermissions)
+                    val intent = Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    )
+                    intent.data = Uri.fromParts("package", applicationContext.packageName, null)
+                    startActivity(intent)
                 },
             ) {
                 Text("Grant Permissions")
