@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.location.Location
@@ -80,12 +81,18 @@ class LocationTracker: Service() {
         Log.d(TAG, "startLocationTracker")
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
+
         val notification = Notification.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle("Biking")
             .setContentText("Location tracker is running")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOnlyAlertOnce(true)
             .setWhen(System.currentTimeMillis())
+            .setContentIntent(PendingIntent.getActivity(
+                this,
+                0,
+                Intent(applicationContext, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE))
             .build()
 
         startForeground(1, notification)

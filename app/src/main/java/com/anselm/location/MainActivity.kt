@@ -21,16 +21,22 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.ScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -59,6 +65,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 data class Sample(
     val location: Location,
@@ -106,7 +114,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     if ( isGranted.value && isFlowAvailable.value ) {
-                        LocationDisplay()
+                        MainScreen()
                     } else if ( isGranted.value ) {
                         LoadingDisplay()
                     } else {
@@ -151,8 +159,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private var lastSample: Sample? = null
+    private var startTime = 0L;
+
+    private var sumSpeed = 0.0f
+    private var sumAltitude = 0.0
+    private var sampleCount = 0
 
     private fun firstSample(location: Location): Sample {
+        this.startTime = location.time
+        this.sumSpeed = 0f
+        this.sumAltitude = 0.0
+        this.sampleCount = 0
         this.lastSample = Sample(
             location = location,
             minSpeed = Float.MAX_VALUE,
@@ -168,30 +185,37 @@ class MainActivity : ComponentActivity() {
         return this.lastSample!!
     }
 
-    private var sumSpeed = 0.0f
-    private var sumAltitude = 0.0
-    private var sampleCount = 0
+    private fun reset() {
+        this.lastSample = null;
+    }
 
     private fun update(location: Location): Sample {
         // This really can't happen.
         if ( lastSample == null ) {
             throw Exception("No sample available")
         }
+        val lastSample = lastSample!!
         this.sampleCount += 1
         this.sumSpeed += location.speed
         this.sumAltitude += location.altitude
-        val verticalDistance = location.altitude - lastSample!!.location.altitude
+        val verticalDistance = location.altitude - lastSample.location.altitude
         return Sample(
             location = location,
-            minSpeed = min(location.speed, lastSample!!.minSpeed),
+            minSpeed = min(location.speed, lastSample.minSpeed),
             avgSpeed = sumSpeed / sampleCount,
-            maxSpeed = max(location.speed, lastSample!!.maxSpeed),
-            minAltitude = min(location.altitude, lastSample!!.minAltitude),
+            maxSpeed = max(location.speed, lastSample.maxSpeed),
+            minAltitude = min(location.altitude, lastSample.minAltitude),
             avgAltitude = sumAltitude / sampleCount,
-            maxAltitude = max(location.altitude, lastSample!!.maxAltitude),
-            distance = lastSample!!.distance + location.distanceTo(lastSample!!.location),
-            climb = if ( verticalDistance > 0 ) lastSample!!.climb + verticalDistance else lastSample!!.climb,
-            descent = if ( verticalDistance < 0 ) lastSample!!.descent - verticalDistance else lastSample!!.descent,
+            maxAltitude = max(location.altitude, lastSample.maxAltitude),
+            distance = lastSample.distance + location.distanceTo(lastSample.location),
+            climb = if (verticalDistance > 0)
+                lastSample.climb + verticalDistance
+            else
+                lastSample.climb,
+            descent = if (verticalDistance < 0)
+                lastSample.descent - verticalDistance
+            else
+                lastSample.descent,
         )
     }
 
@@ -234,16 +258,16 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun WithHeader(title: String, content: @Composable () -> Unit) {
         Surface (
-            shape = RoundedCornerShape(5.dp),
-            shadowElevation = 2.dp,
+            shape = RoundedCornerShape(10.dp),
+            //shadowElevation = 2.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(5.dp),
         ) {
             Column (
                 modifier = Modifier
-                    .background(Color(0x99, 0x099, 0x99, 0xcc))
-                    .border(BorderStroke(1.dp, Color(0xdd, 0xdd, 0xdd, 0xdd)))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
                     .padding(8.dp),
             ){
                 Text(
@@ -260,15 +284,34 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun LocationDisplay() {
-        val location = flow?.collectAsState()?.value ?: return
+        val location = flow?.collectAsState()?.value
+        if ( location == null ) {
+            LoadingDisplay()
+            return;
+        }
         val sample = onLocation(location)
-
         Column (
             modifier = Modifier
                 .padding(8.dp, 8.dp)
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
+            WithHeader("Running Time") {
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = "%02d:%02d:%02d".format(
+                            *(location.time - startTime).toDuration(DurationUnit.MILLISECONDS)
+                                .toComponents { hours, minutes, seconds, _ ->
+                                    arrayOf(hours, minutes, seconds)
+                                }
+                        ),
+                        style = MaterialTheme.typography.displayLarge,
+                    )
+                }
+            }
             WithHeader("Distance") {
                 Row (
                     modifier = Modifier.fillMaxWidth(),
@@ -375,7 +418,8 @@ class MainActivity : ComponentActivity() {
         Column (
             modifier = Modifier
                 .padding(8.dp, 8.dp)
-                .fillMaxHeight(),
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 200.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -391,6 +435,33 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+    @Composable
+    private fun MainScreen() {
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 32.dp)
+                .verticalScroll(rememberScrollState())
+        ) { ->
+            LocationDisplay()
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+            ) {
+                Button (
+                    onClick = { finishAndRemoveTask() }
+                ) {
+                    Text("Quit")
+                }
+                Button (
+                    onClick = { reset() }
+                ) {
+                    Text("Reset")
+                }
+            }
+        }
+    }
+
 }
 
 
