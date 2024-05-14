@@ -34,12 +34,12 @@ class RecordingManager() {
     fun start() {
         Log.d(TAG, "startRecording")
         if ( this.recordingFile != null ) {
-            Log.d(TAG, "Recording already started to ${recordingFile?.name} ")
+            Log.d(TAG, "Recording already started to ${recordingFile?.name}")
         } else {
             val dateString = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd-HH-mm-ss")
                 .format(java.time.LocalDateTime.now())
-            this.recordingFile = File(home, "recording-$dateString")
+            this.recordingFile = File(home, "recording-$dateString.json")
         }
     }
 
