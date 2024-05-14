@@ -26,26 +26,31 @@ class RecordingManager() {
     private var recordingFile: File? = null
     private lateinit var home: File
     private val buffer = mutableListOf<Location>()
-
+    private var doRecordingProlog = true
     constructor(recordingDirectory: File) : this() {
         home = File(recordingDirectory, "recordings")
         home.mkdirs()
     }
     fun start() {
         Log.d(TAG, "startRecording")
-        if ( this.recordingFile != null ) {
+        if (recordingFile != null ) {
             Log.d(TAG, "Recording already started to ${recordingFile?.name}")
         } else {
             val dateString = DateTimeFormatter
                 .ofPattern("yyyy-MM-dd-HH-mm-ss")
                 .format(java.time.LocalDateTime.now())
-            this.recordingFile = File(home, "recording-$dateString.json")
+            recordingFile = File(home, "recording-$dateString.json")
+            doRecordingProlog = true
         }
     }
 
     private fun flush() {
         if (buffer.size > 0) {
             val jsonText = buffer.joinToString(",\n") { it.toJson() }
+            if ( ! doRecordingProlog ) {
+                recordingFile?.appendText(", \n")
+            }
+            doRecordingProlog = false
             recordingFile?.appendText(jsonText)
             buffer.clear()
         }
@@ -53,12 +58,13 @@ class RecordingManager() {
     fun stop() {
         Log.d(TAG, "stopRecording")
         flush()
+        doRecordingProlog = true
         recordingFile = null
     }
 
     fun record(location: Location) {
         buffer.add(location)
-        if ( buffer.size > 50 ) {
+        if ( buffer.size > 5 ) {
             flush()
         }
     }
