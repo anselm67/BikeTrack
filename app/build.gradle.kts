@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.play.services.location)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
