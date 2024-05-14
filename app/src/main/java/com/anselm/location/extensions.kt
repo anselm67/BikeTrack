@@ -10,3 +10,7 @@ val Any.TAG: String
             if (name.length <= 23) name else name.substring(name.length - 23, name.length)// last 23 chars
         }
     }
+
+fun Double.ifNaN(defaultValue: Double): Double {
+    return if ( this.isNaN() ) defaultValue else this
+}

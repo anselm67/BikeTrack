@@ -17,9 +17,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,22 +24,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -60,19 +58,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlin.math.max
-import kotlin.math.min
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 data class Sample(
     val location: Location,
-    val minSpeed:  Float,
-    val avgSpeed:  Float,
-    val maxSpeed:  Float,
-    val minAltitude: Double,
-    val avgAltitude: Double,
-    val maxAltitude: Double,
+    val avgSpeed:  Double,
+    val maxSpeed:  Double,
+    val totalDistance: Double,
     val distance: Double,
+    val verticalDistance: Double,
     val climb: Double,
     val descent: Double,
 )
@@ -145,26 +138,24 @@ class MainActivity : ComponentActivity() {
     private var lastSample: Sample? = null
     private var startTime = 0L
 
-    private var sumSpeed = 0.0f
+    private var sumSpeed = 0.0
     private var sumAltitude = 0.0
     private var sampleCount = 0
 
     private fun firstSample(location: Location): Sample {
         this.startTime = location.time
-        this.sumSpeed = 0f
+        this.sumSpeed = 0.0
         this.sumAltitude = 0.0
         this.sampleCount = 0
         this.lastSample = Sample(
             location = location,
-            minSpeed = Float.MAX_VALUE,
-            avgSpeed = 0.0f,
-            maxSpeed = Float.MIN_VALUE,
-            minAltitude = Double.MAX_VALUE,
-            avgAltitude = 0.0,
-            maxAltitude = Double.MIN_VALUE,
+            avgSpeed = 0.0,
+            maxSpeed = 0.0,
+            totalDistance = 0.0,
             distance = 0.0,
             climb = 0.0,
             descent = 0.0,
+            verticalDistance = 0.0,
         )
         return this.lastSample!!
     }
@@ -183,15 +174,13 @@ class MainActivity : ComponentActivity() {
         this.sumSpeed += location.speed
         this.sumAltitude += location.altitude
         val verticalDistance = location.altitude - lastSample.location.altitude
+        val distance = location.distanceTo(lastSample.location).toDouble()
         val nextSample = Sample(
             location = location,
-            minSpeed = min(location.speed, lastSample.minSpeed),
             avgSpeed = sumSpeed / sampleCount,
-            maxSpeed = max(location.speed, lastSample.maxSpeed),
-            minAltitude = min(location.altitude, lastSample.minAltitude),
-            avgAltitude = sumAltitude / sampleCount,
-            maxAltitude = max(location.altitude, lastSample.maxAltitude),
-            distance = lastSample.distance + location.distanceTo(lastSample.location),
+            maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
+            totalDistance = lastSample.totalDistance + distance,
+            distance = distance,
             climb = if (verticalDistance > 0)
                 lastSample.climb + verticalDistance
             else
@@ -200,6 +189,7 @@ class MainActivity : ComponentActivity() {
                 lastSample.descent - verticalDistance
             else
                 lastSample.descent,
+            verticalDistance = verticalDistance,
         )
         this.lastSample = nextSample
         return nextSample
@@ -235,18 +225,16 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun WithHeader(title: String, content: @Composable () -> Unit) {
-        Surface (
-            shape = RoundedCornerShape(10.dp),
-            //shadowElevation = 2.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(5.dp),
+        Card (
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 6.dp
+            )
         ) {
             Column (
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.secondary))
-                    .padding(8.dp),
+                modifier = Modifier.padding(8.dp),
             ){
                 Text(
                     text = title,
@@ -258,6 +246,7 @@ class MainActivity : ComponentActivity() {
             }
             Spacer(modifier = Modifier.padding(8.dp))
         }
+        Spacer(modifier = Modifier.height(8.dp))
     }
 
     @Composable
@@ -274,92 +263,25 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
-            WithHeader("Running Time") {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = "%02d:%02d:%02d".format(
-                            *(location.time - startTime).toDuration(DurationUnit.MILLISECONDS)
-                                .toComponents { hours, minutes, seconds, _ ->
-                                    arrayOf(hours, minutes, seconds)
-                                }
-                        ),
-                        style = MaterialTheme.typography.displayLarge,
-                    )
-                }
-            }
-            WithHeader("Distance") {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = "%.2f km".format(sample.distance / 1000.0),
-                        style = MaterialTheme.typography.displayLarge,
-                    )
-                }
-            }
-            WithHeader("Speed") {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = "%.2f".format(location.speed * 3.6),
-                        style = MaterialTheme.typography.displayLarge,
-                    )
-                }
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text("%.2f".format(sample.minSpeed * 3.6))
-                    Text("%.2f".format(sample.avgSpeed * 3.6))
-                    Text("%.2f".format(sample.maxSpeed * 3.6))
-                }
-            }
-            WithHeader("Altitude") {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Row {
-                        Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Climb")
-                        Text(
-                            text = "%.2f".format(sample.climb),
-                            style = MaterialTheme.typography.displayLarge,
-                        )
-                    }
-                    Row {
-                        Text(
-                            text = "%.2f".format(location.altitude),
-                            style = MaterialTheme.typography.displaySmall,
-                        )
-                    }
-                    Row {
-                        Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Climb")
-                        Text(
-                            text = "%.2f".format(sample.descent),
-                            style = MaterialTheme.typography.displayLarge,
-                        )
-                    }
-                }
-            }
-            WithHeader("Other") {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-
-                ) {
-                    Text(
-                        "Coordinates: %.2f / %.2f".format(location.latitude, location.longitude)
-                    )
-                    Text("Accuracy: %.2f".format(location.accuracy))
-                    Text("Bearing: %.2f".format(location.bearing))
-                    Text("Sample Count: %d".format(sampleCount))
-                }
-            }
+            TimeElapsedCard(timeMillis = location.time - startTime)
+            DistanceCard(distanceInKilometers = sample.totalDistance / 1000.0)
+            SpeedCard(
+                speedInKilometersPerHour = sample.avgSpeed * 3.6,
+                averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6,
+                maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6,
+            )
+            AltitudeCard(
+                gradePercent = 100.0 * sample.verticalDistance / sample.distance,
+                climbInMeters = sample.climb,
+                descentInMeters = sample.descent,
+            )
+            DebugCard(
+                latitude = location.latitude,
+                longitude = location.longitude,
+                accuracy = location.accuracy.toDouble(),
+                bearing = location.bearing.toDouble(),
+                sampleCount = sampleCount
+            )
         }
     }
 
