@@ -29,16 +29,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -221,32 +217,6 @@ class MainActivity : ComponentActivity() {
     private fun disconnect() {
         unbindService(serviceConnection)
         flow = null
-    }
-
-    @Composable
-    fun WithHeader(title: String, content: @Composable () -> Unit) {
-        Card (
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 6.dp
-            )
-        ) {
-            Column (
-                modifier = Modifier.padding(8.dp),
-            ){
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.displaySmall
-                )
-                Spacer(modifier = Modifier.padding(8.dp))
-                content()
-            }
-            Spacer(modifier = Modifier.padding(8.dp))
-        }
-        Spacer(modifier = Modifier.height(8.dp))
     }
 
     @Composable
