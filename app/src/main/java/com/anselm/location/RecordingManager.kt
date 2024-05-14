@@ -64,7 +64,7 @@ class RecordingManager() {
 
     fun record(location: Location) {
         buffer.add(location)
-        if ( buffer.size > 5 ) {
+        if ( buffer.size > 50 ) {
             flush()
         }
     }
