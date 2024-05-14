@@ -23,9 +23,9 @@ fun Location.toJson(): String {
 }
 
 class RecordingManager() {
-    private var recordingFile: File? = null;
-    private lateinit var home: File;
-    private val buffer = mutableListOf<Location>();
+    private var recordingFile: File? = null
+    private lateinit var home: File
+    private val buffer = mutableListOf<Location>()
 
     constructor(recordingDirectory: File) : this() {
         home = File(recordingDirectory, "recordings")
@@ -45,7 +45,7 @@ class RecordingManager() {
 
     private fun flush() {
         if (buffer.size > 0) {
-            val jsonText = buffer.joinToString(",\n") { it.toJson() };
+            val jsonText = buffer.joinToString(",\n") { it.toJson() }
             recordingFile?.appendText(jsonText)
             buffer.clear()
         }
@@ -53,13 +53,13 @@ class RecordingManager() {
     fun stop() {
         Log.d(TAG, "stopRecording")
         flush()
-        recordingFile = null;
+        recordingFile = null
     }
 
     fun record(location: Location) {
-        buffer.add(location);
+        buffer.add(location)
         if ( buffer.size > 50 ) {
-            flush();
+            flush()
         }
     }
 
