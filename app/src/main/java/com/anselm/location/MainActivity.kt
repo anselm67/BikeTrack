@@ -188,7 +188,7 @@ class MainActivity : ComponentActivity() {
         this.sumSpeed += location.speed
         this.sumAltitude += location.altitude
         val verticalDistance = location.altitude - lastSample.location.altitude
-        return Sample(
+        val nextSample = Sample(
             location = location,
             minSpeed = min(location.speed, lastSample.minSpeed),
             avgSpeed = sumSpeed / sampleCount,
@@ -206,6 +206,8 @@ class MainActivity : ComponentActivity() {
             else
                 lastSample.descent,
         )
+        this.lastSample = nextSample
+        return nextSample
     }
 
     private fun onLocation(location: Location): Sample {
