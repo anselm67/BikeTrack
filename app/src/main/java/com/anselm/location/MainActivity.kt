@@ -241,6 +241,7 @@ class MainActivity : ComponentActivity() {
                 descentInMeters = sample.descent,
             )
             DebugCard(
+                altitude = location.altitude,
                 latitude = location.latitude,
                 longitude = location.longitude,
                 accuracy = location.accuracy.toDouble(),

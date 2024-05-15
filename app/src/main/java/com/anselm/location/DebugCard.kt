@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun DebugCard(
+    altitude: Double,
     latitude: Double,
     longitude: Double,
     accuracy: Double,
@@ -23,6 +24,7 @@ fun DebugCard(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
+            Text("Altitude: %.2f".format(altitude))
             Text(
                 "Coordinates: %.2f / %.2f".format(latitude, longitude)
             )
