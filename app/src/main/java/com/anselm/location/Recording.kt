@@ -1,7 +1,6 @@
 package com.anselm.location
 
 import android.location.Location
-import android.util.Log
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
@@ -55,7 +54,7 @@ class Recording(jsonArray: JsonArray) {
             Location.distanceBetween(to.first, to.second, from.first, from.second, results)
             results[0].toDouble() / 1000.0
         }
-        var distance = 0.0;
+        var distance = 0.0
         return chunks.map { distance += it; distance }
 
     }

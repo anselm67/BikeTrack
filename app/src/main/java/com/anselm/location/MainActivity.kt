@@ -52,7 +52,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlin.math.max
-import kotlin.random.Random
 
 data class Sample(
     val location: Location,
