@@ -231,36 +231,7 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
-            Box (
-                modifier = Modifier.fillMaxWidth().height(200.dp)
-            ) {
-                val recording = recordingManager.load("recording-2024-05-14-10-14-37.json")
-                val altitude = recording.extractAltitude().map(Double::toFloat)
-
-
-
-                val time = recording.extractDistances().map { it.toFloat()  }
-
-
-
-                Graph(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(500.dp),
-                    xValues = time,
-                    yValues = altitude,
-                    graphAppearance = GraphAppearance(
-                        graphColor = Color.Blue,
-                        graphAxisColor = MaterialTheme.colorScheme.primary,
-                        graphThickness = 3f,
-                        isColorAreaUnderChart = true,
-                        colorAreaUnderChart = Color.Green,
-                        isCircleVisible = false,
-                        circleColor = MaterialTheme.colorScheme.secondary,
-                        backgroundColor = MaterialTheme.colorScheme.background
-                    )
-                )
-            }
+            SampleGraphCard()
             TimeElapsedCard(timeMillis = location.time - startTime)
             DistanceCard(distanceInKilometers = sample.totalDistance / 1000.0)
             SpeedCard(

@@ -1,3 +1,5 @@
+// https://fvilarino.medium.com/creating-a-rotating-card-in-jetpack-compose-ba94c7dd76fb
+
 package com.anselm.location
 
 import androidx.compose.foundation.layout.Box

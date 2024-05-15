@@ -86,5 +86,9 @@ class RecordingManager() {
                 instance ?: RecordingManager(recordingDirectory).also { instance = it }
             }
         }
+
+        fun get(): RecordingManager {
+            return instance ?: throw IllegalStateException("RecordingManager not initialized")
+        }
     }
 }

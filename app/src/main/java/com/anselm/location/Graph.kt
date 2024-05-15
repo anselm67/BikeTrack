@@ -1,3 +1,7 @@
+// Heavily inspired by
+// https://proandroiddev.com/creating-graph-in-jetpack-compose-312957b11b2
+// https://github.com/aqua30/GraphCompose/blob/master/app/src/main/java/com/aqua30/graphcompose/screen/Graph.kt
+
 package com.anselm.location
 
 
