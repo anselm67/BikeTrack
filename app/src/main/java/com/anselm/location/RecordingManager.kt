@@ -2,8 +2,11 @@ package com.anselm.location
 
 import android.location.Location
 import android.util.Log
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.io.File
@@ -66,6 +69,14 @@ class RecordingManager() {
         buffer.add(location)
         if ( buffer.size > 50 ) {
             flush()
+        }
+    }
+
+    fun load(filename: String): Recording {
+        Log.d(TAG, "load $filename")
+        with(File(home, filename)) {
+            val jsonText = "[" + this.readText() + "]"
+            return Recording(Json.decodeFromString<JsonArray>(jsonText))
         }
     }
 

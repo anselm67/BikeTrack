@@ -18,11 +18,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -40,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.anselm.location.ui.theme.LocationTheme
@@ -49,6 +52,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlin.math.max
+import kotlin.random.Random
 
 data class Sample(
     val location: Location,
@@ -228,6 +232,36 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
+            Box (
+                modifier = Modifier.fillMaxWidth().height(200.dp)
+            ) {
+                val recording = recordingManager.load("recording-2024-05-14-10-14-37.json")
+                val altitude = recording.extractAltitude().map(Double::toFloat)
+
+
+
+                val time = recording.extractDistances().map { it.toFloat()  }
+
+
+
+                Graph(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(500.dp),
+                    xValues = time,
+                    yValues = altitude,
+                    graphAppearance = GraphAppearance(
+                        graphColor = Color.Blue,
+                        graphAxisColor = MaterialTheme.colorScheme.primary,
+                        graphThickness = 3f,
+                        isColorAreaUnderChart = true,
+                        colorAreaUnderChart = Color.Green,
+                        isCircleVisible = false,
+                        circleColor = MaterialTheme.colorScheme.secondary,
+                        backgroundColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            }
             TimeElapsedCard(timeMillis = location.time - startTime)
             DistanceCard(distanceInKilometers = sample.totalDistance / 1000.0)
             SpeedCard(
