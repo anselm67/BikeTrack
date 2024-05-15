@@ -71,16 +71,18 @@ private fun FlipCardInternal(
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
-            Icon(
-                modifier = Modifier
-                    .size(36.dp)
-                    .align(Alignment.TopEnd)
-                    .offset((-10).dp, (10).dp)
-                    .zIndex(2.0f),
-                painter = painterResource(id = R.drawable.ic_flip_card),
-                contentDescription = "Flip card.",
-                tint = MaterialTheme.colorScheme.primary,
-            )
+            if (cardFace == CardFace.Front) {
+                Icon(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .align(Alignment.TopEnd)
+                        .offset((-10).dp, (10).dp)
+                        .zIndex(2.0f),
+                    painter = painterResource(id = R.drawable.ic_flip_card),
+                    contentDescription = "Flip card.",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
             if ( rotation.value <= 90f) {
                 Box(modifier = Modifier.onGloballyPositioned {
                     coordinates -> frontCardSize = coordinates.size
