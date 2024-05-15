@@ -14,8 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun BasicCard(title: String, content: @Composable () -> Unit) {
+fun BasicCard(title: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Card (
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -36,5 +37,4 @@ fun BasicCard(title: String, content: @Composable () -> Unit) {
         }
         Spacer(modifier = Modifier.padding(8.dp))
     }
-    Spacer(modifier = Modifier.height(8.dp))
 }

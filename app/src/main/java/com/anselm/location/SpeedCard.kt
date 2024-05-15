@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,23 +23,21 @@ private fun Front(speedInKilometersPerHour: Double,
     averageSpeedInKilometersPerHour: Double,
     maxSpeedInKilometersPerHour: Double
 ) {
-    BasicCard("Speed") {
-        Row (
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "%.1f".format(speedInKilometersPerHour),
-                style = MaterialTheme.typography.displayLarge,
-            )
-        }
-        Row (
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text("Average: %.1f".format(averageSpeedInKilometersPerHour))
-            Text("Maximum: %.1f".format(maxSpeedInKilometersPerHour))
-        }
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "%.1f".format(speedInKilometersPerHour),
+            style = MaterialTheme.typography.displayLarge,
+        )
+    }
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text("Average: %.1f".format(averageSpeedInKilometersPerHour))
+        Text("Maximum: %.1f".format(maxSpeedInKilometersPerHour))
     }
 }
 
@@ -69,11 +68,9 @@ fun SpeedCard(speedInKilometersPerHour: Double,
               averageSpeedInKilometersPerHour: Double,
               maxSpeedInKilometersPerHour: Double
 ) {
-    var cardFace by remember { mutableStateOf(CardFace.Front) }
     FlipCard(
-        cardFace = cardFace ,
-        onClick = { cardFace = cardFace.next },
-        //modifier = Modifier.fillMaxWidth(),
+        title = "Speed",
+        modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
         front = {
             Front(
                 speedInKilometersPerHour,

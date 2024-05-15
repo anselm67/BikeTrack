@@ -41,9 +41,9 @@ class Recording(jsonArray: JsonArray) {
         return dataPoints.map {  (it.time - startTime) / (1000f * 60) }
     }
 
-    fun extractAltitude(): List<Double> = dataPoints.map { it.altitude }
+    fun extractAltitude(): List<Float> = dataPoints.map { it.altitude.toFloat() }
 
-    fun extractDistances(): List<Double> {
+    fun extractDistances(): List<Float> {
         val latitudes = dataPoints.map { it.latitude }
         val longitudes = dataPoints.map { it.longitude }
         val size = dataPoints.size
@@ -55,7 +55,7 @@ class Recording(jsonArray: JsonArray) {
             results[0].toDouble() / 1000.0
         }
         var distance = 0.0
-        return chunks.map { distance += it; distance }
+        return chunks.map { distance += it; distance.toFloat() }
     }
     fun extractSpeed(): List<Float> = dataPoints.map { 3.6f * it.speed.toFloat()}
 }

@@ -2,35 +2,33 @@
 
 package com.anselm.location
 
-import android.util.Log
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.zIndex
 
 enum class CardFace(val angle: Float) {
     Front(0f) {
@@ -47,7 +45,7 @@ enum class CardFace(val angle: Float) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FlipCard(
+private fun FlipCardInternal(
     cardFace: CardFace,
     onClick: (CardFace) -> Unit,
     modifier: Modifier = Modifier,
@@ -65,9 +63,6 @@ fun FlipCard(
     Card(
         onClick = { onClick(cardFace) },
         modifier = modifier
-            .onGloballyPositioned {
-                Log.d("com.anselm.location", "TOP FlipCard: ${it.size} ${it.parentCoordinates?.size}")
-            }
             .graphicsLayer {
                 rotationY = rotation.value
                 cameraDistance = 12f * density
@@ -76,10 +71,19 @@ fun FlipCard(
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
+            Icon(
+                modifier = Modifier
+                    .size(36.dp)
+                    .align(Alignment.TopEnd)
+                    .offset((-10).dp, (10).dp)
+                    .zIndex(2.0f),
+                painter = painterResource(id = R.drawable.ic_flip_card),
+                contentDescription = "Flip card.",
+                tint = MaterialTheme.colorScheme.primary,
+            )
             if ( rotation.value <= 90f) {
                 Box(modifier = Modifier.onGloballyPositioned {
                     coordinates -> frontCardSize = coordinates.size
-                    Log.d(TAG, "FlipCard: ${coordinates.size} ${coordinates.parentCoordinates?.size}")
                 }) {
                     front()
                 }
@@ -96,4 +100,25 @@ fun FlipCard(
             }
         }
     }
+}
+
+@Composable
+fun FlipCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    front: @Composable () -> Unit,
+    back: @Composable () -> Unit
+) {
+    var cardFace by remember { mutableStateOf(CardFace.Front) }
+    FlipCardInternal(
+        cardFace = cardFace,
+        onClick = { cardFace = cardFace.next },
+        modifier = modifier,
+        front = {
+            BasicCard(title) {
+                front()
+            }
+        },
+        back = back
+    )
 }
