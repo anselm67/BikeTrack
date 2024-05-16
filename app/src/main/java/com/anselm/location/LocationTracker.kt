@@ -7,11 +7,14 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.os.Binder
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationCallback
@@ -26,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 
-private const val CHANNEL_ID = "ForegroundServiceChannel"
+private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
@@ -76,26 +79,43 @@ class LocationTracker: Service() {
 
     }
 
+    private fun buildExitAction(): NotificationCompat.Action {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.action = MainActivity.EXIT_ACTION
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        return NotificationCompat.Action.Builder(
+            0, "Exit", pendingIntent
+        ).build()
+    }
+
     @SuppressLint("MissingPermission")
     private fun startLocationTracker() {
         Log.d(TAG, "startLocationTracker")
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
 
-        val notification = Notification.Builder(applicationContext, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle("Biking")
             .setContentText("Location tracker is running")
+            .setCategory(NotificationCompat.CATEGORY_SYSTEM)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOnlyAlertOnce(true)
             .setWhen(System.currentTimeMillis())
+            .setOngoing(true)
             .setContentIntent(PendingIntent.getActivity(
                 this,
                 0,
                 Intent(applicationContext, MainActivity::class.java),
                 PendingIntent.FLAG_IMMUTABLE))
+            .addAction(buildExitAction())
             .build()
 
-        startForeground(1, notification)
+        ServiceCompat.startForeground(
+            this,
+            100,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
     }
 
     private fun stopLocationTracker() {
@@ -119,6 +139,7 @@ class LocationTracker: Service() {
             "Location Service Channel",
             NotificationManager.IMPORTANCE_HIGH
         )
+        serviceChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(serviceChannel)
     }

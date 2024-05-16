@@ -99,6 +99,19 @@ class MainActivity : ComponentActivity() {
         stopService(Intent(this, LocationTracker::class.java))
     }
 
+    companion object {
+        public const val EXIT_ACTION = "Exit"
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        when(intent.action) {
+            EXIT_ACTION -> {
+                finishAndRemoveTask()
+            }
+        }
+    }
+
     private val allPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
