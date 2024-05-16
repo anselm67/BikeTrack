@@ -19,6 +19,7 @@ fun DebugCard(
 ) {
     BasicCard(
         title = "Debug",
+        foldable = true,
         modifier = Modifier.padding(0.dp, 4.dp)
     ) {
         Column(

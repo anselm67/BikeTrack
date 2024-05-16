@@ -20,7 +20,6 @@ fun TimeElapsedCard(
     distanceInKilometers: Double
 ) {
     BasicCard(
-        title = "Running Time",
         modifier = Modifier.padding(0.dp, 4.dp)
     ) {
         Column (

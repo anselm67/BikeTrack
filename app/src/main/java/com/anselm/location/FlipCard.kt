@@ -77,7 +77,7 @@ private fun FlipCardInternal(
                         .size(24.dp)
                         .align(Alignment.TopEnd)
                         .offset((-10).dp, (10).dp)
-                        .zIndex(2.0f),
+                        .zIndex(2f),
                     painter = painterResource(id = R.drawable.ic_flip_card),
                     contentDescription = "Flip card.",
                     tint = MaterialTheme.colorScheme.primary,
