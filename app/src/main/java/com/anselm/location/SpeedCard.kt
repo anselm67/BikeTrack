@@ -1,5 +1,6 @@
 package com.anselm.location
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,11 +44,13 @@ private fun Back() {
 
     if ( recording == null ) {
         Column(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "No recording available"
+                text = "No recording available",
+                style = MaterialTheme.typography.titleLarge,
             )
         }
     } else {
