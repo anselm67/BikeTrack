@@ -79,6 +79,12 @@ class RecordingManager() {
         }
     }
 
+    fun lastRecording(): Recording? {
+        return home.listFiles()?.let { files ->
+            files.maxByOrNull { it.lastModified() }?.let { load(it.name) }
+        }
+    }
+
     companion object {
         private var instance: RecordingManager? = null
         fun getInstance(recordingDirectory: File): RecordingManager {

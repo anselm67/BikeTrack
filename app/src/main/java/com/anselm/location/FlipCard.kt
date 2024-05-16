@@ -74,7 +74,7 @@ private fun FlipCardInternal(
             if (cardFace == CardFace.Front) {
                 Icon(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(24.dp)
                         .align(Alignment.TopEnd)
                         .offset((-10).dp, (10).dp)
                         .zIndex(2.0f),

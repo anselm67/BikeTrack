@@ -7,7 +7,6 @@ package com.anselm.location
 
 import android.graphics.Paint
 import android.graphics.PointF
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -57,7 +56,6 @@ private fun split(
     stepRange: Array<Int>
 ): Axis {
     val range = maxValue - minValue
-    Log.d(TAG, "range $range min $minValue max $maxValue")
     var minHate = Float.MAX_VALUE
     var output = Axis(0.0f, 0.0f, 0.0f, 0)
     for (stepCount in stepRange) {
@@ -67,7 +65,6 @@ private fun split(
         if (minValue >= 0 && roundedMin < 0) {
             roundedMin = 0.0f
         }
-        Log.d(TAG, "stepValue: $stepValue minValue: $roundedMin maxValue: $roundedMax stepCount: $stepCount ")
         listOf(5, 10).forEach { granularity ->
             val hate = stepValue / granularity - floor(stepValue / granularity)
             if (hate < minHate) {
