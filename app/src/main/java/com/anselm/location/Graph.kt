@@ -31,8 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.floor
 
-private const val TAG = "com.anselm.Location.Graph"
-
 data class GraphAppearance(
     val graphColor: Color,
     val graphAxisColor: Color,

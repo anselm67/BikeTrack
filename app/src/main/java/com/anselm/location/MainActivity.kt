@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        public const val EXIT_ACTION = "Exit"
+        const val EXIT_ACTION = "Exit"
     }
 
     override fun onNewIntent(intent: Intent) {
