@@ -31,6 +31,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.anselm.location.ui.theme.LocationTheme
@@ -52,6 +55,7 @@ import kotlin.math.max
 
 data class Sample(
     val location: Location,
+    val elapsedTime: Long,
     val avgSpeed:  Double,
     val maxSpeed:  Double,
     val totalDistance: Double,
@@ -67,6 +71,7 @@ class MainActivity : ComponentActivity() {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
     private val isFlowAvailable = mutableStateOf(false)
+    private val isPaused = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,18 +146,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private var lastSample: Sample? = null
-    private var startTime = 0L
 
     private var sumSpeed = 0.0
     private var sumAltitude = 0.0
     private var sampleCount = 0
 
     private fun firstSample(location: Location): Sample {
-        this.startTime = location.time
         this.sumSpeed = 0.0
         this.sumAltitude = 0.0
         this.sampleCount = 0
         this.lastSample = Sample(
+            elapsedTime = 0L,
             location = location,
             avgSpeed = 0.0,
             maxSpeed = 0.0,
@@ -182,6 +186,7 @@ class MainActivity : ComponentActivity() {
         val verticalDistance = location.altitude - lastSample.location.altitude
         val distance = location.distanceTo(lastSample.location).toDouble()
         val nextSample = Sample(
+            elapsedTime = lastSample.elapsedTime + location.time - lastSample.location.time,
             location = location,
             avgSpeed = sumSpeed / sampleCount,
             maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
@@ -202,8 +207,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onLocation(location: Location): Sample {
-        recordingManager.record(location)
-        return if (lastSample == null) firstSample(location) else update(location)
+        if ( ! isPaused.value ) {
+            recordingManager.record(location)
+            return if (lastSample == null) firstSample(location) else update(location)
+        } else {
+            return lastSample!!
+        }
     }
 
     private var flow: StateFlow<Location?>? = null
@@ -236,6 +245,7 @@ class MainActivity : ComponentActivity() {
             LoadingDisplay()
             return
         }
+        // We're on pause? Skip everything.
         val sample = onLocation(location)
         Column (
             modifier = Modifier
@@ -244,7 +254,7 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Top,
         ) {
             TimeElapsedCard(
-                timeMillis = location.time - startTime,
+                timeMillis = sample.elapsedTime,
                 distanceInKilometers = sample.totalDistance / 1000.0
             )
             SpeedCard(
@@ -373,6 +383,21 @@ class MainActivity : ComponentActivity() {
                             text = getString(R.string.app_name),
                             maxLines = 1,
                         )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { isPaused.value = ! isPaused.value },
+                        ) {
+                            Icon(
+                                painterResource(
+                                    id = if ( isPaused.value )
+                                        R.drawable.ic_resume
+                                    else
+                                        R.drawable.ic_pause),
+                                contentDescription = "Pause / Resume toggle.",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 )
             }
