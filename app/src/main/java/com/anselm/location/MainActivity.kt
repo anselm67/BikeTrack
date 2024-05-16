@@ -42,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -72,6 +73,7 @@ class MainActivity : ComponentActivity() {
     }
     private val isFlowAvailable = mutableStateOf(false)
     private val isPaused = mutableStateOf(false)
+    private val isAutoPause = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -207,6 +209,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onLocation(location: Location): Sample {
+        val paused = AutoPause.get().isAutoPause(location)
+        if ( paused && ! isPaused.value ) {
+            Log.d(TAG, "Entering auto pause.")
+            isAutoPause.value = true
+            isPaused.value = true
+        } else if ( ! paused ) {
+            isAutoPause.value = false
+            isPaused.value = false
+        }
         if ( ! isPaused.value ) {
             recordingManager.record(location)
             return if (lastSample == null) firstSample(location) else update(location)
@@ -395,7 +406,10 @@ class MainActivity : ComponentActivity() {
                                     else
                                         R.drawable.ic_pause),
                                 contentDescription = "Pause / Resume toggle.",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = if ( isAutoPause.value )
+                                        Color.Red
+                                    else
+                                        MaterialTheme.colorScheme.primary
                             )
                         }
                     }

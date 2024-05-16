@@ -34,7 +34,7 @@ fun TimeElapsedCard(
                 style = MaterialTheme.typography.displayLarge,
             )
             Text(
-                text = "%.1f km".format(distanceInKilometers),
+                text = "%.2f km".format(distanceInKilometers),
                 style = MaterialTheme.typography.displayLarge,
             )
         }
