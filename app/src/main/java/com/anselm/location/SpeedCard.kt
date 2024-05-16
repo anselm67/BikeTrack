@@ -16,7 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-private fun Front(speedInKilometersPerHour: Double,
+private fun Front(
+    speedInKilometersPerHour: Double,
     averageSpeedInKilometersPerHour: Double,
     maxSpeedInKilometersPerHour: Double
 ) {
@@ -33,8 +34,14 @@ private fun Front(speedInKilometersPerHour: Double,
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("Average: %.1f".format(averageSpeedInKilometersPerHour))
-        Text("Maximum: %.1f".format(maxSpeedInKilometersPerHour))
+        Text(
+            text = "Average: %.1f".format(averageSpeedInKilometersPerHour),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = "Maximum: %.1f".format(maxSpeedInKilometersPerHour),
+            style = MaterialTheme.typography.titleLarge,
+        )
     }
 }
 
@@ -75,9 +82,10 @@ private fun Back() {
     }
 }
 @Composable
-fun SpeedCard(speedInKilometersPerHour: Double,
-              averageSpeedInKilometersPerHour: Double,
-              maxSpeedInKilometersPerHour: Double
+fun SpeedCard(
+    speedInKilometersPerHour: Double,
+    averageSpeedInKilometersPerHour: Double,
+    maxSpeedInKilometersPerHour: Double
 ) {
     FlipCard(
         title = "Speed",

@@ -26,28 +26,25 @@ private fun Front(
 ) {
     Row (
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Center,
     ) {
-        Row {
-            Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Climb")
-            Text(
-                text = "%.1f".format(climbInMeters),
-                style = MaterialTheme.typography.displayLarge,
-            )
-        }
-        Row {
-            Text(
-                text = "%.1f".format(gradePercent.ifNaN(0.0)),
-                style = MaterialTheme.typography.displaySmall,
-            )
-        }
-        Row {
-            Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Climb")
-            Text(
-                text = "%.1f".format(descentInMeters),
-                style = MaterialTheme.typography.displayLarge,
-            )
-        }
+        Text(
+            text = if ( gradePercent.isNaN() ) "--" else "%.1f%%".format(gradePercent),
+            style = MaterialTheme.typography.displayLarge,
+        )
+    }
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ){
+        Text(
+            text = "Up: %3.1f".format(climbInMeters),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = "Down: %3.1f".format(descentInMeters),
+            style = MaterialTheme.typography.titleLarge,
+        )
     }
 }
 @Composable

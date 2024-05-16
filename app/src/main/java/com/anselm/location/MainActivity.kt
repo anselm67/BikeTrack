@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        recordingManager.stop()
         disconnect()
         stopService(Intent(this, LocationTracker::class.java))
     }
@@ -242,10 +243,12 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
-            TimeElapsedCard(timeMillis = location.time - startTime)
-            DistanceCard(distanceInKilometers = sample.totalDistance / 1000.0)
+            TimeElapsedCard(
+                timeMillis = location.time - startTime,
+                distanceInKilometers = sample.totalDistance / 1000.0
+            )
             SpeedCard(
-                speedInKilometersPerHour = sample.avgSpeed * 3.6,
+                speedInKilometersPerHour = location.speed * 3.6,
                 averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6,
                 maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6,
             )

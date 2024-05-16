@@ -50,7 +50,7 @@ def altitude(data):
     plt.ylabel('Altitude (m)')
     plt.show()
 
-# data = load("recording-2024-05-14-10-14-37.json")
-data = load("recording-2024-05-15-18-54-46.json")
+data = load("recording-2024-05-14-10-14-37.json")
+#data = load("recording-2024-05-15-18-54-46.json")
 
 altitude(data)
