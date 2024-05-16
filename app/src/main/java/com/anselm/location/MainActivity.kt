@@ -165,7 +165,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun reset() {
-        this.lastSample = null
+        sampleCount = 0
+        lastSample = null
     }
 
     private fun update(location: Location): Sample {
@@ -339,7 +340,10 @@ class MainActivity : ComponentActivity() {
                     Text("Quit")
                 }
                 StartStopIcon(
-                    onStart = { this@MainActivity.recordingManager.start() },
+                    onStart = {
+                        reset()
+                        this@MainActivity.recordingManager.start()
+                    },
                     onStop = {  this@MainActivity.recordingManager.stop() },
                 )
                 Button (
