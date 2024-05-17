@@ -57,13 +57,16 @@ private fun Back() {
         }
     } else {
         val altitude = recording.extractAltitude()
-        val time = recording.extractDistances()
-
+        var distance = recording.extractDistances()
+        if ( distance.max() <= 2.5 ) {
+            // Switch to meters unit for the graph.
+            distance = distance.map { it * 1000 }
+        }
         Graph(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp),
-            xValues = time,
+            xValues = distance,
             yValues = altitude,
             graphAppearance = GraphAppearance(
                 graphColor = Color.Blue,

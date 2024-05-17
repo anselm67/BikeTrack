@@ -25,7 +25,7 @@ fun TimeElapsedCard(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "%02dh:%02dm:%02ds".format(
+                text = "%02d:%02d:%02d".format(
                     *(timeMillis).toDuration(DurationUnit.MILLISECONDS)
                         .toComponents { hours, minutes, seconds, _ ->
                             arrayOf(hours, minutes, seconds)
