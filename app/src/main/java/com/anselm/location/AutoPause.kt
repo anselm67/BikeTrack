@@ -1,9 +1,6 @@
 package com.anselm.location
 
 import android.location.Location
-import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 
 class AutoPause {
     private var lastLocation: Location? = null
