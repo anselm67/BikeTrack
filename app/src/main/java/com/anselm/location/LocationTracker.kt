@@ -34,15 +34,37 @@ private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
 
+    override fun onDestroy() {
+        super.onDestroy()
+        stopLocationTracker()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand")
         startLocationTracker()
         return START_STICKY
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopLocationTracker()
+    @SuppressLint("MissingPermission")
+    private fun startLocationTracker() {
+        Log.d(TAG, "startLocationTracker")
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        createNotificationChannel()
+        ServiceCompat.startForeground(
+            this,
+            100,
+            buildNotification(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+        )
+    }
+
+    private fun stopLocationTracker() {
+        Log.d(TAG, "stopLocationTracker")
+        fusedLocationClient = null
+        stopForeground(STOP_FOREGROUND_REMOVE)
+    }
+    inner class TrackerBinder : Binder() {
+        fun getFlow(): Flow<Location>? = this@LocationTracker.locationFlow
     }
 
     private var locationFlow: Flow<Location>? = null
@@ -88,13 +110,8 @@ class LocationTracker: Service() {
         ).build()
     }
 
-    @SuppressLint("MissingPermission")
-    private fun startLocationTracker() {
-        Log.d(TAG, "startLocationTracker")
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        createNotificationChannel()
-
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+    private fun buildNotification(): Notification {
+        return NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle("Biking")
             .setContentText("Location tracker is running")
             .setCategory(NotificationCompat.CATEGORY_SYSTEM)
@@ -109,22 +126,6 @@ class LocationTracker: Service() {
                 PendingIntent.FLAG_IMMUTABLE))
             .addAction(buildExitAction())
             .build()
-
-        ServiceCompat.startForeground(
-            this,
-            100,
-            notification,
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-        )
-    }
-
-    private fun stopLocationTracker() {
-        Log.d(TAG, "stopLocationTracker")
-        fusedLocationClient = null
-        stopForeground(STOP_FOREGROUND_REMOVE)
-    }
-    inner class TrackerBinder : Binder() {
-        fun getFlow(): Flow<Location>? = this@LocationTracker.locationFlow
     }
 
     override fun onBind(intent: Intent?): IBinder {
