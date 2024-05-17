@@ -24,7 +24,8 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Location"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:showOnLockScreen="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
