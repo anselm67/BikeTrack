@@ -1,6 +1,7 @@
 package com.anselm.location
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -33,10 +34,18 @@ fun TimeElapsedCard(
                 ),
                 style = MaterialTheme.typography.displayLarge,
             )
-            Text(
-                text = "%.2f km".format(distanceInKilometers),
-                style = MaterialTheme.typography.displayLarge,
-            )
+            Row {
+                Text(
+                    text = "%.2f".format(distanceInKilometers),
+                    style = MaterialTheme.typography.displayLarge,
+                    modifier = Modifier.alignByBaseline(),
+                )
+                Text(
+                    modifier = Modifier.alignByBaseline(),
+                    text = "km",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
         }
     }
 }
