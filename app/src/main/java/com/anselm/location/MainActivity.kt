@@ -34,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity() {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
     private val isFlowAvailable = mutableStateOf(false)
-    private val isPaused = mutableStateOf(false)
+    private val isRecording = mutableStateOf(false)
     private val isAutoPause = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
 
@@ -81,7 +82,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setShowWhenLocked(true)
-//        setTurnScreenOn(true)
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
                 isGranted.value = it.all { it.value }
@@ -213,19 +213,17 @@ class MainActivity : ComponentActivity() {
 
     private fun onLocation(location: Location): Sample {
         val paused = AutoPause.get().isAutoPause(location)
-        if ( paused && ! isPaused.value ) {
+        if ( paused && ! isAutoPause.value ) {
             Log.d(TAG, "Entering auto pause.")
             isAutoPause.value = true
-            isPaused.value = true
         } else if ( ! paused ) {
             isAutoPause.value = false
-            isPaused.value = false
         }
-        if ( ! isPaused.value ) {
+        if ( ! isAutoPause.value ) {
             recordingManager.record(location)
             return if (lastSample == null) firstSample(location) else update(location)
         } else {
-            return lastSample!!
+            return lastSample ?: firstSample(location)
         }
     }
 
@@ -242,6 +240,18 @@ class MainActivity : ComponentActivity() {
             flow = null
         }
     }
+
+    private fun stopRecording() {
+        recordingManager.stop()
+        isRecording.value = false
+    }
+
+    private fun startRecording() {
+        reset()
+        recordingManager.start()
+        isRecording.value = true
+    }
+
     private fun connect() {
         val intent = Intent(this@MainActivity, LocationTracker::class.java)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
@@ -366,13 +376,25 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Text("Quit")
                 }
-                StartStopIcon(
-                    onStart = {
-                        reset()
-                        this@MainActivity.recordingManager.start()
-                    },
-                    onStop = {  this@MainActivity.recordingManager.stop() },
-                )
+                IconButton(
+                    onClick = {
+                        if ( isRecording.value ) stopRecording() else startRecording()
+                    }  ,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            id = if ( isRecording.value )
+                                R.drawable.ic_stop_recording
+                            else
+                                R.drawable.ic_start_recording
+                        ),
+                        contentDescription = "Toggle recording.",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 Button (
                     onClick = { reset() }
                 ) {
@@ -399,21 +421,21 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     actions = {
-                        IconButton(
-                            onClick = { isPaused.value = ! isPaused.value },
-                        ) {
-                            Icon(
-                                painterResource(
-                                    id = if ( isPaused.value )
-                                        R.drawable.ic_resume
-                                    else
-                                        R.drawable.ic_pause),
-                                contentDescription = "Pause / Resume toggle.",
-                                tint = if ( isAutoPause.value )
+                        if ( isRecording.value ) {
+                            IconButton(
+                                onClick = { stopRecording() }
+                            ) {
+                                Icon(
+                                    painterResource(
+                                        id = R.drawable.ic_stop_recording
+                                    ),
+                                    contentDescription = "Recording / paused status.",
+                                    tint = if (isAutoPause.value)
                                         Color.Red
                                     else
-                                        MaterialTheme.colorScheme.primary
-                            )
+                                        MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                     }
                 )

@@ -10,7 +10,6 @@ class AutoPause {
     fun isAutoPause(location: Location): Boolean {
         var paused = false
         if ( lastLocation != null) {
-            Log.d(TAG, "AutoPause? ${lastLocation?.speed} ${location.speed}")
             paused = (
                 // 0.25f is about 1km / h
                 // We moved less than 20m in between samples (5 seconds)
