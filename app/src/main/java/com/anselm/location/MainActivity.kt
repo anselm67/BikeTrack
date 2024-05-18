@@ -52,7 +52,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
 import kotlin.math.max
@@ -244,7 +243,7 @@ class MainActivity : ComponentActivity() {
                     CoroutineScope(Dispatchers.Main),
                     SharingStarted.Eagerly,
                     firstSample(Location(null))
-                )!!
+                )
             isFlowAvailable.value = true
         }
 
