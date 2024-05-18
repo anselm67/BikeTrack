@@ -1,37 +1,16 @@
-package com.anselm.location
+package com.anselm.location.data
 
 import android.location.Location
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
+import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 
-data class LocationStub(
-    val time: Long,
-    val latitude: Double,
-    val longitude: Double,
-    val altitude: Double,
-    val accuracy: Double,
-    val speed: Double,
-    val bearing: Double,
-)
-
-fun fromJson(jsonObject: JsonObject): LocationStub {
-    return LocationStub(
-        time = jsonObject["time"]?.jsonPrimitive?.long ?: 0,
-        latitude = jsonObject["latitude"]?.jsonPrimitive?.double ?: 0.0,
-        longitude = jsonObject["longitude"]?.jsonPrimitive?.double ?: 0.0,
-        altitude = jsonObject["altitude"]?.jsonPrimitive?.double ?: 0.0,
-        accuracy = jsonObject["accuracy"]?.jsonPrimitive?.double ?: 0.0,
-        speed = jsonObject["speed"]?.jsonPrimitive?.double ?: 0.0,
-        bearing = jsonObject["bearing"]?.jsonPrimitive?.double ?: 0.0,
-    )
-}
-
 class Recording(jsonArray: JsonArray) {
-    private var dataPoints: List<LocationStub> = jsonArray.map { fromJson(it.jsonObject) }
+    private var dataPoints: List<LocationStub> = jsonArray.map { it.toLocationStub() }
 
     val size: Int
         get() = dataPoints.size

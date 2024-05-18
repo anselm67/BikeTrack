@@ -1,7 +1,8 @@
-package com.anselm.location
+package com.anselm.location.data
 
 import android.location.Location
 import android.util.Log
+import com.anselm.location.TAG
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

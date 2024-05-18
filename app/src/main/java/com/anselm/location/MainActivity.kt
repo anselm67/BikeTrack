@@ -47,6 +47,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.anselm.location.data.AutoPauseListener
+import com.anselm.location.data.AverageFilter
+import com.anselm.location.data.DataManager
+import com.anselm.location.data.LocationStub
+import com.anselm.location.data.RecordingManager
+import com.anselm.location.data.Sample
+import com.anselm.location.data.defaultSample
 import com.anselm.location.ui.theme.LocationTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,46 +63,39 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
 import kotlin.math.max
 
-data class Sample(
-    val seqno: Int,
-    val location: Location,
-    val elapsedTime: Long,
-    val avgSpeed:  Double,
-    val maxSpeed:  Double,
-    val totalDistance: Double,
-    val distance: Double,
-    val verticalDistance: Double,
-    val climb: Double,
-    val descent: Double,
-)
-
-private val defaultSample = Sample(
-    seqno = 0,
-    elapsedTime = 0L,
-    location = Location(null),
-    avgSpeed = 0.0,
-    maxSpeed = 0.0,
-    totalDistance = 0.0,
-    distance = 0.0,
-    climb = 0.0,
-    descent = 0.0,
-    verticalDistance = 0.0,
-)
 
 class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private val recordingManager by lazy {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
+    private val dataManager by lazy {
+        DataManager(recordingManager)
+    }
     private val isFlowAvailable = mutableStateOf(false)
     private val isRecording = mutableStateOf(false)
     private val isAutoPause = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
 
+    private val autoPauseListener = object : AutoPauseListener {
+        override fun onAutoPause(onOff: Boolean) {
+            isAutoPause.value = onOff
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setShowWhenLocked(true)
+        // Configures the data manager
+        dataManager
+            .addAutoPauseListener(autoPauseListener)
+            // Averages the altitude values.
+            .addFilter(object: AverageFilter(3) {
+                override fun output(sample: Sample, value: Double) {
+                    sample.location.altitude = value
+                }
+            })
+
+        // Requests permissions if needed.
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
                 isGranted.value = it.all { it.value }
@@ -110,6 +110,9 @@ class MainActivity : ComponentActivity() {
             startService(Intent(this, LocationTracker::class.java))
             connect()
         }
+        // Sets up the UI.
+        enableEdgeToEdge()
+        setShowWhenLocked(true)
         setContent {
             LocationTheme {
                 MainScreen()
@@ -119,6 +122,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        dataManager.removeAutoPauseListener(autoPauseListener)
         recordingManager.stop()
         disconnect()
         stopService(Intent(this, LocationTracker::class.java))
@@ -164,85 +168,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private var lastSample: Sample? = null
-
-    private var sumSpeed = 0.0
-    private var sumAltitude = 0.0
-
-    private fun firstSample(location: Location): Sample {
-        if ( location.provider == null) {
-            return defaultSample
-        }
-        this.sumSpeed = 0.0
-        this.sumAltitude = 0.0
-        this.lastSample = defaultSample.copy(location = location)
-        return this.lastSample!!
-    }
-
-    private fun reset() {
-        lastSample = null
-    }
-
-    private fun update(location: Location): Sample {
-        // This really can't happen.
-        if ( lastSample == null ) {
-            throw Exception("No sample available")
-        }
-        val lastSample = lastSample!!
-        this.sumSpeed += location.speed
-        this.sumAltitude += location.altitude
-        val verticalDistance = location.altitude - lastSample.location.altitude
-        val distance = location.distanceTo(lastSample.location).toDouble()
-        val nextSample = Sample(
-            seqno = lastSample.seqno + 1,
-            elapsedTime = lastSample.elapsedTime + location.time - lastSample.location.time,
-            location = location,
-            avgSpeed = sumSpeed / (lastSample.seqno + 1),
-            maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
-            totalDistance = lastSample.totalDistance + distance,
-            distance = distance,
-            climb = if (verticalDistance > 0)
-                lastSample.climb + verticalDistance
-            else
-                lastSample.climb,
-            descent = if (verticalDistance < 0)
-                lastSample.descent - verticalDistance
-            else
-                lastSample.descent,
-            verticalDistance = verticalDistance,
-        )
-        this.lastSample = nextSample
-        return nextSample
-    }
-
-    private fun onLocation(location: Location): Sample {
-        val paused = AutoPause.get().isAutoPause(location)
-        if ( paused && ! isAutoPause.value ) {
-            Log.d(TAG, "Entering auto pause.")
-            isAutoPause.value = true
-        } else if ( ! paused ) {
-            isAutoPause.value = false
-        }
-        if ( ! isAutoPause.value ) {
-            recordingManager.record(location)
-            return if (lastSample == null) firstSample(location) else update(location)
-        } else {
-            return lastSample ?: firstSample(location)
-        }
-    }
-
     private var flow: StateFlow<Sample>? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
             flow = locationFlow
                 .transform { location ->
-                    emit(onLocation(location))
+                    emit(dataManager.onLocation(location))
                 }
                 .stateIn(
                     CoroutineScope(Dispatchers.Main),
                     SharingStarted.Eagerly,
-                    firstSample(Location(null))
+                    defaultSample.copy(location = LocationStub())
                 )
             isFlowAvailable.value = true
         }
@@ -259,7 +196,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startRecording() {
-        reset()
+        dataManager.reset()
         recordingManager.start()
         isRecording.value = true
     }
@@ -303,14 +240,7 @@ class MainActivity : ComponentActivity() {
                 climbInMeters = sample.climb,
                 descentInMeters = sample.descent,
             )
-            DebugCard(
-                altitude = location.altitude,
-                latitude = location.latitude,
-                longitude = location.longitude,
-                accuracy = location.accuracy.toDouble(),
-                bearing = location.bearing.toDouble(),
-                sampleCount = sample.seqno
-            )
+            DebugCard(isAutoPause.value, sample)
         }
     }
 
@@ -408,7 +338,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Button (
-                    onClick = { reset() }
+                    onClick = { dataManager.reset() }
                 ) {
                     Text("Reset")
                 }

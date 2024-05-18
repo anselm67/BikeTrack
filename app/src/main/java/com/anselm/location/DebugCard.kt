@@ -7,16 +7,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.anselm.location.data.Sample
 
 @Composable
 fun DebugCard(
-    altitude: Double,
-    latitude: Double,
-    longitude: Double,
-    accuracy: Double,
-    bearing: Double,
-    sampleCount: Int
+    autoPaused: Boolean,
+    sample: Sample,
 ) {
+    val location = sample.location
     BasicCard(
         title = "Debug",
         foldable = true,
@@ -25,13 +23,14 @@ fun DebugCard(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Altitude: %.2f".format(altitude))
+            Text(if ( autoPaused ) "Paused" else "Running")
+            Text("Altitude: %.2f".format(location.altitude))
             Text(
-                "Coordinates: %.2f / %.2f".format(latitude, longitude)
+                "Coordinates: %.2f / %.2f".format(location.latitude, location.longitude)
             )
-            Text("Accuracy: %.2f".format(accuracy))
-            Text("Bearing: %.2f".format(bearing))
-            Text("Sample Count: %d".format(sampleCount))
+            Text("Accuracy: %.2f".format(location.accuracy))
+            Text("Bearing: %.2f".format(location.bearing))
+            Text("Sample Count: %d".format(sample.seqno))
         }
     }
 
