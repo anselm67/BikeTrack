@@ -84,6 +84,7 @@ data class Sample(
     val verticalDistance: Double,
     val climb: Double,
     val descent: Double,
+    var grade: Double,
 )
 
 val defaultSample = Sample(
@@ -97,6 +98,7 @@ val defaultSample = Sample(
     climb = 0.0,
     descent = 0.0,
     verticalDistance = 0.0,
+    grade = 0.0
 )
 
 interface DataFilter {
@@ -157,6 +159,7 @@ class DataManager(
             maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
             totalDistance = lastSample.totalDistance + distance,
             distance = distance,
+            grade = lastSample.grade,
             climb = if (verticalDistance > 0)
                 lastSample.climb + verticalDistance
             else

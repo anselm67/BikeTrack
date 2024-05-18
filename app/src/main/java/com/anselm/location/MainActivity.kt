@@ -50,6 +50,7 @@ import androidx.core.app.ActivityCompat
 import com.anselm.location.data.AutoPauseListener
 import com.anselm.location.data.AverageFilter
 import com.anselm.location.data.DataManager
+import com.anselm.location.data.GradeFilter
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.RecordingManager
 import com.anselm.location.data.Sample
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
                 override fun output(sample: Sample, value: Double) {
                     sample.location.altitude = value
                 }
-            })
+            }).addFilter(GradeFilter())
 
         // Requests permissions if needed.
         locationPermissionLauncher = registerForActivityResult(
@@ -236,7 +237,7 @@ class MainActivity : ComponentActivity() {
                 maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6,
             )
             AltitudeCard(
-                gradePercent = 100.0 * sample.verticalDistance / sample.distance,
+                gradePercent = sample.grade,
                 climbInMeters = sample.climb,
                 descentInMeters = sample.descent,
             )
