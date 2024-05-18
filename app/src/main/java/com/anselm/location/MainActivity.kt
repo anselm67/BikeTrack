@@ -52,10 +52,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transform
 import kotlin.math.max
 
 data class Sample(
+    val seqno: Int,
     val location: Location,
     val elapsedTime: Long,
     val avgSpeed:  Double,
@@ -65,6 +68,19 @@ data class Sample(
     val verticalDistance: Double,
     val climb: Double,
     val descent: Double,
+)
+
+private val defaultSample = Sample(
+    seqno = 0,
+    elapsedTime = 0L,
+    location = Location(null),
+    avgSpeed = 0.0,
+    maxSpeed = 0.0,
+    totalDistance = 0.0,
+    distance = 0.0,
+    climb = 0.0,
+    descent = 0.0,
+    verticalDistance = 0.0,
 )
 
 class MainActivity : ComponentActivity() {
@@ -153,28 +169,18 @@ class MainActivity : ComponentActivity() {
 
     private var sumSpeed = 0.0
     private var sumAltitude = 0.0
-    private var sampleCount = 0
 
     private fun firstSample(location: Location): Sample {
+        if ( location.provider == null) {
+            return defaultSample
+        }
         this.sumSpeed = 0.0
         this.sumAltitude = 0.0
-        this.sampleCount = 0
-        this.lastSample = Sample(
-            elapsedTime = 0L,
-            location = location,
-            avgSpeed = 0.0,
-            maxSpeed = 0.0,
-            totalDistance = 0.0,
-            distance = 0.0,
-            climb = 0.0,
-            descent = 0.0,
-            verticalDistance = 0.0,
-        )
+        this.lastSample = defaultSample.copy(location = location)
         return this.lastSample!!
     }
 
     private fun reset() {
-        sampleCount = 0
         lastSample = null
     }
 
@@ -184,15 +190,15 @@ class MainActivity : ComponentActivity() {
             throw Exception("No sample available")
         }
         val lastSample = lastSample!!
-        this.sampleCount += 1
         this.sumSpeed += location.speed
         this.sumAltitude += location.altitude
         val verticalDistance = location.altitude - lastSample.location.altitude
         val distance = location.distanceTo(lastSample.location).toDouble()
         val nextSample = Sample(
+            seqno = lastSample.seqno + 1,
             elapsedTime = lastSample.elapsedTime + location.time - lastSample.location.time,
             location = location,
-            avgSpeed = sumSpeed / sampleCount,
+            avgSpeed = sumSpeed / (lastSample.seqno + 1),
             maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
             totalDistance = lastSample.totalDistance + distance,
             distance = distance,
@@ -226,11 +232,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private var flow: StateFlow<Location?>? = null
+    private var flow: StateFlow<Sample>? = null
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            flow = (service as LocationTracker.TrackerBinder).getFlow()!!
-                .stateIn(CoroutineScope(Dispatchers.Main), SharingStarted.Eagerly, null)
+            val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
+            flow = locationFlow
+                .transform { location ->
+                    emit(onLocation(location))
+                }
+                .stateIn(
+                    CoroutineScope(Dispatchers.Main),
+                    SharingStarted.Eagerly,
+                    firstSample(Location(null))
+                )!!
             isFlowAvailable.value = true
         }
 
@@ -263,13 +277,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun LocationDisplay() {
-        val location = flow?.collectAsState()?.value
-        if ( location == null ) {
+        val sample = flow?.collectAsState()?.value
+        if ( sample == null ) {
             LoadingDisplay()
             return
         }
+        val location = sample.location
         // We're on pause? Skip everything.
-        val sample = onLocation(location)
         Column (
             modifier = Modifier
                 .padding(8.dp, 8.dp)
@@ -296,7 +310,7 @@ class MainActivity : ComponentActivity() {
                 longitude = location.longitude,
                 accuracy = location.accuracy.toDouble(),
                 bearing = location.bearing.toDouble(),
-                sampleCount = sampleCount
+                sampleCount = sample.seqno
             )
         }
     }
