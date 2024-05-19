@@ -205,11 +205,7 @@ class MainActivity : ComponentActivity() {
                 timeMillis = sample.elapsedTime,
                 distanceInKilometers = sample.totalDistance / 1000.0
             )
-            SpeedCard(
-                speedInKilometersPerHour = location.speed * 3.6,
-                averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6,
-                maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6,
-            )
+            SpeedCard(sample)
             AltitudeCard(sample)
             DebugCard(dataManagerContext?.isAutoPause?.value ?: false, sample)
         }

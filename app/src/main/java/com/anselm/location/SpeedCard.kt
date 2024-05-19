@@ -15,19 +15,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.data.Sample
+
+private const val MIN_SPEED = 0.0001
 
 @Composable
-private fun Front(
-    speedInKilometersPerHour: Double,
-    averageSpeedInKilometersPerHour: Double,
-    maxSpeedInKilometersPerHour: Double
-) {
+private fun Front(sample: Sample) {
+    val speedInKilometersPerHour = sample.location.speed * 3.6
+    val averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6
+    val maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6
+
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "%.1f".format(speedInKilometersPerHour),
+            text = speedInKilometersPerHour.formatIf("--", "%.1f") { it <= MIN_SPEED },
             style = MaterialTheme.typography.displayLarge,
         )
     }
@@ -36,12 +39,17 @@ private fun Front(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = if ( averageSpeedInKilometersPerHour.isNaN() )
-                    "--" else "Average: %.1f".format(averageSpeedInKilometersPerHour),
+            text = averageSpeedInKilometersPerHour.formatIf(
+                "Average: --",
+                "Average: %.1f"
+            ) { it.isNaN() || it <= MIN_SPEED },
             style = MaterialTheme.typography.titleLarge,
         )
         Text(
-            text = "Maximum: %.1f".format(maxSpeedInKilometersPerHour),
+            text = maxSpeedInKilometersPerHour.formatIf(
+                "Maximum: --",
+                "Maximum: %.1f"
+            ) { it.isNaN() || it < MIN_SPEED },
             style = MaterialTheme.typography.titleLarge,
         )
     }
@@ -84,20 +92,12 @@ private fun Back() {
     }
 }
 @Composable
-fun SpeedCard(
-    speedInKilometersPerHour: Double,
-    averageSpeedInKilometersPerHour: Double,
-    maxSpeedInKilometersPerHour: Double
-) {
+fun SpeedCard(sample: Sample) {
     FlipCard(
         title = "Speed",
         modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
         front = {
-            Front(
-                speedInKilometersPerHour,
-                averageSpeedInKilometersPerHour,
-                maxSpeedInKilometersPerHour
-            )
+            Front(sample)
         },
         back = {
             Back()
