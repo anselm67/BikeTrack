@@ -12,23 +12,12 @@ import kotlinx.serialization.json.put
 import java.io.File
 import java.time.format.DateTimeFormatter
 
-fun Location.toJson(): String {
-    val obj = buildJsonObject {
-        put("time", this@toJson.time)
-        put("latitude", this@toJson.latitude)
-        put("longitude", this@toJson.longitude)
-        put("altitude", this@toJson.altitude)
-        put("accuracy", this@toJson.accuracy)
-        put("speed", this@toJson.speed)
-        put("bearing", this@toJson.bearing)
-    }
-    return Json.encodeToString(obj)
-}
+
 
 class RecordingManager() {
     private var recordingFile: File? = null
     private lateinit var home: File
-    private val buffer = mutableListOf<Location>()
+    private val buffer = mutableListOf<LocationStub>()
     private var doRecordingProlog = true
     constructor(recordingDirectory: File) : this() {
         home = File(recordingDirectory, "recordings")
@@ -65,7 +54,7 @@ class RecordingManager() {
         recordingFile = null
     }
 
-    fun record(location: Location) {
+    fun record(location: LocationStub) {
         buffer.add(location)
         if ( buffer.size > 50 ) {
             flush()

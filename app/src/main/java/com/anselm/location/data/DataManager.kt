@@ -5,13 +5,17 @@ import android.util.Log
 import com.anselm.location.AutoPause
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.float
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import kotlinx.serialization.json.put
 import kotlin.math.max
 
 data class LocationStub(
@@ -55,6 +59,19 @@ data class LocationStub(
         )
         return result[0]
     }
+}
+
+fun LocationStub.toJson(): String {
+    val obj = buildJsonObject {
+        put("time", this@toJson.time)
+        put("latitude", this@toJson.latitude)
+        put("longitude", this@toJson.longitude)
+        put("altitude", this@toJson.altitude)
+        put("accuracy", this@toJson.accuracy)
+        put("speed", this@toJson.speed)
+        put("bearing", this@toJson.bearing)
+    }
+    return Json.encodeToString(obj)
 }
 
 fun JsonElement.toLocationStub(): LocationStub {
@@ -113,6 +130,7 @@ interface AutoPauseListener {
     fun onAutoPause(onOff: Boolean)
 }
 class DataManager {
+
     private var lastSample: Sample? = null
     private var isRunning = true
     private var sumSpeed = 0.0
@@ -139,12 +157,11 @@ class DataManager {
         lastSample = null
     }
 
-    private fun update(rawLocation: Location): Sample {
+    private fun update(location: LocationStub): Sample {
         // This really can't happen.
         if ( lastSample == null ) {
             throw Exception("No sample available")
         }
-        val location = LocationStub(rawLocation)
         val lastSample = lastSample!!
         this.sumSpeed += location.speed
         this.sumAltitude += location.altitude
@@ -183,8 +200,8 @@ class DataManager {
         return this.lastSample!!
     }
 
-    fun onLocation(location: Location): Sample {
-        val shouldRun = ! AutoPause.get().isAutoPause(location)
+    fun onLocation(rawLocation: Location): Sample {
+        val shouldRun = true//! AutoPause.get().isAutoPause(rawLocation)
         if ( shouldRun && ! isRunning ) {
             isRunning = true
             autoPauseListeners.forEach {
@@ -198,12 +215,13 @@ class DataManager {
             }
         }
         if ( isRunning ) {
+            val location = LocationStub(rawLocation)
             app.recordingManager.record(location)
-            val nextSample = if (lastSample == null) firstSample(location) else update(location)
+            val nextSample = if (lastSample == null) firstSample(rawLocation) else update(location)
             filters.forEach { it.update(nextSample) }
             return nextSample
         } else {
-            return lastSample ?: firstSample(location)
+            return lastSample ?: firstSample(rawLocation)
         }
     }
 
