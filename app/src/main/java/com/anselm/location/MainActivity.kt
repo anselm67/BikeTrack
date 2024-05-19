@@ -210,11 +210,7 @@ class MainActivity : ComponentActivity() {
                 averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6,
                 maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6,
             )
-            AltitudeCard(
-                gradePercent = sample.grade,
-                climbInMeters = sample.climb,
-                descentInMeters = sample.descent,
-            )
+            AltitudeCard(sample)
             DebugCard(dataManagerContext?.isAutoPause?.value ?: false, sample)
         }
     }

@@ -14,19 +14,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.data.Sample
 
 @Composable
-private fun Front(
-    gradePercent: Double,
-    climbInMeters: Double,
-    descentInMeters: Double,
-) {
+private fun Front(sample: Sample) {
     Row (
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
         Text(
-            text = if ( gradePercent.isNaN() ) "--" else "%.1f%%".format(gradePercent),
+            text = "%.1f".format(sample.altitude),
+            style = MaterialTheme.typography.displayLarge,
+        )
+        Text(
+            text = if ( sample.grade.isNaN() ) "--" else "%.1f%%".format(sample.grade),
             style = MaterialTheme.typography.displayLarge,
         )
     }
@@ -35,11 +36,11 @@ private fun Front(
         horizontalArrangement = Arrangement.SpaceBetween,
     ){
         Text(
-            text = "Up: %3.1f".format(climbInMeters),
+            text = "Up: %3.1f".format(sample.climb),
             style = MaterialTheme.typography.titleLarge,
         )
         Text(
-            text = "Down: %3.1f".format(descentInMeters),
+            text = "Down: %3.1f".format(sample.descent),
             style = MaterialTheme.typography.titleLarge,
         )
     }
@@ -84,20 +85,12 @@ private fun Back() {
 }
 
 @Composable
-fun AltitudeCard(
-    gradePercent: Double,
-    climbInMeters: Double,
-    descentInMeters: Double
-) {
+fun AltitudeCard(sample: Sample) {
     FlipCard(
         title = "Altitude",
         modifier = Modifier.padding(0.dp, 4.dp),
         front = {
-            Front(
-                gradePercent,
-                climbInMeters,
-                descentInMeters
-            )
+            Front(sample)
         },
         back = { Back() }
     )
