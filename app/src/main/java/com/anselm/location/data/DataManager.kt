@@ -2,7 +2,7 @@ package com.anselm.location.data
 
 import android.location.Location
 import android.util.Log
-import com.anselm.location.AutoPause
+import androidx.compose.runtime.mutableStateOf
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import kotlinx.serialization.encodeToString
@@ -130,21 +130,41 @@ interface AutoPauseListener {
     fun onAutoPause(onOff: Boolean)
 }
 class DataManager {
+    inner class Context {
+        val isRecording = mutableStateOf(false)
+        val isAutoPause = mutableStateOf(false)
 
-    private var lastSample: Sample? = null
-    private var isRunning = true
-    private var sumSpeed = 0.0
-    private var sumAltitude = 0.0
+        var lastSample: Sample? = null
+        var sumSpeed = 0.0
+        var sumAltitude = 0.0
 
+        fun onDestroy() {
+            stopRecording()
+        }
+        fun onLocation(location: Location): Sample {
+            return this@DataManager.onLocation(this@Context, location)
+        }
 
-    private val autoPauseListeners = mutableListOf<AutoPauseListener>()
-    fun addAutoPauseListener(autoPauseListener: AutoPauseListener): DataManager {
-        autoPauseListeners.add(autoPauseListener)
-        return this
+        fun reset() {
+            lastSample = null
+            sumSpeed = 0.0
+            sumAltitude = 0.0
+        }
+
+        fun startRecording() {
+            reset()
+            isRecording.value = true
+            app.recordingManager.start()
+        }
+
+        fun stopRecording() {
+            isRecording.value = false
+            app.recordingManager.stop()
+        }
     }
 
-    fun removeAutoPauseListener(autoPauseListener: AutoPauseListener): Boolean {
-        return autoPauseListeners.remove(autoPauseListener)
+    fun createContext(): Context {
+        return Context()
     }
 
     private val filters = mutableListOf<DataFilter>()
@@ -153,25 +173,21 @@ class DataManager {
         return this
     }
 
-    fun reset() {
-        lastSample = null
-    }
-
-    private fun update(location: LocationStub): Sample {
+    private fun update(context: Context, location: LocationStub): Sample {
         // This really can't happen.
-        if ( lastSample == null ) {
+        if ( context.lastSample == null ) {
             throw Exception("No sample available")
         }
-        val lastSample = lastSample!!
-        this.sumSpeed += location.speed
-        this.sumAltitude += location.altitude
+        val lastSample = context.lastSample!!
+        context.sumSpeed += location.speed
+        context.sumAltitude += location.altitude
         val verticalDistance = location.altitude - lastSample.location.altitude
         val distance = location.distanceTo(lastSample.location).toDouble()
         val nextSample = Sample(
             seqno = lastSample.seqno + 1,
             elapsedTime = lastSample.elapsedTime + location.time - lastSample.location.time,
             location = location,
-            avgSpeed = sumSpeed / (lastSample.seqno + 1),
+            avgSpeed = context.sumSpeed / (lastSample.seqno + 1),
             maxSpeed = max(location.speed.toDouble(), lastSample.maxSpeed),
             totalDistance = lastSample.totalDistance + distance,
             distance = distance,
@@ -186,42 +202,41 @@ class DataManager {
                 lastSample.descent,
             verticalDistance = verticalDistance,
         )
-        this.lastSample = nextSample
+        context.lastSample = nextSample
         return nextSample
     }
 
-    private fun firstSample(location: Location): Sample {
+    private fun firstSample(context: Context, location: Location): Sample {
         if ( location.provider == null) {
             return defaultSample
         }
-        this.sumSpeed = 0.0
-        this.sumAltitude = 0.0
-        this.lastSample = defaultSample.copy(location = LocationStub(location))
-        return this.lastSample!!
+        context.sumSpeed = 0.0
+        context.sumAltitude = 0.0
+        context.lastSample = defaultSample.copy(location = LocationStub(location))
+        return context.lastSample!!
     }
 
-    fun onLocation(rawLocation: Location): Sample {
+    fun onLocation(context: Context, rawLocation: Location): Sample {
         val shouldRun = true//! AutoPause.get().isAutoPause(rawLocation)
-        if ( shouldRun && ! isRunning ) {
-            isRunning = true
-            autoPauseListeners.forEach {
-                it.onAutoPause(false)
-            }
-        } else if ( ! shouldRun && isRunning) {
+        if ( shouldRun && context.isAutoPause.value ) {
+            context.isAutoPause.value = false
+        } else if ( ! shouldRun && ! context.isAutoPause.value ) {
             Log.d(TAG, "Entering auto pause.")
-            isRunning = false
-            autoPauseListeners.forEach {
-                it.onAutoPause(true)
-            }
+            context.isAutoPause.value = true
         }
-        if ( isRunning ) {
+        if ( ! context.isAutoPause.value ) {
             val location = LocationStub(rawLocation)
-            app.recordingManager.record(location)
-            val nextSample = if (lastSample == null) firstSample(rawLocation) else update(location)
+            if ( context.isRecording.value ) {
+                app.recordingManager.record(location)
+            }
+            val nextSample = if (context.lastSample == null)
+                firstSample(context, rawLocation)
+            else
+                update(context, location)
             filters.forEach { it.update(nextSample) }
             return nextSample
         } else {
-            return lastSample ?: firstSample(rawLocation)
+            return context.lastSample ?: firstSample(context, rawLocation)
         }
     }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.RecordingManager
 
 @Composable
@@ -46,7 +47,7 @@ private fun Front(
 }
 @Composable
 private fun Back() {
-    val recording = RecordingManager.get().lastRecording()
+    val recording = app.recordingManager.lastRecording()
     if ( recording == null ) {
         Column(
             verticalArrangement = Arrangement.Center,

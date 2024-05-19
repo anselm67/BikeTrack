@@ -1,17 +1,12 @@
 package com.anselm.location.data
 
-import android.location.Location
 import android.util.Log
 import com.anselm.location.TAG
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import java.io.File
 import java.time.format.DateTimeFormatter
-
 
 
 class RecordingManager() {
@@ -81,10 +76,6 @@ class RecordingManager() {
             return instance ?: synchronized(this) {
                 instance ?: RecordingManager(recordingDirectory).also { instance = it }
             }
-        }
-
-        fun get(): RecordingManager {
-            return instance ?: throw IllegalStateException("RecordingManager not initialized")
         }
     }
 }

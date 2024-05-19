@@ -47,8 +47,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.data.AutoPauseListener
 import com.anselm.location.data.AverageFilter
+import com.anselm.location.data.DataManager
 import com.anselm.location.data.GradeFilter
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
@@ -65,28 +65,20 @@ import kotlinx.coroutines.flow.transform
 class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private val isFlowAvailable = mutableStateOf(false)
-    private val isRecording = mutableStateOf(false)
-    private val isAutoPause = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
-
-    private val autoPauseListener = object : AutoPauseListener {
-        override fun onAutoPause(onOff: Boolean) {
-            isAutoPause.value = onOff
-        }
-    }
+    private var dataManagerContext : DataManager.Context? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Configures the data manager
         app.dataManager
-            .addAutoPauseListener(autoPauseListener)
             // Averages the altitude values.
             .addFilter(object: AverageFilter(3) {
                 override fun output(sample: Sample, value: Double) {
                     sample.location.altitude = value
                 }
             }).addFilter(GradeFilter())
-
+        dataManagerContext = app.dataManager.createContext()
         // Requests permissions if needed.
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
@@ -114,8 +106,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        app.dataManager.removeAutoPauseListener(autoPauseListener)
-        app.recordingManager.stop()
+        dataManagerContext?.onDestroy()
         disconnect()
         stopService(Intent(this, LocationTracker::class.java))
     }
@@ -166,7 +157,7 @@ class MainActivity : ComponentActivity() {
             val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
             flow = locationFlow
                 .transform { location ->
-                    emit(app.dataManager.onLocation(location))
+                    emit(app.dataManager.onLocation(dataManagerContext!!, location))
                 }
                 .stateIn(
                     CoroutineScope(Dispatchers.Main),
@@ -183,14 +174,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopRecording() {
-        app.recordingManager.stop()
-        isRecording.value = false
+        dataManagerContext?.stopRecording()
     }
 
     private fun startRecording() {
-        app.dataManager.reset()
-        app.recordingManager.start()
-        isRecording.value = true
+        dataManagerContext?.startRecording()
     }
 
     private fun connect() {
@@ -232,7 +220,7 @@ class MainActivity : ComponentActivity() {
                 climbInMeters = sample.climb,
                 descentInMeters = sample.descent,
             )
-            DebugCard(isAutoPause.value, sample)
+            DebugCard(dataManagerContext?.isAutoPause?.value ?: false, sample)
         }
     }
 
@@ -294,6 +282,7 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     private fun DisplayScreen() {
+        val isRecording = dataManagerContext?.isRecording?.value ?: false
         Column (
             modifier = Modifier
                 .fillMaxWidth()
@@ -312,7 +301,7 @@ class MainActivity : ComponentActivity() {
                 }
                 IconButton(
                     onClick = {
-                        if ( isRecording.value ) stopRecording() else startRecording()
+                        if ( isRecording ) stopRecording() else startRecording()
                     }  ,
                     colors = IconButtonDefaults.iconButtonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -320,7 +309,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Icon(
                         painter = painterResource(
-                            id = if ( isRecording.value )
+                            id = if ( isRecording )
                                 R.drawable.ic_stop_recording
                             else
                                 R.drawable.ic_start_recording
@@ -330,7 +319,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Button (
-                    onClick = { app.dataManager.reset() }
+                    onClick = { dataManagerContext?.reset() }
                 ) {
                     Text("Reset")
                 }
@@ -341,6 +330,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreen() {
+        val isRecording = dataManagerContext?.isRecording?.value ?: false
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -355,7 +345,7 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     actions = {
-                        if ( isRecording.value ) {
+                        if ( isRecording ) {
                             IconButton(
                                 onClick = { stopRecording() }
                             ) {
@@ -364,7 +354,7 @@ class MainActivity : ComponentActivity() {
                                         id = R.drawable.ic_stop_recording
                                     ),
                                     contentDescription = "Recording / paused status.",
-                                    tint = if (isAutoPause.value)
+                                    tint = if (dataManagerContext?.isAutoPause?.value == true)
                                         Color.Red
                                     else
                                         MaterialTheme.colorScheme.primary,
