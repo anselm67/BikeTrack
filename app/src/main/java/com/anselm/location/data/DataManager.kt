@@ -3,6 +3,7 @@ package com.anselm.location.data
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import com.anselm.location.AutoPause
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import kotlinx.serialization.encodeToString
@@ -215,7 +216,7 @@ class DataManager {
     }
 
     fun onLocation(context: Context, location: LocationStub): Sample {
-        val shouldRun = true//! AutoPause.get().isAutoPause(location)
+        val shouldRun = ! AutoPause.get().isAutoPause(location)
         if ( shouldRun && context.isAutoPause.value ) {
             context.isAutoPause.value = false
         } else if ( ! shouldRun && ! context.isAutoPause.value ) {

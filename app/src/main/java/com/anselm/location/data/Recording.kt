@@ -3,12 +3,6 @@ package com.anselm.location.data
 import android.location.Location
 import com.anselm.location.LocationApplication.Companion.app
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.double
-import kotlinx.serialization.json.float
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
 
 class Recording(jsonArray: JsonArray) {
     private var dataPoints: List<Sample> =
