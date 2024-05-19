@@ -191,21 +191,22 @@ fun Graph(
                 moveTo(coordinates.first().x, coordinates.first().y)
                 for (i in 0 until coordinates.size - 1) {
                     cubicTo(
-                        controlPoints1[i].x,controlPoints1[i].y,
-                        controlPoints2[i].x,controlPoints2[i].y,
-                        coordinates[i + 1].x,coordinates[i + 1].y
+                        controlPoints1[i].x, controlPoints1[i].y,
+                        controlPoints2[i].x, controlPoints2[i].y,
+                        coordinates[i + 1].x, coordinates[i + 1].y
                     )
                 }
             }
 
+            val fillPath = android.graphics.Path(stroke.asAndroidPath())
+                .asComposePath()
+                .apply {
+                    lineTo(coordinates.last().x, size.height - bottomMargin)
+                    lineTo(leftMargin, size.height - bottomMargin)
+                    close()
+                }
+
             if (graphAppearance.isColorAreaUnderChart){
-                val fillPath = android.graphics.Path(stroke.asAndroidPath())
-                    .asComposePath()
-                    .apply {
-                        lineTo(leftMargin * xValues.last(), size.height - bottomMargin)
-                        lineTo(leftMargin, size.height - bottomMargin)
-                        close()
-                    }
                 drawPath(
                     fillPath,
                     brush = Brush.verticalGradient(

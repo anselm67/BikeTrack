@@ -1,5 +1,5 @@
 package com.anselm.location
-
+// REDACTED
 import android.Manifest
 import android.content.ComponentName
 import android.content.Context
