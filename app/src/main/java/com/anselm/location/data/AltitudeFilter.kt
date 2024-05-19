@@ -1,5 +1,8 @@
 package com.anselm.location.data
 
+import android.util.Log
+import com.anselm.location.TAG
+
 // Altitude filter:
 // - altitude
 // - avgAltitude
@@ -19,12 +22,16 @@ class AltitudeFilter: AverageFilter(3) {
         sumAltitude += sample.altitude
         sample.avgAltitude = sumAltitude / sample.seqno
         if ( lastSample != null ) {
-            val verticalDistance = sample.altitude - lastSample!!.altitude
+            val lastSample = lastSample!!
+            val verticalDistance = sample.altitude - lastSample.altitude
             if ( verticalDistance > 0.0) {
-                sample.climb += verticalDistance
+                sample.climb = lastSample.climb + verticalDistance
+                sample.descent = lastSample.descent
             } else {
-                sample.descent -= verticalDistance
+                sample.climb = lastSample.climb
+                sample.descent = lastSample.descent - verticalDistance
             }
+            Log.d(TAG, "vd $verticalDistance climb ${sample.climb} descent: ${sample.descent}")
         }
         lastSample = sample
     }
