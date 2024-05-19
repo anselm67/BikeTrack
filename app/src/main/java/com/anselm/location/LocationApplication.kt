@@ -16,6 +16,7 @@ class LocationApplication: Application() {
         app = this
     }
 
+
     companion object {
         @SuppressLint("StaticFieldLeak")
         lateinit var app: LocationApplication

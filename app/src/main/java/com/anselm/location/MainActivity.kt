@@ -156,8 +156,11 @@ class MainActivity : ComponentActivity() {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
             flow = locationFlow
-                .transform { location ->
-                    emit(app.dataManager.onLocation(dataManagerContext!!, location))
+                .transform { rawLocation ->
+                    // The init value has a fake LocationStub that shouldn't be emitted.
+                    if ( rawLocation.provider != null) {
+                        emit(dataManagerContext!!.onLocation(LocationStub(rawLocation)))
+                    }
                 }
                 .stateIn(
                     CoroutineScope(Dispatchers.Main),
@@ -358,6 +361,18 @@ class MainActivity : ComponentActivity() {
                                         Color.Red
                                     else
                                         MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { startRecording() }
+                            ) {
+                                Icon(
+                                    painterResource(
+                                        id = R.drawable.ic_start_recording
+                                    ),
+                                    contentDescription = "Recording / paused status.",
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                             }
                         }

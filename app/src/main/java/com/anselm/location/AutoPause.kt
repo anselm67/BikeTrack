@@ -1,10 +1,10 @@
 package com.anselm.location
 
-import android.location.Location
+import com.anselm.location.data.LocationStub
 
 class AutoPause {
-    private var lastLocation: Location? = null
-    fun isAutoPause(location: Location): Boolean {
+    private var lastLocation: LocationStub? = null
+    fun isAutoPause(location: LocationStub): Boolean {
         var paused = false
         if ( lastLocation != null) {
             paused = (

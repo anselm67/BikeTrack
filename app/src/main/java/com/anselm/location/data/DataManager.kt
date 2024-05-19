@@ -16,6 +16,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
+import java.io.Closeable
 import kotlin.math.max
 
 data class LocationStub(
@@ -125,12 +126,8 @@ interface DataFilter {
 
 }
 
-interface AutoPauseListener {
-
-    fun onAutoPause(onOff: Boolean)
-}
 class DataManager {
-    inner class Context {
+    inner class Context: Closeable {
         val isRecording = mutableStateOf(false)
         val isAutoPause = mutableStateOf(false)
 
@@ -141,7 +138,7 @@ class DataManager {
         fun onDestroy() {
             stopRecording()
         }
-        fun onLocation(location: Location): Sample {
+        fun onLocation(location: LocationStub): Sample {
             return this@DataManager.onLocation(this@Context, location)
         }
 
@@ -160,6 +157,10 @@ class DataManager {
         fun stopRecording() {
             isRecording.value = false
             app.recordingManager.stop()
+        }
+
+        override fun close() {
+            onDestroy()
         }
     }
 
@@ -206,18 +207,15 @@ class DataManager {
         return nextSample
     }
 
-    private fun firstSample(context: Context, location: Location): Sample {
-        if ( location.provider == null) {
-            return defaultSample
-        }
+    private fun firstSample(context: Context, location: LocationStub): Sample {
         context.sumSpeed = 0.0
         context.sumAltitude = 0.0
-        context.lastSample = defaultSample.copy(location = LocationStub(location))
+        context.lastSample = defaultSample.copy(location = location)
         return context.lastSample!!
     }
 
-    fun onLocation(context: Context, rawLocation: Location): Sample {
-        val shouldRun = true//! AutoPause.get().isAutoPause(rawLocation)
+    fun onLocation(context: Context, location: LocationStub): Sample {
+        val shouldRun = true//! AutoPause.get().isAutoPause(location)
         if ( shouldRun && context.isAutoPause.value ) {
             context.isAutoPause.value = false
         } else if ( ! shouldRun && ! context.isAutoPause.value ) {
@@ -225,19 +223,22 @@ class DataManager {
             context.isAutoPause.value = true
         }
         if ( ! context.isAutoPause.value ) {
-            val location = LocationStub(rawLocation)
             if ( context.isRecording.value ) {
                 app.recordingManager.record(location)
             }
             val nextSample = if (context.lastSample == null)
-                firstSample(context, rawLocation)
+                firstSample(context, location)
             else
                 update(context, location)
             filters.forEach { it.update(nextSample) }
             return nextSample
         } else {
-            return context.lastSample ?: firstSample(context, rawLocation)
+            return context.lastSample ?: firstSample(context, location)
         }
     }
-
+    fun process(input: List<LocationStub>): List<Sample> {
+        createContext().use { context ->
+            return input.map { onLocation(context, it) }
+        }
+    }
 }
