@@ -10,14 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.anselm.location.data.Sample
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Composable
-fun TimeElapsedCard(
-    timeMillis: Long,
-    distanceInKilometers: Double
-) {
+fun TimeElapsedCard(sample: Sample) {
+    val timeMillis = sample.elapsedTime
+    val distanceInKilometers = sample.totalDistance / 1000.0
+
     BasicCard(
         modifier = Modifier.padding(0.dp, 4.dp)
     ) {

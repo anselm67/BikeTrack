@@ -193,7 +193,6 @@ class MainActivity : ComponentActivity() {
             LoadingDisplay()
             return
         }
-        val location = sample.location
         // We're on pause? Skip everything.
         Column (
             modifier = Modifier
@@ -201,10 +200,7 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight(),
             verticalArrangement = Arrangement.Top,
         ) {
-            TimeElapsedCard(
-                timeMillis = sample.elapsedTime,
-                distanceInKilometers = sample.totalDistance / 1000.0
-            )
+            TimeElapsedCard(sample)
             SpeedCard(sample)
             AltitudeCard(sample)
             DebugCard(dataManagerContext?.isAutoPause?.value ?: false, sample)
