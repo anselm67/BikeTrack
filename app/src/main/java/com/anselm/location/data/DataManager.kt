@@ -18,7 +18,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 import java.io.Closeable
-import kotlin.math.max
 
 data class LocationStub(
     val time: Long,

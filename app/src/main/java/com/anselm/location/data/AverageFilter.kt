@@ -1,6 +1,5 @@
 package com.anselm.location.data
 
-import android.util.Log
 
 abstract class AverageFilter(
     size: Int

@@ -1,9 +1,7 @@
 package com.anselm.location.data
 
 import android.location.Location
-import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.TAG
 import kotlinx.serialization.json.JsonArray
 
 class Recording(jsonArray: JsonArray) {
@@ -35,5 +33,5 @@ class Recording(jsonArray: JsonArray) {
         var distance = 0.0
         return chunks.map { distance += it; distance.toFloat() }
     }
-    fun extractSpeed(): List<Float> = dataPoints.map { 3.6f * it.location.speed.toFloat()}
+    fun extractSpeed(): List<Float> = dataPoints.map { 3.6f * it.location.speed }
 }

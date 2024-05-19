@@ -1,8 +1,5 @@
 package com.anselm.location.data
 
-import android.util.Log
-import com.anselm.location.TAG
-
 // Altitude filter:
 // - altitude
 // - avgAltitude
