@@ -3,6 +3,7 @@ package com.anselm.location.data
 import android.location.Location
 import android.util.Log
 import com.anselm.location.AutoPause
+import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -111,9 +112,7 @@ interface AutoPauseListener {
 
     fun onAutoPause(onOff: Boolean)
 }
-class DataManager(
-    private val recordingManager: RecordingManager,
-) {
+class DataManager {
     private var lastSample: Sample? = null
     private var isRunning = true
     private var sumSpeed = 0.0
@@ -199,7 +198,7 @@ class DataManager(
             }
         }
         if ( isRunning ) {
-            recordingManager.record(location)
+            app.recordingManager.record(location)
             val nextSample = if (lastSample == null) firstSample(location) else update(location)
             filters.forEach { it.update(nextSample) }
             return nextSample

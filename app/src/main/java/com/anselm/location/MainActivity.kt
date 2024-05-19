@@ -46,12 +46,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.AutoPauseListener
 import com.anselm.location.data.AverageFilter
-import com.anselm.location.data.DataManager
 import com.anselm.location.data.GradeFilter
 import com.anselm.location.data.LocationStub
-import com.anselm.location.data.RecordingManager
 import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
 import com.anselm.location.ui.theme.LocationTheme
@@ -65,12 +64,6 @@ import kotlinx.coroutines.flow.transform
 
 class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
-    private val recordingManager by lazy {
-        RecordingManager.getInstance(applicationContext!!.filesDir)
-    }
-    private val dataManager by lazy {
-        DataManager(recordingManager)
-    }
     private val isFlowAvailable = mutableStateOf(false)
     private val isRecording = mutableStateOf(false)
     private val isAutoPause = mutableStateOf(false)
@@ -85,7 +78,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Configures the data manager
-        dataManager
+        app.dataManager
             .addAutoPauseListener(autoPauseListener)
             // Averages the altitude values.
             .addFilter(object: AverageFilter(3) {
@@ -121,8 +114,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        dataManager.removeAutoPauseListener(autoPauseListener)
-        recordingManager.stop()
+        app.dataManager.removeAutoPauseListener(autoPauseListener)
+        app.recordingManager.stop()
         disconnect()
         stopService(Intent(this, LocationTracker::class.java))
     }
@@ -173,7 +166,7 @@ class MainActivity : ComponentActivity() {
             val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
             flow = locationFlow
                 .transform { location ->
-                    emit(dataManager.onLocation(location))
+                    emit(app.dataManager.onLocation(location))
                 }
                 .stateIn(
                     CoroutineScope(Dispatchers.Main),
@@ -190,13 +183,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopRecording() {
-        recordingManager.stop()
+        app.recordingManager.stop()
         isRecording.value = false
     }
 
     private fun startRecording() {
-        dataManager.reset()
-        recordingManager.start()
+        app.dataManager.reset()
+        app.recordingManager.start()
         isRecording.value = true
     }
 
@@ -337,7 +330,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Button (
-                    onClick = { dataManager.reset() }
+                    onClick = { app.dataManager.reset() }
                 ) {
                     Text("Reset")
                 }
