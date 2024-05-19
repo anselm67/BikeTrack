@@ -1,7 +1,9 @@
 package com.anselm.location.data
 
 import android.location.Location
+import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.TAG
 import kotlinx.serialization.json.JsonArray
 
 class Recording(jsonArray: JsonArray) {
@@ -15,7 +17,9 @@ class Recording(jsonArray: JsonArray) {
         return dataPoints.map {  it.elapsedTime / (1000f * 60) }
     }
 
-    fun extractAltitude(): List<Float> = dataPoints.map { it.location.altitude.toFloat() }
+    fun extractAltitude(): List<Float> = dataPoints.map {
+        it.altitude.toFloat()
+    }
 
     fun extractDistances(): List<Float> {
         val latitudes = dataPoints.map { it.location.latitude }

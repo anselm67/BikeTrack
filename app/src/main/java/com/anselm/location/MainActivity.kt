@@ -47,11 +47,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.data.AltitudeFilter
 import com.anselm.location.data.AverageFilter
 import com.anselm.location.data.DataManager
 import com.anselm.location.data.GradeFilter
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
+import com.anselm.location.data.SpeedFilter
 import com.anselm.location.data.defaultSample
 import com.anselm.location.ui.theme.LocationTheme
 import kotlinx.coroutines.CoroutineScope
@@ -71,13 +73,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Configures the data manager
-        app.dataManager
-            // Averages the altitude values.
-            .addFilter(object: AverageFilter(3) {
-                override fun output(sample: Sample, value: Double) {
-                    sample.location.altitude = value
-                }
-            }).addFilter(GradeFilter())
+
         dataManagerContext = app.dataManager.createContext()
         // Requests permissions if needed.
         locationPermissionLauncher = registerForActivityResult(

@@ -24,7 +24,8 @@ fun DebugCard(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(if ( autoPaused ) "Paused" else "Running")
-            Text("Altitude: %.2f".format(location.altitude))
+            Text("Raw altitude: %.2f".format(sample.location.altitude))
+            Text("Average altitude: %.2f".format(sample.altitude))
             Text(
                 "Coordinates: %.2f / %.2f".format(location.latitude, location.longitude)
             )

@@ -11,6 +11,3 @@ val Any.TAG: String
         }
     }
 
-fun Double.ifNaN(defaultValue: Double): Double {
-    return if ( this.isNaN() ) defaultValue else this
-}

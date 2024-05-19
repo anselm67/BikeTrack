@@ -62,6 +62,13 @@ def extract_grade(data, min_distance=5):
     #grade = [min(25.0, max(g, -25.0)) for g in grade]
     return t[1:], grade
 
+def print_values(title, xValues, yValues = None, num_values = 10):
+    print(title)
+    for i in range(0, num_values): 
+        if ( yValues == None):
+            print(f"{xValues[i]}")
+        else:
+            print(f"{xValues[i]} {yValues[i]}")
 
 def distance(data):
     (t, _) = extract(data, "speed")
@@ -75,25 +82,33 @@ def distance(data):
 def altitude_by_distance(data):
     (_, y) = extract(data, "altitude")
     d = extract_distance(data)
-
+    print_values("Distance", d)
     fig, ax = plt.subplots()
     ax.plot(d, y[1:], linewidth=2.0, marker=".", label="Real time")
     (xValues, yValues) = average3(d, y[1:])
-    ax.plot(xValues, yValues, linewidth=2.0, marker="o", label="average3")
-    (xValues, yValues) = derivative3(d, y[1:])
-    ax.plot(xValues, yValues, linewidth=2.0, marker="o", label="derivative3")
+    print_values("Average3", xValues, yValues)
+    ax.plot(xValues, yValues, linewidth=2.0, marker="x", label="average3")
     ax.legend()
     plt.xlabel('Dist (m)')
     plt.ylabel('Altitude (m)')
     plt.show()
+
+def grade_by_distance(data):
+    (_, grade) = extract_grade(data)
+    d = extract_distance(data)
+    fig, ax = plt.subplots()
+    ax.plot(d, grade, linewidth=2.0, marker=".", label="Real time")
+    ax.legend()
+    plt.xlabel('Dist (m)')
+    plt.ylabel('Altitude (m)')
+    plt.show()
+
 
 def altitude_by_time(ax, data):
     (t, y) = extract(data, "altitude")
     ax.plot(t, y, linewidth=2.0, marker=".", label="Real time")
     (xValues, yValues) = average3(t, y)
     ax.plot(xValues, yValues, linewidth=2.0, marker="o", label="average3")
-    (xValues, yValues) = derivative3(t, y)
-    ax.plot(xValues, yValues, linewidth=2.0, marker="o", label="derivative3")
     ax.legend()
 
 def integrate(steps, values):
@@ -142,12 +157,6 @@ def average2(xValues, yValues):
 def average3(xValues, yValues): 
     return xValues[2:], [(x + y + z) / 3.0 for (x, y, z) in zip(yValues[2:], yValues[1:-1], yValues[:-2])]
 
-def derivative2(xValues, yValues):
-    return xValues[1:], [(2.0 * x - y) for (x, y, z) in zip(yValues[1:], yValues[:-1])]
-
-def derivative3(xValues, yValues):
-    return xValues[2:], [(2.5 * x - y - 0.5 * z) for (x, y, z) in zip(yValues[2:], yValues[1:-1], yValues[:-2])]
-
 def altitude(data):
     fig, (ax1, ax2) = plt.subplots(2)
     grade_by_time(ax1, data)
@@ -156,9 +165,14 @@ def altitude(data):
 
 #data = load("recording-2024-05-14-10-14-37.json")
 #data = load("recording-2024-05-15-18-54-46.json")
-data = load("2024-05-18-descente.json")
+#data = load("2024-05-18-descente.json")
+
+data = load('2024-05-19-montee.json')
 
 #altitude_by_time(data)
 #altitude_by_distance(data)
-altitude(data)
+grade_by_distance(data)
+#distance(data)
+#altitude(data)
 #altitude_vs_grade(data)
+

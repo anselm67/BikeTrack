@@ -74,7 +74,9 @@ class LocationTracker: Service() {
         locationFlow = callbackFlow {
             val locationCallback = object : LocationCallback() {
                 override fun onLocationResult(locationResult: LocationResult) {
-                    Log.d(TAG, "Location ${locationResult.lastLocation}")
+                    Log.d(TAG, "${locationResult.lastLocation?.time} " +
+                            "${locationResult.locations.size} " +
+                            "Location ${locationResult.lastLocation}")
                     locationResult.lastLocation?.let { location ->
                         trySendBlocking(location)
                             .onFailure { e -> Log.e(TAG, "Failed to send location", e) }

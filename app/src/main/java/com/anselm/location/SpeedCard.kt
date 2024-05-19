@@ -37,7 +37,8 @@ private fun Front(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Average: %.1f".format(averageSpeedInKilometersPerHour),
+            text = if ( averageSpeedInKilometersPerHour.isNaN() )
+                    "--" else "Average: %.1f".format(averageSpeedInKilometersPerHour),
             style = MaterialTheme.typography.titleLarge,
         )
         Text(
