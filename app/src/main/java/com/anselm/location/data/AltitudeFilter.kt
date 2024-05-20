@@ -31,7 +31,7 @@ class AltitudeFilter: AverageFilter(3) {
                 sample.climb = lastSample.climb
                 sample.descent = lastSample.descent - verticalDistance
             }
-            Log.d(TAG, "vd $verticalDistance climb ${sample.climb} descent: ${sample.descent}")
+            sample.verticalDistance = verticalDistance
         }
         lastSample = sample
     }
