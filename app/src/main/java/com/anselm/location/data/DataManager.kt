@@ -150,9 +150,6 @@ class DataManager {
         fun onDestroy() {
             stopRecording()
         }
-        fun onLocation(location: LocationStub): Sample {
-            return this@DataManager.onLocation(this@Context, location)
-        }
 
         fun reset() {
             lastSample = null

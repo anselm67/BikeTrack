@@ -42,14 +42,14 @@ private fun Front(sample: Sample) {
             text = averageSpeedInKilometersPerHour.formatIf(
                 "Average: --",
                 "Average: %.1f"
-            ) { it.isNaN() || it <= MIN_SPEED },
+            ) { it.isFinite() || it <= MIN_SPEED },
             style = MaterialTheme.typography.titleLarge,
         )
         Text(
             text = maxSpeedInKilometersPerHour.formatIf(
                 "Maximum: --",
                 "Maximum: %.1f"
-            ) { it.isNaN() || it < MIN_SPEED },
+            ) { it.isFinite() || it < MIN_SPEED },
             style = MaterialTheme.typography.titleLarge,
         )
     }

@@ -27,7 +27,7 @@ private fun Front(sample: Sample) {
             style = MaterialTheme.typography.displayLarge,
         )
         Text(
-            text = if ( sample.grade.isNaN() ) "--" else "%.1f%%".format(sample.grade),
+            text = if ( sample.grade.isFinite() ) "--" else "%.1f%%".format(sample.grade),
             style = MaterialTheme.typography.displayLarge,
         )
     }
