@@ -16,8 +16,6 @@ private const val TAG = "com.anselm.location.components.HomeScreen"
 fun HomeScreen(
     navController: NavHostController,
 ) {
-    val scope = rememberCoroutineScope()
-
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
