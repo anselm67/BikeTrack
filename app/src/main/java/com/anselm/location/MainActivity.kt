@@ -45,6 +45,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.DebugCard
@@ -145,10 +146,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    var isTrackerBound = mutableStateOf(false)
+
     inner class TrackerConnection : ServiceConnection {
         var binder: LocationTracker.TrackerBinder? = null
         var flow: StateFlow<Sample>? = null
-        var isFlowAvailable = mutableStateOf(false)
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             binder = (service as LocationTracker.TrackerBinder)
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
                     SharingStarted.Eagerly,
                     defaultSample.copy(location = LocationStub())
                 )
-            isFlowAvailable.value = true
+            isTrackerBound.value = true
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -169,7 +171,7 @@ class MainActivity : ComponentActivity() {
             binder?.close()
             binder = null
             flow = null
-            isFlowAvailable.value = false
+            isTrackerBound.value = false
             this@MainActivity.unbindService(this)
         }
     }
@@ -299,7 +301,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun TopBarActions() {
-        if ( liveContext?.isRecording?.value == true ) {
+        val isRecording = liveContext?.isRecording?.value
+
+        if ( ! isTrackerBound.value ) {
+            // We don't display any action buttons.
+            return
+        }
+        if ( isRecording == true ) {
             IconButton(
                 onClick = { stopRecording() }
             ) {
@@ -329,10 +337,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    private fun BottomBar(navController: NavController) {
+        BottomAppBar (
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.primary,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+            ) {
+                IconButton(
+                    onClick = {
+                        Log.d(TAG, "Navigate to HOME")
+                        navController.navigate(NavigationItem.Home.route)
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        contentDescription = "Navigate to the home screen.",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        Log.d(TAG, "Navigate to RECORDINGS")
+                        navController.navigate(NavigationItem.Recordings.route)
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        contentDescription = "Navigate to the home screen.",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                IconButton(
+                    onClick = { }
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        contentDescription = "Navigate to the home screen.",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
+    }
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreen() {
         val navController =  rememberNavController()
+
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -351,51 +406,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             },
-            bottomBar = {
-                BottomAppBar (
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                    ) {
-                        IconButton(
-                            onClick = {
-                                Log.d(TAG, "Navigate to HOME")
-                                navController.navigate(NavigationItem.Home.route)
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_start_recording),
-                                contentDescription = "Navigate to the home screen.",
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                Log.d(TAG, "Navigate to RECORDINGS")
-                                navController.navigate(NavigationItem.Recordings.route)
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_start_recording),
-                                contentDescription = "Navigate to the home screen.",
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                        IconButton(
-                            onClick = { }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_start_recording),
-                                contentDescription = "Navigate to the home screen.",
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                }
-            }
+//            bottomBar = { BottomBar(navController = navController) }
         ) { innerPadding ->
 //            NavHost(
 //                navController = navController,
@@ -409,7 +420,7 @@ class MainActivity : ComponentActivity() {
 //                }
 //            }
             Column(modifier = Modifier.padding(innerPadding)) {
-                if (isGranted.value && trackerConnection?.isFlowAvailable!!.value) {
+                if (isGranted.value && isTrackerBound.value) {
                     DisplayScreen()
                 } else if (isGranted.value) {
                     LoadingDisplay()
