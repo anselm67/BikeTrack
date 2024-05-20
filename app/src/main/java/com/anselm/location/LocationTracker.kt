@@ -26,7 +26,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -36,7 +35,7 @@ private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
-    private val liveContext = app.dataManager.createContext(false /* TODO */)
+    private val liveContext = app.dataManager.createContext(true)
 
     override fun onDestroy() {
         super.onDestroy()

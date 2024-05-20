@@ -52,7 +52,6 @@ import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
 import com.anselm.location.ui.theme.LocationTheme
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
