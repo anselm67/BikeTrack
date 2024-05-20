@@ -63,63 +63,93 @@ class LocationTracker: Service() {
             buildNotification(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         )
+        // As soon as we're started, we start collecting locations.
+        fusedLocationClient?.requestLocationUpdates(
+            LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                5000
+            ).build(),
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
     private fun stopLocationTracker() {
         Log.d(TAG, "stopLocationTracker")
+        // Stops receiving location updates.
+        fusedLocationClient?.removeLocationUpdates(locationCallback)
         fusedLocationClient = null
-        locationFlow = null
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
+    interface SampleCallback {
+        fun emit(sample: Sample)
+
+        fun close()
+    }
+    private val flows = mutableListOf<SampleCallback>()
+
+    private val locationCallback = object : LocationCallback() {
+
+        override fun onLocationResult(locationResult: LocationResult) {
+            Log.d(TAG, "Tracker => ${locationResult.lastLocation}")
+            locationResult.lastLocation?.let { rawLocation ->
+                // Skip fake locations
+                if (rawLocation.provider == null) {
+                    return
+                }
+                val sample = app.dataManager.onLocation(
+                    liveContext,
+                    LocationStub(rawLocation),
+                )
+                flows.forEach { it.emit(sample) }
+            }
+        }
+
+        override fun onLocationAvailability(locationAvailability: LocationAvailability) {
+            Log.d(TAG, "Location availability $locationAvailability")
+        }
+    }
+
+    fun setupLocationFlow(): Pair<Flow<Sample>, SampleCallback?> {
+        var flowCallback: SampleCallback? = null
+        val callbackFlow = callbackFlow {
+
+            val callback = object : SampleCallback {
+                override fun emit(sample: Sample) {
+                    trySendBlocking(sample)
+                }
+                override fun close() {
+                    close()
+                }
+            }
+
+            flowCallback = callback
+            flows.add(callback)
+
+            awaitClose {
+                flows.remove(callback)
+            }
+        }
+        return Pair(callbackFlow, flowCallback)
+    }
+
     inner class TrackerBinder : Binder() {
+        private val pair = setupLocationFlow()
 
         val flow: Flow<Sample>
-            get() = this@LocationTracker.locationFlow!!
+            get() = pair.first
 
         val liveContext: DataManager.Context
             get() = this@LocationTracker.liveContext
+
+        fun close() {
+            pair.second?.close()
+        }
     }
 
-    private var locationFlow: Flow<Sample>? = null
-
-    @SuppressLint("MissingPermission")
-    private fun setupLocationFlow() {
-        locationFlow = callbackFlow {
-            val locationCallback = object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult) {
-                    Log.d(TAG, "Tracker => ${locationResult.lastLocation}")
-                    locationResult.lastLocation?.let { rawLocation ->
-                        // Skip fake locations
-                        if ( rawLocation.provider == null ) {
-                            return
-                        }
-                        val sample = app.dataManager.onLocation(
-                            liveContext,
-                            LocationStub(rawLocation),
-                        )
-                        trySendBlocking(sample)
-                            .onFailure { e -> Log.e(TAG, "Failed to send location", e) }
-                    }
-                }
-                override fun onLocationAvailability(locationAvailability: LocationAvailability) {
-                    Log.d(TAG, "Location availability $locationAvailability")
-                }
-            }
-
-            fusedLocationClient?.requestLocationUpdates(
-                LocationRequest.Builder(
-                    Priority.PRIORITY_HIGH_ACCURACY,
-                    5000
-                ).build(),
-                locationCallback,
-                Looper.getMainLooper()
-            )
-
-            awaitClose {
-                Log.d(TAG, "awaitClose - location flow.")
-                fusedLocationClient?.removeLocationUpdates(locationCallback)
-            }
-        }
+    override fun onBind(intent: Intent?): IBinder {
+        Log.d(TAG, "onBind")
+        return TrackerBinder()
     }
 
     private fun buildExitAction(): NotificationCompat.Action {
@@ -147,13 +177,6 @@ class LocationTracker: Service() {
                 PendingIntent.FLAG_IMMUTABLE))
             .addAction(buildExitAction())
             .build()
-    }
-
-    override fun onBind(intent: Intent?): IBinder {
-        if ( locationFlow == null ) {
-            setupLocationFlow()
-        }
-        return TrackerBinder()
     }
 
     private fun createNotificationChannel() {

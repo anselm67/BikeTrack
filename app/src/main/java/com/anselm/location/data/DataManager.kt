@@ -147,10 +147,6 @@ class DataManager {
 
         var lastSample: Sample? = null
 
-        fun onDestroy() {
-            stopRecording()
-        }
-
         fun reset() {
             lastSample = null
             filters.forEach { it.reset() }
@@ -167,9 +163,7 @@ class DataManager {
             app.recordingManager.stop()
         }
 
-        override fun close() {
-            onDestroy()
-        }
+        override fun close() { }
     }
 
     fun createContext(canAutoPause: Boolean = true): Context {

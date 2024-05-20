@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
@@ -144,7 +145,7 @@ class MainActivity : ComponentActivity() {
             binder = (service as LocationTracker.TrackerBinder)
             flow = binder!!.flow
                 .stateIn(
-                    CoroutineScope(Dispatchers.Main),
+                    CoroutineScope(this@MainActivity.lifecycleScope.coroutineContext),
                     SharingStarted.Eagerly,
                     defaultSample.copy(location = LocationStub())
                 )
@@ -152,17 +153,8 @@ class MainActivity : ComponentActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            isFlowAvailable.value = false
-            flow = null
+            disconnect()
         }
-    }
-
-    private fun stopRecording() {
-        binder?.liveContext?.stopRecording()
-    }
-
-    private fun startRecording() {
-        binder?.liveContext?.startRecording()
     }
 
     private fun connect() {
@@ -172,8 +164,19 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun disconnect() {
+        binder?.close()
         unbindService(serviceConnection)
         flow = null
+        binder = null
+        isFlowAvailable.value = false
+    }
+
+    private fun stopRecording() {
+        binder?.liveContext?.stopRecording()
+    }
+
+    private fun startRecording() {
+        binder?.liveContext?.startRecording()
     }
 
     @Composable
