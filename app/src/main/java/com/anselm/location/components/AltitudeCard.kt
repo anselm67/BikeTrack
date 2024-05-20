@@ -1,4 +1,4 @@
-package com.anselm.location
+package com.anselm.location.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,8 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.anselm.location.Graph
+import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Sample
+import com.anselm.location.formatIf
 
 @Composable
 private fun Front(sample: Sample) {

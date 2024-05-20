@@ -1,4 +1,4 @@
-package com.anselm.location
+package com.anselm.location.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.anselm.location.R
 
 @Composable
 fun BasicCard(

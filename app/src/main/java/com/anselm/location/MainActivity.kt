@@ -47,6 +47,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
+import com.anselm.location.components.AltitudeCard
+import com.anselm.location.components.DebugCard
+import com.anselm.location.components.SpeedCard
+import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
@@ -290,7 +294,10 @@ class MainActivity : ComponentActivity() {
                                 R.drawable.ic_start_recording
                         ),
                         contentDescription = "Toggle recording.",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (binder?.liveContext?.isAutoPause?.value == true)
+                            Color.Red
+                        else
+                            MaterialTheme.colorScheme.primary,
                     )
                 }
                 Button (

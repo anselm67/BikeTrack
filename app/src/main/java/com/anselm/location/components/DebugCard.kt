@@ -1,4 +1,4 @@
-package com.anselm.location
+package com.anselm.location.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
