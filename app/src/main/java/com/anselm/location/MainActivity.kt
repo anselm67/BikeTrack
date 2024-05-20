@@ -19,16 +19,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,10 +45,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.DebugCard
+import com.anselm.location.components.HomeScreen
+import com.anselm.location.components.LoadingDisplay
+import com.anselm.location.components.RecordingsScreen
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
+import com.anselm.location.data.DataManager
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
@@ -63,8 +68,13 @@ import kotlinx.coroutines.flow.stateIn
 
 class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
-    private val isFlowAvailable = mutableStateOf(false)
+    private var trackerConnection: TrackerConnection? = null
     private val isGranted = mutableStateOf(false)
+
+    private val liveContext: DataManager.Context?
+        get() = trackerConnection?.binder?.liveContext
+    private val binder: LocationTracker.TrackerBinder?
+        get() = trackerConnection?.binder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,12 +84,12 @@ class MainActivity : ComponentActivity() {
                 isGranted.value = it.all { it.value }
                 Log.d(TAG, "isGranted ${isGranted.value}")
                 if ( isGranted.value ) {
-                    connect()
+                    trackerConnection = connect()
                 }
         }
         isGranted.value = requestPermissions()
         if ( isGranted.value ) {
-            connect()
+            trackerConnection = connect()
         }
         // Sets up the UI.
         enableEdgeToEdge()
@@ -93,7 +103,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        disconnect()
+        trackerConnection?.disconnect()
+        trackerConnection = null
     }
 
     // Quits the application, killing the tracking service.
@@ -140,10 +151,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private var binder: LocationTracker.TrackerBinder? = null
-    private var flow: StateFlow<Sample>? = null
+    inner class TrackerConnection : ServiceConnection {
+        var binder: LocationTracker.TrackerBinder? = null
+        var flow: StateFlow<Sample>? = null
+        var isFlowAvailable = mutableStateOf(false)
 
-    private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             binder = (service as LocationTracker.TrackerBinder)
             flow = binder!!.flow
@@ -158,33 +170,35 @@ class MainActivity : ComponentActivity() {
         override fun onServiceDisconnected(name: ComponentName?) {
             disconnect()
         }
+
+        fun disconnect() {
+            binder?.close()
+            binder = null
+            flow = null
+            isFlowAvailable.value = false
+            this@MainActivity.unbindService(this)
+        }
     }
 
-    private fun connect() {
+    private fun connect(): TrackerConnection {
+        val connection = TrackerConnection()
         val intent = Intent(this@MainActivity, LocationTracker::class.java)
         startService(intent)
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-    }
-
-    private fun disconnect() {
-        binder?.close()
-        unbindService(serviceConnection)
-        flow = null
-        binder = null
-        isFlowAvailable.value = false
+        bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        return connection
     }
 
     private fun stopRecording() {
-        binder?.liveContext?.stopRecording()
+        liveContext?.stopRecording()
     }
 
     private fun startRecording() {
-        binder?.liveContext?.startRecording()
+        liveContext?.startRecording()
     }
 
     @Composable
     fun LocationDisplay() {
-        val sample = flow?.collectAsState()?.value
+        val sample = trackerConnection?.flow?.collectAsState()?.value
         if ( sample == null ) {
             LoadingDisplay()
             return
@@ -199,7 +213,7 @@ class MainActivity : ComponentActivity() {
             TimeElapsedCard(sample)
             SpeedCard(sample)
             AltitudeCard(sample)
-            DebugCard(binder?.liveContext?.isAutoPause?.value ?: false, sample)
+            DebugCard(liveContext?.isAutoPause?.value ?: false, sample)
         }
     }
 
@@ -237,31 +251,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Composable
-    private fun LoadingDisplay() {
-        Column (
-            modifier = Modifier
-                .padding(8.dp, 8.dp)
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 200.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.width(96.dp),
-                color = MaterialTheme.colorScheme.secondary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                strokeWidth = 7.dp
-            )
-            Text(
-                text = "Loading...",
-                style = MaterialTheme.typography.titleSmall,
-            )
-        }
-    }
+
+
     @Composable
     private fun DisplayScreen() {
-        val isRecording = binder?.liveContext?.isRecording?.value ?: false
+        val isRecording = liveContext?.isRecording?.value ?: false
         Column (
             modifier = Modifier
                 .fillMaxWidth()
@@ -294,14 +288,14 @@ class MainActivity : ComponentActivity() {
                                 R.drawable.ic_start_recording
                         ),
                         contentDescription = "Toggle recording.",
-                        tint = if (binder?.liveContext?.isAutoPause?.value == true)
+                        tint = if ( liveContext?.isAutoPause?.value == true )
                             Color.Red
                         else
                             MaterialTheme.colorScheme.primary,
                     )
                 }
                 Button (
-                    onClick = { binder?.liveContext?.reset() }
+                    onClick = { liveContext?.reset() }
                 ) {
                     Text("Reset")
                 }
@@ -309,10 +303,42 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    private fun TopBarActions() {
+        if ( liveContext?.isRecording?.value == true ) {
+            IconButton(
+                onClick = { stopRecording() }
+            ) {
+                Icon(
+                    painterResource(
+                        id = R.drawable.ic_stop_recording
+                    ),
+                    contentDescription = "Recording / paused status.",
+                    tint = if ( liveContext?.isAutoPause?.value == true )
+                        Color.Red
+                    else
+                        MaterialTheme.colorScheme.primary,
+                )
+            }
+        } else {
+            IconButton(
+                onClick = { startRecording() }
+            ) {
+                Icon(
+                    painterResource(
+                        id = R.drawable.ic_start_recording
+                    ),
+                    contentDescription = "Recording / paused status.",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreen() {
-        val isRecording = binder?.liveContext?.isRecording?.value ?: false
+        val navController =  rememberNavController()
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -327,40 +353,69 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     actions = {
-                        if ( isRecording ) {
-                            IconButton(
-                                onClick = { stopRecording() }
-                            ) {
-                                Icon(
-                                    painterResource(
-                                        id = R.drawable.ic_stop_recording
-                                    ),
-                                    contentDescription = "Recording / paused status.",
-                                    tint = if (binder?.liveContext?.isAutoPause?.value == true)
-                                        Color.Red
-                                    else
-                                        MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        } else {
-                            IconButton(
-                                onClick = { startRecording() }
-                            ) {
-                                Icon(
-                                    painterResource(
-                                        id = R.drawable.ic_start_recording
-                                    ),
-                                    contentDescription = "Recording / paused status.",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
+                        TopBarActions()
                     }
                 )
+            },
+            bottomBar = {
+                BottomAppBar (
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                    ) {
+                        IconButton(
+                            onClick = {
+                                Log.d(TAG, "Navigate to HOME")
+                                navController.navigate(NavigationItem.Home.route)
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_start_recording),
+                                contentDescription = "Navigate to the home screen.",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                Log.d(TAG, "Navigate to RECORDINGS")
+                                navController.navigate(NavigationItem.Recordings.route)
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_start_recording),
+                                contentDescription = "Navigate to the home screen.",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        IconButton(
+                            onClick = { }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_start_recording),
+                                contentDescription = "Navigate to the home screen.",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
             }
         ) { innerPadding ->
+//            NavHost(
+//                navController = navController,
+//                startDestination = NavigationItem.Home.route,
+//            ) {
+//                composable(NavigationItem.Home.route) {
+//                    HomeScreen(navController)
+//                }
+//                composable(NavigationItem.Recordings.route) {
+//                    RecordingsScreen(navController)
+//                }
+//            }
             Column(modifier = Modifier.padding(innerPadding)) {
-                if (isGranted.value && isFlowAvailable.value) {
+                if (isGranted.value && trackerConnection?.isFlowAvailable!!.value) {
                     DisplayScreen()
                 } else if (isGranted.value) {
                     LoadingDisplay()

@@ -70,6 +70,9 @@ class RecordingManager() {
         }
     }
 
+    val recordings: List<String>
+        get() = home.listFiles()?.map { it.name } ?: emptyList()
+
     companion object {
         private var instance: RecordingManager? = null
         fun getInstance(recordingDirectory: File): RecordingManager {
