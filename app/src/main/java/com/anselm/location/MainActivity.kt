@@ -45,14 +45,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.DebugCard
-import com.anselm.location.components.HomeScreen
 import com.anselm.location.components.LoadingDisplay
-import com.anselm.location.components.RecordingsScreen
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.data.DataManager
@@ -73,8 +69,6 @@ class MainActivity : ComponentActivity() {
 
     private val liveContext: DataManager.Context?
         get() = trackerConnection?.binder?.liveContext
-    private val binder: LocationTracker.TrackerBinder?
-        get() = trackerConnection?.binder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
