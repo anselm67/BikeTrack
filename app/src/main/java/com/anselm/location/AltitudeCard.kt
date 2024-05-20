@@ -27,7 +27,7 @@ private fun Front(sample: Sample) {
             style = MaterialTheme.typography.displayLarge,
         )
         Text(
-            text = if ( sample.grade.isFinite() ) "--" else "%.1f%%".format(sample.grade),
+            text = sample.grade.formatIf("--", "%.1f%%") { ! it.isFinite() },
             style = MaterialTheme.typography.displayLarge,
         )
     }
