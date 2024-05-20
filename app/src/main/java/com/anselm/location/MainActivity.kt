@@ -46,8 +46,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.data.DataManager
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
 import com.anselm.location.data.defaultSample
@@ -57,33 +55,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transform
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
     private val isFlowAvailable = mutableStateOf(false)
     private val isGranted = mutableStateOf(false)
-    private var dataManagerContext : DataManager.Context? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Configures the data manager
-
-        dataManagerContext = app.dataManager.createContext()
         // Requests permissions if needed.
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()) { it ->
                 isGranted.value = it.all { it.value }
                 Log.d(TAG, "isGranted ${isGranted.value}")
                 if ( isGranted.value ) {
-                    startService(Intent(this, LocationTracker::class.java))
                     connect()
                 }
         }
         isGranted.value = requestPermissions()
         if ( isGranted.value ) {
-            startService(Intent(this, LocationTracker::class.java))
             connect()
         }
         // Sets up the UI.
@@ -98,9 +89,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        dataManagerContext?.onDestroy()
         disconnect()
+    }
+
+    // Quits the application, killing the tracking service.
+    private fun quit() {
         stopService(Intent(this, LocationTracker::class.java))
+        finishAndRemoveTask()
     }
 
     companion object {
@@ -110,9 +105,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         when(intent.action) {
-            EXIT_ACTION -> {
-                finishAndRemoveTask()
-            }
+            EXIT_ACTION -> { quit() }
         }
     }
 
@@ -143,17 +136,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var binder: LocationTracker.TrackerBinder? = null
     private var flow: StateFlow<Sample>? = null
+
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val locationFlow = (service as LocationTracker.TrackerBinder).getFlow()!!
-            flow = locationFlow
-                .transform { rawLocation ->
-                    // The init value has a fake LocationStub that shouldn't be emitted.
-                    if ( rawLocation.provider != null) {
-                        emit(dataManagerContext!!.onLocation(LocationStub(rawLocation)))
-                    }
-                }
+            binder = (service as LocationTracker.TrackerBinder)
+            flow = binder!!.flow
                 .stateIn(
                     CoroutineScope(Dispatchers.Main),
                     SharingStarted.Eagerly,
@@ -169,15 +158,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopRecording() {
-        dataManagerContext?.stopRecording()
+        binder?.liveContext?.stopRecording()
     }
 
     private fun startRecording() {
-        dataManagerContext?.startRecording()
+        binder?.liveContext?.startRecording()
     }
 
     private fun connect() {
         val intent = Intent(this@MainActivity, LocationTracker::class.java)
+        startService(intent)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
@@ -203,7 +193,7 @@ class MainActivity : ComponentActivity() {
             TimeElapsedCard(sample)
             SpeedCard(sample)
             AltitudeCard(sample)
-            DebugCard(dataManagerContext?.isAutoPause?.value ?: false, sample)
+            DebugCard(binder?.liveContext?.isAutoPause?.value ?: false, sample)
         }
     }
 
@@ -265,7 +255,7 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     private fun DisplayScreen() {
-        val isRecording = dataManagerContext?.isRecording?.value ?: false
+        val isRecording = binder?.liveContext?.isRecording?.value ?: false
         Column (
             modifier = Modifier
                 .fillMaxWidth()
@@ -278,7 +268,7 @@ class MainActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
                 Button (
-                    onClick = { finishAndRemoveTask() }
+                    onClick = { quit() }
                 ) {
                     Text("Quit")
                 }
@@ -302,7 +292,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 Button (
-                    onClick = { dataManagerContext?.reset() }
+                    onClick = { binder?.liveContext?.reset() }
                 ) {
                     Text("Reset")
                 }
@@ -313,7 +303,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreen() {
-        val isRecording = dataManagerContext?.isRecording?.value ?: false
+        val isRecording = binder?.liveContext?.isRecording?.value ?: false
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -337,7 +327,7 @@ class MainActivity : ComponentActivity() {
                                         id = R.drawable.ic_stop_recording
                                     ),
                                     contentDescription = "Recording / paused status.",
-                                    tint = if (dataManagerContext?.isAutoPause?.value == true)
+                                    tint = if (binder?.liveContext?.isAutoPause?.value == true)
                                         Color.Red
                                     else
                                         MaterialTheme.colorScheme.primary,

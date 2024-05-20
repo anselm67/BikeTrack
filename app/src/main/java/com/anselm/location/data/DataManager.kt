@@ -175,8 +175,8 @@ class DataManager {
         }
     }
 
-    fun createContext(): Context {
-        return Context()
+    fun createContext(canAutoPause: Boolean = true): Context {
+        return Context(canAutoPause)
     }
 
     private fun update(context: Context, location: LocationStub): Sample {
@@ -225,7 +225,7 @@ class DataManager {
         }
     }
     fun process(input: List<LocationStub>): List<Sample> {
-        createContext().use { context ->
+        createContext(false).use { context ->
             return input.map { onLocation(context, it) }
         }
     }
