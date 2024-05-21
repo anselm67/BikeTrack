@@ -107,6 +107,7 @@ private fun FlipCardInternal(
 
 @Composable
 fun FlipCard(
+    key: String,
     title: String,
     modifier: Modifier = Modifier,
     front: @Composable () -> Unit,
@@ -118,7 +119,7 @@ fun FlipCard(
         onClick = { cardFace = cardFace.next },
         modifier = modifier,
         front = {
-            BasicCard(title) {
+            BasicCard(key, title) {
                 front()
             }
         },

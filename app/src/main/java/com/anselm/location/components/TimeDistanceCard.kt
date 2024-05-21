@@ -20,6 +20,7 @@ fun TimeElapsedCard(sample: Sample) {
     val distanceInKilometers = sample.totalDistance / 1000.0
 
     BasicCard(
+        key = "TimeElapsedCard",
         modifier = Modifier.padding(0.dp, 4.dp)
     ) {
         Column (

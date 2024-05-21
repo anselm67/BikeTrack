@@ -90,6 +90,7 @@ private fun Back() {
 @Composable
 fun AltitudeCard(sample: Sample) {
     FlipCard(
+        key = "AltitudeCard",
         title = "Altitude",
         modifier = Modifier.padding(0.dp, 4.dp),
         front = {

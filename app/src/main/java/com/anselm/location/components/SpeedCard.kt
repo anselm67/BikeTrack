@@ -97,6 +97,7 @@ private fun Back() {
 @Composable
 fun SpeedCard(sample: Sample) {
     FlipCard(
+        key = "SpeedCard",
         title = "Speed",
         modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
         front = {

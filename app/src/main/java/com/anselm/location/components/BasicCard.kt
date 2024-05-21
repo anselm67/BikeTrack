@@ -1,6 +1,7 @@
 package com.anselm.location.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,12 +31,17 @@ import com.anselm.location.R
 
 @Composable
 fun BasicCard(
+    key : String,
     title: String? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
     foldable: Boolean? = false,
     content: @Composable () -> Unit
 ) {
-    var folded by remember { mutableStateOf(false) }
+    val sharedPreferences = LocalContext.current.getSharedPreferences(
+            "LocationPreferences",
+        Context.MODE_PRIVATE)
+    var folded by remember { mutableStateOf(sharedPreferences.getBoolean("${key}.folded", false)) }
+
     Card (
         modifier = modifier,
         colors = CardDefaults.cardColors(
@@ -56,7 +63,10 @@ fun BasicCard(
                         .offset((-10).dp, 10.dp)
                         .size(24.dp)
                         .zIndex(2f),
-                    onClick = { folded = !folded },
+                    onClick = {
+                        folded = !folded
+                        sharedPreferences.edit().putBoolean("${key}.folded", folded).apply()
+                    },
                 ) {
                     Icon(
                         painter = painterResource(
