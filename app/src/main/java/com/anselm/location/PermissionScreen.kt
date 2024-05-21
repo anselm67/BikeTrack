@@ -77,7 +77,6 @@ fun PermissionScreen(navController: NavController) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val context = LocalContext.current
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = "Permissions required",

@@ -11,10 +11,8 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.lifecycleScope
 import com.anselm.location.data.DataManager
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.RecordingManager
