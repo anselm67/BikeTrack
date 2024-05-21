@@ -50,12 +50,15 @@ class GradeFilter : DataFilter {
                 sample.grade = lastSample?.grade ?: 0.0
             }
         }
-        Log.d(TAG, "sample.grade ${sample.grade} cursor $cursor " +
-                "altitude ${sample.altitude} distance ${sample.distance}")
+//        Log.d(TAG, "sample.grade ${sample.grade} cursor $cursor " +
+//                "altitude ${sample.altitude} distance ${sample.distance}")
         lastSample = sample
     }
 
     override fun reset() {
+        pendingDistances.fill(0.0)
+        pendingAltitudes.fill(0.0)
+        lastSample = null
         cursor = -1
     }
 }
