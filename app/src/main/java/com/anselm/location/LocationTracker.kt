@@ -12,6 +12,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.anselm.location.LocationApplication.Companion.app
@@ -51,7 +52,6 @@ class LocationTracker: Service() {
         return START_STICKY
     }
 
-    @SuppressLint("MissingPermission")
     private fun startLocationTracker() {
         Log.d(TAG, "startLocationTracker")
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -62,24 +62,46 @@ class LocationTracker: Service() {
             buildNotification(),
             ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         )
-        // As soon as we're started, we start collecting locations.
-        fusedLocationClient?.requestLocationUpdates(
-            LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                5000
-            ).build(),
-            locationCallback,
-            Looper.getMainLooper()
-        )
+    }
+
+    private var isRequestingLocations = false
+    @SuppressLint("MissingPermission")
+    private fun startLocationRequests() {
+        // We'll track locations only when recording is on.
+        synchronized(this) {
+            if (!isRequestingLocations) {
+                fusedLocationClient?.requestLocationUpdates(
+                    LocationRequest.Builder(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        5000
+                    ).build(),
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
+            }
+            isRequestingLocations = true
+        }
     }
 
     private fun stopLocationTracker() {
         Log.d(TAG, "stopLocationTracker")
+        // Stops the recording if any was ongoing.
+        if ( liveContext.isRecording.value ) {
+            liveContext.stopRecording()
+        }
         // Stops receiving location updates.
-        fusedLocationClient?.removeLocationUpdates(locationCallback)
+        stopLocationRequests()
         fusedLocationClient = null
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
+
+    private fun stopLocationRequests() {
+        synchronized(this) {
+            isRequestingLocations = false
+            fusedLocationClient?.removeLocationUpdates(locationCallback)
+        }
+    }
+
     interface SampleCallback {
         fun emit(sample: Sample)
 
@@ -138,8 +160,21 @@ class LocationTracker: Service() {
         val flow: Flow<Sample>
             get() = pair.first
 
-        val liveContext: DataManager.Context
-            get() = this@LocationTracker.liveContext
+        fun startRecording() {
+            startLocationRequests()
+            liveContext.startRecording()
+        }
+
+        fun stopRecording() {
+            liveContext.stopRecording()
+            stopLocationRequests()
+        }
+
+        val isRecording: MutableState<Boolean>
+            get() = liveContext.isRecording
+
+        val isAutoPause: MutableState<Boolean>
+            get() = liveContext.isAutoPause
 
         fun close() {
             pair.second?.close()

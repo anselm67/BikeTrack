@@ -151,7 +151,7 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 startDestination =
                     if ( app.checkPermissions() )
-                        NavigationItem.Recording.route
+                        NavigationItem.ViewRecordings.route
                     else
                         NavigationItem.Permission.route,
             ) {

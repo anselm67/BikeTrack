@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -21,7 +22,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -82,13 +85,13 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
         TimeElapsedCard(sample)
         SpeedCard(sample)
         AltitudeCard(sample)
-        DebugCard(trackerConnection.binder?.liveContext?.isAutoPause?.value ?: false, sample)
+        DebugCard(trackerConnection.binder?.isAutoPause?.value ?: false, sample)
     }
 }
 
 @Composable
 private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnection) {
-    val liveContext = trackerConnection.binder?.liveContext ?: return
+    val liveContext = trackerConnection.binder ?: return
     Column (
         modifier = Modifier
             .fillMaxWidth()
@@ -109,20 +112,22 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
                 }  ,
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
+                ),
+                modifier = Modifier.size(96.dp)
             ) {
                 Icon(
                     painter = painterResource(
                         id = if ( liveContext.isRecording.value )
                             R.drawable.ic_stop_recording
                         else
-                            R.drawable.ic_start_recording
+                            R.drawable.ic_start_recording,
                     ),
                     contentDescription = "Toggle recording.",
                     tint = if ( liveContext.isAutoPause.value )
                         Color.Red
                     else
                         MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }
@@ -135,7 +140,7 @@ private var trackerConnection: LocationApplication.TrackerConnection? = null
 fun RecordingScreen(
     navController: NavHostController,
 ) {
-    val bottomBarState = app.hideBottomBar.value
+    val bottomBarVisible = app.hideBottomBar.value
 
     DisposableEffect(LocalContext.current) {
         Log.d(TAG, "RecordingScreen.connect()")
@@ -143,9 +148,9 @@ fun RecordingScreen(
 
         onDispose {
             Log.d(TAG, "RecordingScreen.close")
-            app.hideBottomBar.value = bottomBarState
             trackerConnection?.close()
             trackerConnection = null
+            app.hideBottomBar.value = bottomBarVisible
         }
     }
     Column(
@@ -153,18 +158,23 @@ fun RecordingScreen(
     ) {
         Log.d(TAG, "Recording.connected? ${app.isTrackerBound.value}")
         if ( app.isTrackerBound.value ) {
-            if (trackerConnection?.binder?.liveContext?.isRecording?.value == true) {
+            if (trackerConnection?.binder?.isRecording?.value == true) {
                 app.hideBottomBar.value = true
                 DisplayScreen(trackerConnection!!)
             } else {
                 app.hideBottomBar.value = false
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize()
+                        .paint(
+                            painter = painterResource(id = R.drawable.cyclist_start),
+                            contentScale = ContentScale.FillHeight,
+                            alpha = 0.45f
+                        ),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Button(
-                        onClick = { trackerConnection?.binder?.liveContext?.startRecording() }
+                        onClick = { trackerConnection?.binder?.startRecording() }
                     ) {
                         Text("Start Recording")
                     }

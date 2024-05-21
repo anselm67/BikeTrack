@@ -61,7 +61,7 @@ fun PermissionScreen(navController: NavController) {
             .fillMaxSize()
             .paint(
                 painter = painterResource(id = R.drawable.permission_background),
-                contentScale = ContentScale.FillBounds,
+                contentScale = ContentScale.FillHeight,
                 alpha = 0.45f
             )
             .padding(16.dp),

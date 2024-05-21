@@ -46,6 +46,22 @@ class LocationApplication: Application() {
         app = this
     }
 
+    override fun onTerminate() {
+        super.onTerminate()
+        trackerConnections.forEach {
+            it.close()
+        }
+    }
+
+    // Really quit, killing the service if needed.
+    fun quit() {
+        stopService(trackerServiceIntent)
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        postOnUiThread {
+            activityManager.appTasks.firstOrNull()?.finishAndRemoveTask()
+        }
+    }
+
     val allPermissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -64,6 +80,7 @@ class LocationApplication: Application() {
     }
 
     var isTrackerBound = mutableStateOf(false)
+    val trackerConnections = mutableListOf<TrackerConnection>()
 
     inner class TrackerConnection : ServiceConnection {
         var binder: LocationTracker.TrackerBinder? = null
@@ -86,28 +103,27 @@ class LocationApplication: Application() {
         }
 
         fun close() {
+            val isRecording = binder?.isRecording?.value == true
             binder?.close()
             binder = null
             flow = null
             isTrackerBound.value = false
             applicationContext.unbindService(this)
+            trackerConnections.remove(this)
+            // If no one is recording, we can shutdown the service.
+            if ( ! isRecording ) {
+                Log.d(TAG, "isRecording false => shutdown service.")
+                stopService(trackerServiceIntent)
+            }
         }
     }
 
     fun connect(): TrackerConnection {
         val connection = TrackerConnection()
         bindService(trackerServiceIntent, connection, Context.BIND_AUTO_CREATE)
+        trackerConnections.add(connection)
         return connection
     }
-
-    fun quit() {
-        stopService(trackerServiceIntent)
-        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        postOnUiThread {
-            activityManager.appTasks.firstOrNull()?.finishAndRemoveTask()
-        }
-    }
-
 
     private fun postOnUiThread(block: () ->Unit) {
         applicationScope.launch(Dispatchers.Main) { block() }
