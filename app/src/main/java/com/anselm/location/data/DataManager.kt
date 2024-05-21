@@ -154,18 +154,12 @@ class DataManager {
 
         fun startRecording() {
             reset()
-            app.postOnUiThread {
-                Log.d(TAG, "runOnUiThread.start ${isRecording}")
-                isRecording.value = true
-            }
+            isRecording.value = true
             app.recordingManager.start()
         }
 
         fun stopRecording() {
-            app.postOnUiThread {
-                Log.d(TAG, "runOnUiThread.stop ${isRecording}")
-                isRecording.value = false
-            }
+            isRecording.value = false
             app.recordingManager.stop()
         }
 

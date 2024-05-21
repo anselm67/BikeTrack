@@ -21,6 +21,7 @@ fun RecordingsScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text("All Rides")
         app.recordingManager.recordings.forEach {
             Text(
                 text = it

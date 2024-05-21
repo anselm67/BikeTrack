@@ -46,10 +46,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.DebugCard
+import com.anselm.location.components.HomeScreen
 import com.anselm.location.components.LoadingDisplay
+import com.anselm.location.components.RecordingsScreen
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.data.DataManager
@@ -74,18 +79,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Requests permissions if needed.
-        locationPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()) { it ->
-                isGranted.value = it.all { it.value }
-                Log.d(TAG, "isGranted ${isGranted.value}")
-                if ( isGranted.value ) {
-                    trackerConnection = connect()
-                }
-        }
-        isGranted.value = requestPermissions()
-        if ( isGranted.value ) {
-            trackerConnection = connect()
-        }
+//        locationPermissionLauncher = registerForActivityResult(
+//            ActivityResultContracts.RequestMultiplePermissions()) { it ->
+//                isGranted.value = it.all { it.value }
+//                Log.d(TAG, "isGranted ${isGranted.value}")
+//                if ( isGranted.value ) {
+//                    trackerConnection = connect()
+//                }
+//        }
+//        isGranted.value = requestPermissions()
+//        if ( isGranted.value ) {
+//            trackerConnection = connect()
+//        }
         // Sets up the UI.
         enableEdgeToEdge()
         setShowWhenLocked(true)
@@ -102,12 +107,6 @@ class MainActivity : ComponentActivity() {
         trackerConnection = null
     }
 
-    // Quits the application, killing the tracking service.
-    private fun quit() {
-        stopService(Intent(this, LocationTracker::class.java))
-        finishAndRemoveTask()
-    }
-
     companion object {
         const val EXIT_ACTION = "Exit"
     }
@@ -115,7 +114,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         when(intent.action) {
-            EXIT_ACTION -> { quit() }
+            EXIT_ACTION -> { app.quit() }
         }
     }
 
@@ -264,7 +263,7 @@ class MainActivity : ComponentActivity() {
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
                 Button (
-                    onClick = { quit() }
+                    onClick = { app.quit() }
                 ) {
                     Text("Quit")
                 }
@@ -337,8 +336,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun TopBar(navController: NavController) {
+        if ( app.hideTopBar.value ) {
+            return
+        }
+        CenterAlignedTopAppBar(
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+            ),
+            title = {
+                Text(
+                    text = getString(R.string.app_name),
+                    maxLines = 1,
+                )
+            },
+            actions = {
+                TopBarActions()
+            }
+        )
+    }
     @Composable
     private fun BottomBar(navController: NavController) {
+        if ( app.hideBottomBar.value ) {
+            return
+        }
         BottomAppBar (
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.primary,
@@ -354,7 +378,7 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        painter = painterResource(id = R.drawable.ic_home),
                         contentDescription = "Navigate to the home screen.",
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -366,7 +390,7 @@ class MainActivity : ComponentActivity() {
                     }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        painter = painterResource(id = R.drawable.ic_list),
                         contentDescription = "Navigate to the home screen.",
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -375,7 +399,7 @@ class MainActivity : ComponentActivity() {
                     onClick = { }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_start_recording),
+                        painter = painterResource(id = R.drawable.ic_settings),
                         contentDescription = "Navigate to the home screen.",
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -383,51 +407,42 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MainScreen() {
         val navController =  rememberNavController()
 
         Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
-                    ),
-                    title = {
-                        Text(
-                            text = getString(R.string.app_name),
-                            maxLines = 1,
-                        )
-                    },
-                    actions = {
-                        TopBarActions()
-                    }
-                )
-            },
-//            bottomBar = { BottomBar(navController = navController) }
+            topBar = { TopBar(navController) },
+            bottomBar = { BottomBar(navController = navController) }
         ) { innerPadding ->
-//            NavHost(
-//                navController = navController,
-//                startDestination = NavigationItem.Home.route,
-//            ) {
-//                composable(NavigationItem.Home.route) {
-//                    HomeScreen(navController)
-//                }
-//                composable(NavigationItem.Recordings.route) {
-//                    RecordingsScreen(navController)
-//                }
-//            }
-            Column(modifier = Modifier.padding(innerPadding)) {
-                if (isGranted.value && isTrackerBound.value) {
-                    DisplayScreen()
-                } else if (isGranted.value) {
-                    LoadingDisplay()
-                } else {
-                    PermissionPrompt()
+            NavHost(
+                modifier = Modifier.padding(innerPadding),
+                navController = navController,
+                startDestination =
+                    if ( checkPermissions() )
+                        NavigationItem.Home.route
+                    else
+                        NavigationItem.Permission.route,
+            ) {
+                composable(NavigationItem.Permission.route) {
+                    PermissionScreen(navController)
+                }
+                composable(NavigationItem.Home.route) {
+                    HomeScreen(navController)
+                }
+                composable(NavigationItem.Recordings.route) {
+                    RecordingsScreen(navController)
                 }
             }
+//            Column(modifier = Modifier.padding(innerPadding)) {
+//                if (isGranted.value && isTrackerBound.value) {
+//                    DisplayScreen()
+//                } else if (isGranted.value) {
+//                    LoadingDisplay()
+//                } else {
+//                    PermissionPrompt()
+//                }
+//            }
         }
     }
 }
