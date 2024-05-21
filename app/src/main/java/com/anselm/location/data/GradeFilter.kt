@@ -1,34 +1,61 @@
 package com.anselm.location.data
 
+import android.util.Log
+import com.anselm.location.TAG
+import com.anselm.location.shift
+
 private const val  MIN_DISTANCE_IN_METERS = 5.0
 
 // TODO Keep an array of pendingDistance / pendingAltitude
 class GradeFilter : DataFilter {
-    private var pendingDistance = -1.0
-    private var pendingAltitude = 0.0
+    private var lastSample: Sample? = null
+    private var cursor = -1
+    private var pendingDistances = DoubleArray(16) { 0.0 }
+    private var pendingAltitudes = DoubleArray(16) { 0.0 }
 
     override fun update(sample: Sample) {
-        // grade defaults to previous value, unless we update it here.
-        if ( pendingDistance >= 0.0) {
-            pendingDistance += sample.distance
-            pendingAltitude += sample.verticalDistance
-            if ( pendingDistance > MIN_DISTANCE_IN_METERS ) {
-                sample.grade = 100.0 * pendingAltitude / pendingDistance
-                pendingDistance = -1.0
-                pendingAltitude = 0.0
-            }
-        } else {
-            if ( sample.distance > MIN_DISTANCE_IN_METERS) {
+        if ( cursor < 0 ) {
+            if ( sample.distance > MIN_DISTANCE_IN_METERS ) {
                 sample.grade = 100.0 * sample.verticalDistance / sample.distance
             } else {
-                pendingDistance = sample.distance
-                pendingAltitude = sample.verticalDistance
+                cursor = 1
+                pendingDistances[0] = sample.distance
+                pendingAltitudes[0] = sample.verticalDistance
+                sample.grade = lastSample?.grade ?: 0.0            }
+        } else {
+            if ( cursor < pendingDistances.size ) {
+                pendingDistances[cursor] = sample.distance
+                pendingAltitudes[cursor] = sample.verticalDistance
+                cursor++
+            } else {
+                Log.d(TAG, "Missing space in pending arrays.")
+                pendingDistances.shift(-1)
+                pendingAltitudes.shift(-1)
+                pendingDistances[cursor - 1] = sample.distance
+                pendingAltitudes[cursor - 1] = sample.verticalDistance
+            }
+            if ( pendingDistances.sum() > MIN_DISTANCE_IN_METERS ) {
+                sample.grade = 100.0 * pendingAltitudes.sum() / pendingDistances.sum()
+                do {
+                    pendingDistances.shift(1)
+                    pendingAltitudes.shift(1)
+                    cursor--
+                    pendingDistances[cursor] = 0.0
+                    pendingAltitudes[cursor] = 0.0
+                } while ((cursor > 0) && (pendingDistances.sum() >= MIN_DISTANCE_IN_METERS))
+                if ( cursor == 0 ) {
+                    cursor = -1
+                }
+            } else {
+                sample.grade = lastSample?.grade ?: 0.0
             }
         }
+        Log.d(TAG, "sample.grade ${sample.grade} cursor $cursor " +
+                "altitude ${sample.altitude} distance ${sample.distance}")
+        lastSample = sample
     }
 
     override fun reset() {
-        pendingDistance = -1.0
-        pendingAltitude = 0.0
+        cursor = -1
     }
 }
