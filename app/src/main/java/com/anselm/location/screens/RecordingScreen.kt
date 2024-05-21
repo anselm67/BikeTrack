@@ -109,20 +109,21 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
 private var trackerConnection: LocationApplication.TrackerConnection? = null
 
 @Composable
-fun RecordingScreen(
-    navController: NavHostController,
-) {
+fun RecordingScreen() {
     val bottomBarVisible = app.hideBottomBar.value
+    val appBarTitle = app.appBarTitle.value
 
     DisposableEffect(LocalContext.current) {
         Log.d(TAG, "RecordingScreen.connect()")
         trackerConnection = app.connect()
+        app.appBarTitle.value = "Happy Ride !"
 
         onDispose {
             Log.d(TAG, "RecordingScreen.close")
             trackerConnection?.close()
             trackerConnection = null
             app.hideBottomBar.value = bottomBarVisible
+            app.appBarTitle.value = appBarTitle
         }
     }
     Column(

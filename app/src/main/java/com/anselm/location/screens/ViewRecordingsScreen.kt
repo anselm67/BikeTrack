@@ -4,9 +4,11 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
@@ -14,14 +16,33 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Recording
 
 private const val TAG = "com.anselm.location.components.RecordingsScreen"
+
+
+@Composable
+private fun StatBox(value: Double, units: String) {
+    Column (
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ){
+        Text(
+            text = "%.2f".format(value),
+            style = MaterialTheme.typography.displayMedium,
+        )
+        Text(
+            text = units,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+    }
+}
 
 @Composable
 private fun DisplayRecording(title: String, recording: Recording) {
@@ -35,7 +56,9 @@ private fun DisplayRecording(title: String, recording: Recording) {
         )
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
             verticalArrangement = Arrangement.Top,
         ) {
             Column(
@@ -43,27 +66,27 @@ private fun DisplayRecording(title: String, recording: Recording) {
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = title
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
                 )
             }
+            Spacer(modifier = Modifier.size(12.dp))
             Row (
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(
-                    text = "%.2f".format(recording.lastSample().avgSpeed)
-                )
-                Text(
-                    text = "%.2f".format(recording.lastSample().totalDistance)
-                )
+                StatBox(value = recording.lastSample().avgSpeed, units = "km/h")
+                StatBox(value = recording.lastSample().totalDistance, units = "km")
                 Column (
                     horizontalAlignment = Alignment.Start,
                 ) {
                     Text(
-                        text = "%.1f".format(recording.lastSample().climb)
+                        text = "%.1f up".format(recording.lastSample().climb),
+                        style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        text = "%.1f".format(recording.lastSample().descent)
+                        text = "%.1f dn".format(recording.lastSample().descent),
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 }
             }
@@ -73,19 +96,25 @@ private fun DisplayRecording(title: String, recording: Recording) {
 
 
 @Composable
-fun ViewRecordingsScreen(navController: NavHostController) {
+fun ViewRecordingsScreen() {
     Log.d(TAG, "RecordingScreen")
+    var appBarTitle = app.appBarTitle.value
+
+    DisposableEffect (LocalContext.current ){
+        appBarTitle = app.appBarTitle.value
+        app.appBarTitle.value = "Your Rides"
+
+        onDispose {
+            app.appBarTitle.value = appBarTitle
+        }
+    }
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "All Rides",
-            style = MaterialTheme.typography.displaySmall,
-
-        )
         app.recordingManager.recordings.forEach {
             DisplayRecording(it, app.recordingManager.load(it))
         }

@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    private fun TopBar(navController: NavController) {
+    private fun TopBar() {
         if ( app.hideTopBar.value ) {
             return
         }
@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
             ),
             title = {
                 Text(
-                    text = getString(R.string.app_name),
+                    text = app.appBarTitle.value,
                     maxLines = 1,
                 )
             },
@@ -144,7 +144,7 @@ class MainActivity : ComponentActivity() {
         val navController =  rememberNavController()
 
         Scaffold(
-            topBar = { TopBar(navController) },
+            topBar = { TopBar() },
             bottomBar = { BottomBar(navController = navController) }
         ) { innerPadding ->
             NavHost(
@@ -160,10 +160,10 @@ class MainActivity : ComponentActivity() {
                     PermissionScreen(navController)
                 }
                 composable(NavigationItem.Recording.route) {
-                    RecordingScreen(navController)
+                    RecordingScreen()
                 }
                 composable(NavigationItem.ViewRecordings.route) {
-                    ViewRecordingsScreen(navController)
+                    ViewRecordingsScreen()
                 }
             }
         }

@@ -40,6 +40,9 @@ class LocationApplication: Application() {
     // Dynamic screen configuration.
     val hideTopBar = mutableStateOf(false)
     val hideBottomBar = mutableStateOf(false)
+    val appBarTitle by lazy {
+        mutableStateOf(getString(R.string.app_name))
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -80,6 +83,7 @@ class LocationApplication: Application() {
     }
 
     var isTrackerBound = mutableStateOf(false)
+
     val trackerConnections = mutableListOf<TrackerConnection>()
 
     inner class TrackerConnection : ServiceConnection {
