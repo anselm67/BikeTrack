@@ -26,8 +26,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.components.RecordingScreen
-import com.anselm.location.components.RecordingsScreen
+import com.anselm.location.screens.RecordingScreen
+import com.anselm.location.screens.ViewRecordingsScreen
+import com.anselm.location.screens.PermissionScreen
 import com.anselm.location.ui.theme.LocationTheme
 
 
@@ -162,7 +163,7 @@ class MainActivity : ComponentActivity() {
                     RecordingScreen(navController)
                 }
                 composable(NavigationItem.ViewRecordings.route) {
-                    RecordingsScreen(navController)
+                    ViewRecordingsScreen(navController)
                 }
             }
         }

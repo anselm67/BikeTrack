@@ -1,4 +1,4 @@
-package com.anselm.location
+package com.anselm.location.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.NavigationItem
+import com.anselm.location.R
 
 @Composable
 fun PermissionScreen(navController: NavController) {

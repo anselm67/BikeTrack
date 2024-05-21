@@ -1,4 +1,4 @@
-package com.anselm.location.components
+package com.anselm.location.screens
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,11 @@ import androidx.navigation.NavHostController
 import com.anselm.location.LocationApplication
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.R
-import com.anselm.location.data.DataManager
+import com.anselm.location.components.AltitudeCard
+import com.anselm.location.components.DebugCard
+import com.anselm.location.components.LoadingDisplay
+import com.anselm.location.components.SpeedCard
+import com.anselm.location.components.TimeElapsedCard
 
 private const val TAG = "com.anselm.location.components.HomeScreen"
 

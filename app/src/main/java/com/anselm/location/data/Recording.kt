@@ -11,6 +11,8 @@ class Recording(jsonArray: JsonArray) {
     val size: Int
         get() = dataPoints.size
 
+    fun lastSample(): Sample = dataPoints.last()
+
     fun extractTime(): List<Float> {
         return dataPoints.map {  it.elapsedTime / (1000f * 60) }
     }
