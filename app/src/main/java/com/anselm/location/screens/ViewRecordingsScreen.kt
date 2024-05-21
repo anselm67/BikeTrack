@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Recording
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 private const val TAG = "com.anselm.location.components.RecordingsScreen"
 
@@ -70,6 +72,20 @@ private fun DisplayRecording(title: String, recording: Recording) {
                 )
             }
             Spacer(modifier = Modifier.size(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = "Duration %02d:%02d:%02d".format(
+                        *(recording.lastSample().elapsedTime).toDuration(DurationUnit.MILLISECONDS)
+                            .toComponents { hours, minutes, seconds, _ ->
+                                arrayOf(hours, minutes, seconds)
+                            }
+                    ),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
             Row (
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
