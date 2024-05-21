@@ -1,13 +1,8 @@
 package com.anselm.location
 
-import android.Manifest
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
@@ -31,10 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.anselm.location.LocationApplication.Companion.app
-import kotlinx.serialization.encoding.CompositeEncoder
 
 @Composable
 fun PermissionScreen(navController: NavController) {
@@ -43,7 +36,7 @@ fun PermissionScreen(navController: NavController) {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()) { it ->
         if ( it.all { it.value } ) {
-            navController.navigate(NavigationItem.Home.route)
+            navController.navigate(NavigationItem.Recording.route)
         }
     }
 
@@ -55,7 +48,7 @@ fun PermissionScreen(navController: NavController) {
             launcher.launch(app.allPermissions)
         } else {
             // We shouldn't be there in the first place.
-            navController.navigate(NavigationItem.Home.route)
+            navController.navigate(NavigationItem.Recording.route)
         }
         onDispose {
             app.hideTopBar.value = false

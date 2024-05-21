@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
@@ -29,6 +30,10 @@ import kotlinx.coroutines.launch
 
 class LocationApplication: Application() {
     private val applicationScope = CoroutineScope(SupervisorJob())
+    private val trackerServiceIntent by lazy {
+        Intent(this, LocationTracker::class.java)
+    }
+
     val recordingManager by lazy {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
@@ -65,8 +70,6 @@ class LocationApplication: Application() {
     inner class TrackerConnection : ServiceConnection {
         var binder: LocationTracker.TrackerBinder? = null
         var flow: StateFlow<Sample>? = null
-        val liveContext: DataManager.Context?
-            get() = binder?.liveContext
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             binder = (service as LocationTracker.TrackerBinder)
@@ -80,6 +83,7 @@ class LocationApplication: Application() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            Log.d(TAG, "onServiceDisconnected")
             close()
         }
 
@@ -94,28 +98,19 @@ class LocationApplication: Application() {
 
     fun connect(): TrackerConnection {
         val connection = TrackerConnection()
-        val intent = Intent(this, LocationTracker::class.java)
-        startService(intent)
-        bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        bindService(trackerServiceIntent, connection, Context.BIND_AUTO_CREATE)
         return connection
     }
 
     fun quit() {
-        stopService(Intent(this, LocationTracker::class.java))
+        stopService(trackerServiceIntent)
         val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         postOnUiThread {
             activityManager.appTasks.firstOrNull()?.finishAndRemoveTask()
         }
     }
 
-    private val actionButtons = mutableListOf<@Composable (context: DataManager.Context) -> Unit>()
-    fun addActionButton(button: @Composable (context: DataManager.Context) -> Unit) {
-        actionButtons.add(button)
-    }
 
-    fun removeActionButton(button: @Composable (context: DataManager.Context) -> Unit) {
-        actionButtons.remove(button)
-    }
     private fun postOnUiThread(block: () ->Unit) {
         applicationScope.launch(Dispatchers.Main) { block() }
     }

@@ -2,7 +2,6 @@ package com.anselm.location
 // REDACTED
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,14 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.components.HomeScreen
+import com.anselm.location.components.RecordingScreen
 import com.anselm.location.components.RecordingsScreen
 import com.anselm.location.ui.theme.LocationTheme
 
@@ -68,6 +66,7 @@ class MainActivity : ComponentActivity() {
             // We don't display any action buttons.
             return
         }
+
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -107,8 +106,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 IconButton(
                     onClick = {
-                        Log.d(TAG, "Navigate to HOME")
-                        navController.navigate(NavigationItem.Home.route)
+                        navController.navigate(NavigationItem.ViewRecordings.route)
                     }
                 ) {
                     Icon(
@@ -119,12 +117,11 @@ class MainActivity : ComponentActivity() {
                 }
                 IconButton(
                     onClick = {
-                        Log.d(TAG, "Navigate to RECORDINGS")
-                        navController.navigate(NavigationItem.Recordings.route)
+                        navController.navigate(NavigationItem.Recording.route)
                     }
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_list),
+                        painter = painterResource(id = R.drawable.ic_start_recording),
                         contentDescription = "Navigate to the home screen.",
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -154,17 +151,17 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 startDestination =
                     if ( app.checkPermissions() )
-                        NavigationItem.Home.route
+                        NavigationItem.Recording.route
                     else
                         NavigationItem.Permission.route,
             ) {
                 composable(NavigationItem.Permission.route) {
                     PermissionScreen(navController)
                 }
-                composable(NavigationItem.Home.route) {
-                    HomeScreen(navController)
+                composable(NavigationItem.Recording.route) {
+                    RecordingScreen(navController)
                 }
-                composable(NavigationItem.Recordings.route) {
+                composable(NavigationItem.ViewRecordings.route) {
                     RecordingsScreen(navController)
                 }
             }

@@ -148,6 +148,7 @@ class LocationTracker: Service() {
 
     override fun onBind(intent: Intent?): IBinder {
         Log.d(TAG, "onBind")
+        startService(Intent(this, LocationTracker::class.java))
         return TrackerBinder()
     }
 

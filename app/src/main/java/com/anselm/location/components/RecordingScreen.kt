@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -87,8 +88,7 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
 
 @Composable
 private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnection) {
-    val liveContext = trackerConnection.binder?.liveContext!!
-    val isRecording = liveContext.isRecording.value
+    val liveContext = trackerConnection.binder?.liveContext ?: return
     Column (
         modifier = Modifier
             .fillMaxWidth()
@@ -100,14 +100,9 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
-            Button (
-                onClick = { app.quit() }
-            ) {
-                Text("Quit")
-            }
             IconButton(
                 onClick = {
-                    if ( isRecording )
+                    if ( liveContext.isRecording.value )
                         liveContext.stopRecording()
                     else
                         liveContext.startRecording()
@@ -118,7 +113,7 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if ( isRecording )
+                        id = if ( liveContext.isRecording.value )
                             R.drawable.ic_stop_recording
                         else
                             R.drawable.ic_start_recording
@@ -130,11 +125,6 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
                         MaterialTheme.colorScheme.primary,
                 )
             }
-            Button (
-                onClick = { liveContext.reset() }
-            ) {
-                Text("Reset")
-            }
         }
     }
 }
@@ -142,18 +132,18 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
 private var trackerConnection: LocationApplication.TrackerConnection? = null
 
 @Composable
-fun HomeScreen(
+fun RecordingScreen(
     navController: NavHostController,
 ) {
+    val bottomBarState = app.hideBottomBar.value
+
     DisposableEffect(LocalContext.current) {
-        Log.d(TAG, "HomeScreen.connect()")
+        Log.d(TAG, "RecordingScreen.connect()")
         trackerConnection = app.connect()
 
-//        app.addActionButton(::TopBarActionButton)
-
         onDispose {
-            Log.d(TAG, "HomeScreen.close")
-//            app.removeActionButton(::TopBarActionButton)
+            Log.d(TAG, "RecordingScreen.close")
+            app.hideBottomBar.value = bottomBarState
             trackerConnection?.close()
             trackerConnection = null
         }
@@ -161,9 +151,25 @@ fun HomeScreen(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        Log.d(TAG, "HomeScreen.connected? ${app.isTrackerBound.value}")
+        Log.d(TAG, "Recording.connected? ${app.isTrackerBound.value}")
         if ( app.isTrackerBound.value ) {
-            DisplayScreen(trackerConnection!!)
+            if (trackerConnection?.binder?.liveContext?.isRecording?.value == true) {
+                app.hideBottomBar.value = true
+                DisplayScreen(trackerConnection!!)
+            } else {
+                app.hideBottomBar.value = false
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Button(
+                        onClick = { trackerConnection?.binder?.liveContext?.startRecording() }
+                    ) {
+                        Text("Start Recording")
+                    }
+                }
+            }
         } else {
             LoadingDisplay()
         }

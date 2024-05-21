@@ -2,13 +2,13 @@ package com.anselm.location
 
 enum class Screen {
     PERMISSION,
-    HOME,
-    RECORDINGS,
+    RECORDING,
+    VIEW_RECORDINGS,
 }
 
 sealed class NavigationItem(val route: String) {
     data object Permission: NavigationItem(Screen.PERMISSION.name)
-    data object Home : NavigationItem(Screen.HOME.name)
-    data object Recordings: NavigationItem(Screen.RECORDINGS.name)
+    data object Recording : NavigationItem(Screen.RECORDING.name)
+    data object ViewRecordings: NavigationItem(Screen.VIEW_RECORDINGS.name)
 }
 
