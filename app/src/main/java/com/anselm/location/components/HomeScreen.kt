@@ -19,8 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +31,38 @@ import com.anselm.location.R
 import com.anselm.location.data.DataManager
 
 private const val TAG = "com.anselm.location.components.HomeScreen"
+
+@Composable
+fun TopBarActionButton(liveContext: DataManager.Context) {
+    if (liveContext.isRecording.value ) {
+        IconButton(
+            onClick = { liveContext.stopRecording() }
+        ) {
+            Icon(
+                painterResource(
+                    id = R.drawable.ic_stop_recording
+                ),
+                contentDescription = "Recording / paused status.",
+                tint = if (liveContext.isAutoPause.value)
+                    Color.Red
+                else
+                    MaterialTheme.colorScheme.primary,
+            )
+        }
+    } else {
+        IconButton(
+            onClick = { liveContext.startRecording() }
+        ) {
+            Icon(
+                painterResource(
+                    id = R.drawable.ic_start_recording
+                ),
+                contentDescription = "Recording / paused status.",
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
 
 @Composable
 fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
@@ -53,14 +83,6 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
         AltitudeCard(sample)
         DebugCard(trackerConnection.binder?.liveContext?.isAutoPause?.value ?: false, sample)
     }
-}
-
-private fun stopRecording(context: DataManager.Context) {
-    context.stopRecording()
-}
-
-private fun startRecording(context: DataManager.Context) {
-    context.startRecording()
 }
 
 @Composable
@@ -85,7 +107,10 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             }
             IconButton(
                 onClick = {
-                    if ( isRecording ) stopRecording(liveContext) else startRecording(liveContext)
+                    if ( isRecording )
+                        liveContext.stopRecording()
+                    else
+                        liveContext.startRecording()
                 }  ,
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -106,7 +131,7 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
                 )
             }
             Button (
-                onClick = { liveContext?.reset() }
+                onClick = { liveContext.reset() }
             ) {
                 Text("Reset")
             }
@@ -124,8 +149,11 @@ fun HomeScreen(
         Log.d(TAG, "HomeScreen.connect()")
         trackerConnection = app.connect()
 
+//        app.addActionButton(::TopBarActionButton)
+
         onDispose {
             Log.d(TAG, "HomeScreen.close")
+//            app.removeActionButton(::TopBarActionButton)
             trackerConnection?.close()
             trackerConnection = null
         }

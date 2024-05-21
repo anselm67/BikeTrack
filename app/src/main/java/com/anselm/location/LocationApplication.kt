@@ -1,5 +1,6 @@
 package com.anselm.location
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.Application
@@ -7,8 +8,11 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.IBinder
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.anselm.location.data.DataManager
 import com.anselm.location.data.LocationStub
@@ -39,11 +43,30 @@ class LocationApplication: Application() {
         app = this
     }
 
+    val allPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.FOREGROUND_SERVICE_LOCATION,
+        Manifest.permission.POST_NOTIFICATIONS,
+    )
+
+    fun checkPermissions(): Boolean {
+        return allPermissions.all {
+            ActivityCompat.checkSelfPermission(
+                this,
+                it
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     var isTrackerBound = mutableStateOf(false)
 
     inner class TrackerConnection : ServiceConnection {
         var binder: LocationTracker.TrackerBinder? = null
         var flow: StateFlow<Sample>? = null
+        val liveContext: DataManager.Context?
+            get() = binder?.liveContext
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             binder = (service as LocationTracker.TrackerBinder)
@@ -85,7 +108,14 @@ class LocationApplication: Application() {
         }
     }
 
+    private val actionButtons = mutableListOf<@Composable (context: DataManager.Context) -> Unit>()
+    fun addActionButton(button: @Composable (context: DataManager.Context) -> Unit) {
+        actionButtons.add(button)
+    }
 
+    fun removeActionButton(button: @Composable (context: DataManager.Context) -> Unit) {
+        actionButtons.remove(button)
+    }
     private fun postOnUiThread(block: () ->Unit) {
         applicationScope.launch(Dispatchers.Main) { block() }
     }

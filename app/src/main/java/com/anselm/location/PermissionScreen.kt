@@ -36,23 +36,6 @@ import androidx.navigation.NavController
 import com.anselm.location.LocationApplication.Companion.app
 import kotlinx.serialization.encoding.CompositeEncoder
 
-private val allPermissions = arrayOf(
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION,
-    Manifest.permission.FOREGROUND_SERVICE,
-    Manifest.permission.FOREGROUND_SERVICE_LOCATION,
-    Manifest.permission.POST_NOTIFICATIONS,
-)
-
-private fun checkPermissions(context: Context): Boolean {
-    return allPermissions.all {
-        ActivityCompat.checkSelfPermission(
-            context,
-            it
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-}
-
 @Composable
 fun PermissionScreen(navController: NavController) {
     val context = LocalContext.current
@@ -68,8 +51,8 @@ fun PermissionScreen(navController: NavController) {
         app.hideTopBar.value = true
         app.hideBottomBar.value = true
 
-        if ( ! checkPermissions(context) ) {
-            launcher.launch(allPermissions)
+        if ( ! app.checkPermissions() ) {
+            launcher.launch(app.allPermissions)
         } else {
             // We shouldn't be there in the first place.
             navController.navigate(NavigationItem.Home.route)
