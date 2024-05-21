@@ -37,38 +37,6 @@ import com.anselm.location.data.DataManager
 private const val TAG = "com.anselm.location.components.HomeScreen"
 
 @Composable
-fun TopBarActionButton(liveContext: DataManager.Context) {
-    if (liveContext.isRecording.value ) {
-        IconButton(
-            onClick = { liveContext.stopRecording() }
-        ) {
-            Icon(
-                painterResource(
-                    id = R.drawable.ic_stop_recording
-                ),
-                contentDescription = "Recording / paused status.",
-                tint = if (liveContext.isAutoPause.value)
-                    Color.Red
-                else
-                    MaterialTheme.colorScheme.primary,
-            )
-        }
-    } else {
-        IconButton(
-            onClick = { liveContext.startRecording() }
-        ) {
-            Icon(
-                painterResource(
-                    id = R.drawable.ic_start_recording
-                ),
-                contentDescription = "Recording / paused status.",
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
 fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
     val sample = trackerConnection.flow?.collectAsState()?.value
     if ( sample == null ) {
