@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Recording
 
@@ -98,10 +97,9 @@ private fun DisplayRecording(title: String, recording: Recording) {
 @Composable
 fun ViewRecordingsScreen() {
     Log.d(TAG, "RecordingScreen")
-    var appBarTitle = app.appBarTitle.value
+    val appBarTitle = app.appBarTitle.value
 
     DisposableEffect (LocalContext.current ){
-        appBarTitle = app.appBarTitle.value
         app.appBarTitle.value = "Your Rides"
 
         onDispose {

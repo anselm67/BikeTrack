@@ -11,7 +11,7 @@ val Any.TAG: String
         }
     }
 
-fun Double.formatIf(ifFmt: String, elseFmt: String, tst: (Double) -> Boolean, ): String {
+fun Double.formatIf(ifFmt: String, elseFmt: String, tst: (Double) -> Boolean): String {
     return if ( tst(this) ) {
         ifFmt.format(this)
     } else {

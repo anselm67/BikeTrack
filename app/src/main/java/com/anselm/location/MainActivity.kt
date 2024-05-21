@@ -26,9 +26,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.screens.PermissionScreen
 import com.anselm.location.screens.RecordingScreen
 import com.anselm.location.screens.ViewRecordingsScreen
-import com.anselm.location.screens.PermissionScreen
 import com.anselm.location.ui.theme.LocationTheme
 
 
@@ -44,10 +44,6 @@ class MainActivity : ComponentActivity() {
                 MainScreen()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     companion object {
