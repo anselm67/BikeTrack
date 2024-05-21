@@ -19,7 +19,7 @@ fun Double.formatIf(ifFmt: String, elseFmt: String, tst: (Double) -> Boolean, ):
     }
 }
 
-fun DoubleArray.shift(position: Int): Unit {
+fun DoubleArray.shift(position: Int) {
     if ( position > 0 ) {
         // Shift right
         this.copyInto(this, 0, position, this.size - position)
