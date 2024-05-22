@@ -90,8 +90,8 @@ private fun DisplayRecording(title: String, recording: Recording) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                StatBox(value = recording.lastSample().avgSpeed, units = "km/h")
-                StatBox(value = recording.lastSample().totalDistance, units = "km")
+                StatBox(value = recording.lastSample().avgSpeed * 3.6, units = "km/h")
+                StatBox(value = recording.lastSample().totalDistance / 1000.0, units = "km")
                 Column (
                     horizontalAlignment = Alignment.Start,
                 ) {

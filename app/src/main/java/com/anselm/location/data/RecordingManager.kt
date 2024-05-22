@@ -71,7 +71,9 @@ class RecordingManager() {
     }
 
     val recordings: List<String>
-        get() = home.listFiles()?.map { it.name } ?: emptyList()
+        get() = home.listFiles()
+            ?.sortedByDescending { it.lastModified() }
+            ?.map { it.name } ?: emptyList()
 
     companion object {
         private var instance: RecordingManager? = null
