@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -121,15 +122,15 @@ private fun DisplayRecordingItem(title: String, recording: Recording) {
 @Composable
 fun ViewRecordingsScreen() {
     Log.d(TAG, "RecordingScreen")
-    val appBarTitle = app.appBarTitle.value
+    val appBarTitle = rememberSaveable { app.appBarTitle.value }
 
     DisposableEffect (LocalContext.current ){
         app.appBarTitle.value = "Your Rides"
-
         onDispose {
             app.appBarTitle.value = appBarTitle
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

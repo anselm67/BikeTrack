@@ -11,6 +11,27 @@ class Recording(
     private var dataPoints: List<Sample> =
         app.dataManager.process(jsonArray.map { it.toLocationStub() })
 
+    private var updated = false
+
+    var title: String = id
+        set(value) {
+            field = value
+            updated = true
+        }
+
+    var time: Long = dataPoints.last().location.time
+        set(value) {
+            field = value
+            updated = true
+        }
+
+    var description: String = ""
+        set(value) {
+            field = value
+            updated = true
+        }
+    val endTime: Long = dataPoints.last().location.time
+
     val size: Int
         get() = dataPoints.size
 
