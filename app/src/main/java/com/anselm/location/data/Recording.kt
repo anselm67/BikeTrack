@@ -4,7 +4,10 @@ import android.location.Location
 import com.anselm.location.LocationApplication.Companion.app
 import kotlinx.serialization.json.JsonArray
 
-class Recording(jsonArray: JsonArray) {
+class Recording(
+    val id: String,
+    jsonArray: JsonArray
+) {
     private var dataPoints: List<Sample> =
         app.dataManager.process(jsonArray.map { it.toLocationStub() })
 

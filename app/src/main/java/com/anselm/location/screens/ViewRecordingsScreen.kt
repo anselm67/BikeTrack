@@ -21,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.NavigationItem
 import com.anselm.location.data.Recording
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -46,9 +48,15 @@ private fun StatBox(value: Double, units: String) {
 }
 
 @Composable
-private fun DisplayRecording(title: String, recording: Recording) {
+private fun DisplayRecordingItem(title: String, recording: Recording) {
+    val navController = LocalNavController.current
     Card(
         modifier = Modifier.padding(8.dp),
+        onClick = {
+            navController.navigate(
+                "${NavigationItem.RecordingDetails.route}/${recording.id}"
+            )
+        },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -130,7 +138,7 @@ fun ViewRecordingsScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         app.recordingManager.recordings.forEach {
-            DisplayRecording(it, app.recordingManager.load(it))
+            DisplayRecordingItem(it, app.recordingManager.load(it))
         }
     }
 }

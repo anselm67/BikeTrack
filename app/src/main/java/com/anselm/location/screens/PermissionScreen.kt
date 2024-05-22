@@ -26,13 +26,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 
 @Composable
-fun PermissionScreen(navController: NavController) {
+fun PermissionScreen() {
+    val navController = LocalNavController.current
     val context = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(

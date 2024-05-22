@@ -17,14 +17,20 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.R
 import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
 
 private const val MIN_SPEED = 0.0001
 
 @Composable
-private fun Front(sample: Sample) {
-    val speedInKilometersPerHour = sample.location.speed * 3.6
+private fun Front(recordingId: String?, sample: Sample) {
+    val isLive = (recordingId == null)
+    val speedInKilometersPerHour =
+        if ( isLive )
+            sample.location.speed * 3.6
+        else
+            sample.avgSpeed * 3.6
     val averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6
     val maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6
 
@@ -59,8 +65,12 @@ private fun Front(sample: Sample) {
 }
 
 @Composable
-private fun Back() {
-    val recording = app.recordingManager.lastRecording()
+private fun Back(recordingId: String?) {
+    val recording =
+        if ( recordingId == null )
+            app.recordingManager.lastRecording()
+        else
+            app.recordingManager.load(recordingId)
 
     if ( recording == null ) {
         Column(
@@ -69,7 +79,7 @@ private fun Back() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "No recording available",
+                text = "No data available",
                 style = MaterialTheme.typography.titleLarge,
             )
         }
@@ -95,16 +105,17 @@ private fun Back() {
     }
 }
 @Composable
-fun SpeedCard(sample: Sample) {
+fun SpeedCard(sample: Sample, recordingId: String? = null) {
     FlipCard(
         key = "SpeedCard",
         title = "Speed",
         modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
+        drawableId = R.drawable.ic_show_chart,
         front = {
-            Front(sample)
+            Front(recordingId, sample)
         },
         back = {
-            Back()
+            Back(recordingId)
         }
     )
 }

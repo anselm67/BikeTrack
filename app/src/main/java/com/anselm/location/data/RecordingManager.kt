@@ -60,7 +60,7 @@ class RecordingManager() {
         Log.d(TAG, "load $filename")
         with(File(home, filename)) {
             val jsonText = "[" + this.readText() + "]"
-            return Recording(Json.decodeFromString<JsonArray>(jsonText))
+            return Recording(filename, Json.decodeFromString<JsonArray>(jsonText))
         }
     }
 

@@ -48,6 +48,7 @@ private fun FlipCardInternal(
     cardFace: CardFace,
     onClick: (CardFace) -> Unit,
     modifier: Modifier = Modifier,
+    drawableId: Int,
     back: @Composable () -> Unit = { },
     front: @Composable () -> Unit = { },
     ) {
@@ -77,7 +78,7 @@ private fun FlipCardInternal(
                         .align(Alignment.TopEnd)
                         .offset((-10).dp, (10).dp)
                         .zIndex(2f),
-                    painter = painterResource(id = R.drawable.ic_flip_card),
+                    painter = painterResource(id = drawableId),
                     contentDescription = "Flip card.",
                     tint = MaterialTheme.colorScheme.primary,
                 )
@@ -108,6 +109,7 @@ fun FlipCard(
     key: String,
     title: String,
     modifier: Modifier = Modifier,
+    drawableId: Int = R.drawable.ic_flip_card,
     front: @Composable () -> Unit,
     back: @Composable () -> Unit
 ) {
@@ -116,6 +118,7 @@ fun FlipCard(
         cardFace = cardFace,
         onClick = { cardFace = cardFace.next },
         modifier = modifier,
+        drawableId = drawableId,
         front = {
             BasicCard(key, title) {
                 front()

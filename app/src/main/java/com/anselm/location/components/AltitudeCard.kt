@@ -20,19 +20,22 @@ import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
 
 @Composable
-private fun Front(sample: Sample) {
+private fun Front(recordingId: String?, sample: Sample) {
+    val isLive = (recordingId == null)
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
         Text(
-            text = "%.1f".format(sample.altitude),
+            text = "%.1f".format(sample.avgAltitude),
             style = MaterialTheme.typography.displayLarge,
         )
-        Text(
-            text = sample.grade.formatIf("--", "%.1f%%") { ! it.isFinite() },
-            style = MaterialTheme.typography.displayLarge,
-        )
+        if ( isLive ) {
+            Text(
+                text = sample.grade.formatIf("--", "%.1f%%") { !it.isFinite() },
+                style = MaterialTheme.typography.displayLarge,
+            )
+        }
     }
     Row (
         modifier = Modifier.fillMaxWidth(),
@@ -49,8 +52,13 @@ private fun Front(sample: Sample) {
     }
 }
 @Composable
-private fun Back() {
-    val recording = app.recordingManager.lastRecording()
+private fun Back(recordingId: String?) {
+    val recording =
+        if ( recordingId != null )
+            app.recordingManager.load(recordingId)
+        else
+            app.recordingManager.lastRecording()
+
     if ( recording == null ) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -88,14 +96,14 @@ private fun Back() {
 }
 
 @Composable
-fun AltitudeCard(sample: Sample) {
+fun AltitudeCard(sample: Sample, recordingId: String? = null) {
     FlipCard(
         key = "AltitudeCard",
         title = "Altitude",
         modifier = Modifier.padding(0.dp, 4.dp),
         front = {
-            Front(sample)
+            Front(recordingId, sample)
         },
-        back = { Back() }
+        back = { Back(recordingId) }
     )
 }
