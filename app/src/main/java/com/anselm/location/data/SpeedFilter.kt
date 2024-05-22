@@ -21,8 +21,8 @@ class SpeedFilter : DataFilter {
             }
         }
         lastSample = sample
-        Log.d(TAG, "speed: ${sample.location.speed} avgSpeed: ${sample.avgSpeed} maxSpeed: ${sample.maxSpeed} " +
-                "distance ${sample.distance}  ${sample.totalDistance}")
+//        Log.d(TAG, "speed: ${sample.location.speed} avgSpeed: ${sample.avgSpeed} maxSpeed: ${sample.maxSpeed} " +
+//                "distance ${sample.distance}  ${sample.totalDistance}")
     }
 
     override fun reset() {
