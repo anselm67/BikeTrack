@@ -1,8 +1,5 @@
 package com.anselm.location.data
 
-import android.util.Log
-import com.anselm.location.TAG
-
 class SpeedFilter : DataFilter {
     private var lastSample: Sample? = null
     private var sumSpeed = 0.0
