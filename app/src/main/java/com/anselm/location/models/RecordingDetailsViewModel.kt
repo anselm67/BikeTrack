@@ -28,7 +28,8 @@ class RecordingDetailsViewModel(
     class   Factory(private val recordingId: String) :
         ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return requireNotNull(RecordingDetailsViewModel(recordingId) as? T) {
+            @Suppress("UNCHECKED_CAST")
+            return requireNotNull(value = RecordingDetailsViewModel(recordingId) as? T) {
                 "Cannot create an instance of $modelClass"
             }
         }

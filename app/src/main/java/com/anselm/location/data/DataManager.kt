@@ -121,9 +121,9 @@ class DataManager {
             app.recordingManager.start()
         }
 
-        fun stopRecording() {
+        fun stopRecording(): Entry {
             isRecording.value = false
-            app.recordingManager.stop()
+            return app.recordingManager.stop()
         }
 
         override fun close() { }

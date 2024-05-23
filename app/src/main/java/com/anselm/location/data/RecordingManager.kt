@@ -51,11 +51,23 @@ class RecordingManager() {
             buffer.clear()
         }
     }
-    fun stop() {
+    fun stop(): Entry {
+        assert(recordingFile != null)
+        val recordingFile = recordingFile!!
         Log.d(TAG, "stopRecording")
         flush()
+        // Add a new entry to the catalog for this ride.
+        val entry = Entry(
+            id = recordingFile.name,
+            title = "Enter a title",
+            time = System.currentTimeMillis(),
+            description = "Enter a description",
+            lastSample = defaultSample,
+        )
+        addEntry(entry)
         doRecordingProlog = true
-        recordingFile = null
+        this.recordingFile = null
+        return entry
     }
 
     fun record(location: LocationStub) {
@@ -99,11 +111,11 @@ class RecordingManager() {
         }
     }
 
-    private var catalog : MutableList<Entry>? = null
+    private val catalog by lazy { loadCatalog() }
 
-    private fun rebuildCatalog() {
+    private fun rebuildCatalog(): MutableList<Entry> {
         Log.d(TAG, "rebuildCatalog")
-        val newCatalog = mutableListOf<Entry>()
+        val catalog = mutableListOf<Entry>()
         home.list()?.forEach { id ->
             if ( id != "catalog.json") {
                 val entry = Entry(
@@ -114,39 +126,51 @@ class RecordingManager() {
                     lastSample = defaultSample
                 )
                 val recording = load(entry)
-                newCatalog.add(entry.apply {
+                catalog.add(entry.apply {
                     title = id
                     time = recording.time
                     lastSample = recording.lastSample()
                 })
             }
         }
-        catalog = newCatalog
-        saveCatalog()
+        // TODO We should save this, right now it's recomputed on each launch until
+        // saved through adding/modifying a recording
+        return catalog
     }
 
-    private fun loadCatalog() {
+    private fun loadCatalog(): MutableList<Entry> {
         if ( catalogFile.exists() ) {
             // TODO Handle errors.
             with ( catalogFile ) {
                 val jsonText = this.readText()
-                catalog = Json.decodeFromString<MutableList<Entry>>(jsonText)
+                return Json.decodeFromString<MutableList<Entry>>(jsonText)
             }
         } else {
-            rebuildCatalog()
+            return rebuildCatalog()
         }
     }
 
     @OptIn(ExperimentalSerializationApi::class)
     fun saveCatalog() {
-        assert( catalog != null )
-        Log.d(TAG, "saveCatalog: ${catalog!!.size} entries.")
+        Log.d(TAG, "saveCatalog: ${catalog.size} entries.")
         val prettyJson = Json {
             prettyPrint = true
             prettyPrintIndent = "  "
         }
         with ( catalogFile ) {
             this.writeText(prettyJson.encodeToString(catalog))
+        }
+    }
+
+    private fun addEntry(entry: Entry) {
+        catalog.add(entry)
+        saveCatalog()
+    }
+
+    fun removeEntry(entry: Entry) {
+        if ( catalog.remove(entry) ) {
+            File(home, entry.id).delete()
+            saveCatalog()
         }
     }
 
