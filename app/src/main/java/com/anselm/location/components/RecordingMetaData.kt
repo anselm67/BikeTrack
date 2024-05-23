@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.anselm.location.LocalNavController
 import com.anselm.location.R
 import com.anselm.location.TAG
 import com.anselm.location.models.RecordingDetailsViewModel
@@ -87,6 +88,7 @@ private fun Back(viewModel: RecordingDetailsViewModel) {
 @Composable
 private fun Front(viewModel: RecordingDetailsViewModel) {
     val recording by viewModel.recordingState.collectAsState()
+    val navController = LocalNavController.current
 
     val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy 'at' HH:mm", Locale.US)
     Column (
@@ -102,6 +104,18 @@ private fun Front(viewModel: RecordingDetailsViewModel) {
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding()
         )
+        IconButton (
+            onClick = {
+                recording.delete()
+                navController.popBackStack()
+            }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_trash),
+                contentDescription = "Delete",
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
     }
 }
 @Composable

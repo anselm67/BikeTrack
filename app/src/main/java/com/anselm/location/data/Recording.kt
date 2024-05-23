@@ -24,8 +24,6 @@ class Recording(
             updated = true
         }
 
-    val id: String = entry.id
-
     val size: Int
         get() = dataPoints.size
 
@@ -35,7 +33,7 @@ class Recording(
         }
     }
 
-    fun deleteEntry() {
+    fun delete() {
         entry.delete()
     }
 
