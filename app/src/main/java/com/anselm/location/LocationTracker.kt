@@ -35,7 +35,7 @@ private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
-    private val liveContext = app.dataManager.createContext(false /* TODO true */)
+    private val liveContext = app.dataManager.createContext(true)
 
     override fun onDestroy() {
         super.onDestroy()
