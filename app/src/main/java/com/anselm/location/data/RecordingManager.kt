@@ -9,10 +9,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
 import java.io.File
 import java.time.format.DateTimeFormatter
 
@@ -44,7 +40,9 @@ class RecordingManager() {
 
     private fun flush() {
         if (buffer.size > 0) {
-            val jsonText = buffer.joinToString(",\n") { it.toJson() }
+            val jsonText = buffer.joinToString(",\n") {
+                Json.encodeToString(it)
+            }
             if ( ! doRecordingProlog ) {
                 recordingFile?.appendText(", \n")
             }
@@ -79,7 +77,12 @@ class RecordingManager() {
         Log.d(TAG, "load ${entry.id}")
         with ( File(home, entry.id) ) {
             val jsonText = "[" + this.readText() + "]"
-            return Recording(entry, Json.decodeFromString<JsonArray>(jsonText))
+            return Recording(
+                entry,
+                app.dataManager.process(
+                    Json.decodeFromString<List<LocationStub>>(jsonText)
+                )
+            )
         }
     }
 
@@ -94,17 +97,6 @@ class RecordingManager() {
                 instance ?: RecordingManager(recordingDirectory).also { instance = it }
             }
         }
-    }
-
-    private fun fromJson(obj: JsonObject): Entry {
-        return Entry(
-            id = obj["id"]?.jsonPrimitive?.content ?: "",
-            title = obj["title"]?.jsonPrimitive?.content ?: "",
-            time = obj["time"]?.jsonPrimitive?.long ?: 0,
-            description = obj["description"]?.jsonPrimitive?.content ?: "",
-            // We cache the lastSample for efficient listing of recordings.
-            lastSample = obj["lastSample"]?.toSample() ?: defaultSample
-        )
     }
 
     private var catalog : MutableList<Entry>? = null

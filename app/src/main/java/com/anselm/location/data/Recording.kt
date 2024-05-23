@@ -1,16 +1,11 @@
 package com.anselm.location.data
 
 import android.location.Location
-import com.anselm.location.LocationApplication.Companion.app
-import kotlinx.serialization.json.JsonArray
 
 class Recording(
     private val entry: Entry,
-    jsonArray: JsonArray
+    private val dataPoints: List<Sample>
 ) {
-    private var dataPoints: List<Sample> =
-        app.dataManager.process(jsonArray.map { it.toLocationStub() })
-
     private var updated = false
 
     var title: String
