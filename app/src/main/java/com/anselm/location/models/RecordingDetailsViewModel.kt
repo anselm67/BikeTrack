@@ -20,7 +20,7 @@ class RecordingDetailsViewModel(
         this.recordingFlow.value = recording
         // Launch a coroutine to update the database.
         app.launch {
-            recording.saveEntry()
+            recording.save()
         }
     }
 

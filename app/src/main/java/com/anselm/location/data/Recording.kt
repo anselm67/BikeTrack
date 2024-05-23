@@ -29,10 +29,14 @@ class Recording(
     val size: Int
         get() = dataPoints.size
 
-    fun saveEntry() {
-        if (updated) {
+    fun save() {
+        if ( updated ) {
             entry.save()
         }
+    }
+
+    fun deleteEntry() {
+        entry.delete()
     }
 
     fun lastSample(): Sample = dataPoints.last()

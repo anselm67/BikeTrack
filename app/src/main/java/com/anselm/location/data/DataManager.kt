@@ -110,7 +110,7 @@ class DataManager {
 
         var lastSample: Sample? = null
 
-        fun reset() {
+        private fun reset() {
             lastSample = null
             filters.forEach { it.reset() }
         }
@@ -123,7 +123,7 @@ class DataManager {
 
         fun stopRecording(): Entry {
             isRecording.value = false
-            return app.recordingManager.stop()
+            return app.recordingManager.stop(lastSample)
         }
 
         override fun close() { }

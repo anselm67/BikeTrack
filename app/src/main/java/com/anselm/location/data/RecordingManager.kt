@@ -51,7 +51,7 @@ class RecordingManager() {
             buffer.clear()
         }
     }
-    fun stop(): Entry {
+    fun stop(lastSample: Sample?): Entry {
         assert(recordingFile != null)
         val recordingFile = recordingFile!!
         Log.d(TAG, "stopRecording")
@@ -59,10 +59,10 @@ class RecordingManager() {
         // Add a new entry to the catalog for this ride.
         val entry = Entry(
             id = recordingFile.name,
-            title = "Enter a title",
+            title = "",
             time = System.currentTimeMillis(),
-            description = "Enter a description",
-            lastSample = defaultSample,
+            description = "",
+            lastSample = lastSample ?: defaultSample,
         )
         addEntry(entry)
         doRecordingProlog = true
@@ -78,7 +78,7 @@ class RecordingManager() {
     }
 
     fun load(recordingId: String): Recording {
-        val entry = catalog?.find { it.id == recordingId }
+        val entry = catalog.find { it.id == recordingId }
         if ( entry == null ) {
             error("No such recording $recordingId")
         }
@@ -167,7 +167,7 @@ class RecordingManager() {
         saveCatalog()
     }
 
-    fun removeEntry(entry: Entry) {
+    fun delete(entry: Entry) {
         if ( catalog.remove(entry) ) {
             File(home, entry.id).delete()
             saveCatalog()
@@ -175,12 +175,7 @@ class RecordingManager() {
     }
 
     fun list(): List<Entry> {
-        synchronized (this ) {
-            if (catalog == null) {
-                loadCatalog()
-            }
-        }
-        return catalog!!.toList()
+        return catalog.toList()
     }
 }
 
@@ -200,5 +195,9 @@ class Entry (
 
     fun save() {
         recordingManager.saveCatalog()
+    }
+
+    fun delete() {
+        recordingManager.delete(this)
     }
 }
