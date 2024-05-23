@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
-import com.anselm.location.data.Recording
+import com.anselm.location.data.Entry
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -49,13 +49,13 @@ private fun StatBox(value: Double, units: String) {
 }
 
 @Composable
-private fun DisplayRecordingItem(title: String, recording: Recording) {
+private fun DisplayRecordingItem(entry: Entry) {
     val navController = LocalNavController.current
     Card(
         modifier = Modifier.padding(8.dp),
         onClick = {
             navController.navigate(
-                "${NavigationItem.RecordingDetails.route}/${recording.id}"
+                "${NavigationItem.RecordingDetails.route}/${entry.id}"
             )
         },
         colors = CardDefaults.cardColors(
@@ -76,7 +76,7 @@ private fun DisplayRecordingItem(title: String, recording: Recording) {
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = title,
+                    text = entry.title,
                     style = MaterialTheme.typography.titleLarge,
                 )
             }
@@ -87,7 +87,7 @@ private fun DisplayRecordingItem(title: String, recording: Recording) {
             ) {
                 Text(
                     text = "Duration %02d:%02d:%02d".format(
-                        *(recording.lastSample().elapsedTime).toDuration(DurationUnit.MILLISECONDS)
+                        *(entry.lastSample.elapsedTime).toDuration(DurationUnit.MILLISECONDS)
                             .toComponents { hours, minutes, seconds, _ ->
                                 arrayOf(hours, minutes, seconds)
                             }
@@ -99,17 +99,17 @@ private fun DisplayRecordingItem(title: String, recording: Recording) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                StatBox(value = recording.lastSample().avgSpeed * 3.6, units = "km/h")
-                StatBox(value = recording.lastSample().totalDistance / 1000.0, units = "km")
+                StatBox(value = entry.lastSample.avgSpeed * 3.6, units = "km/h")
+                StatBox(value = entry.lastSample.totalDistance / 1000.0, units = "km")
                 Column (
                     horizontalAlignment = Alignment.Start,
                 ) {
                     Text(
-                        text = "%.1f up".format(recording.lastSample().climb),
+                        text = "%.1f up".format(entry.lastSample.climb),
                         style = MaterialTheme.typography.titleLarge,
                     )
                     Text(
-                        text = "%.1f dn".format(recording.lastSample().descent),
+                        text = "%.1f dn".format(entry.lastSample.descent),
                         style = MaterialTheme.typography.titleLarge,
                     )
                 }
@@ -138,8 +138,8 @@ fun ViewRecordingsScreen() {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        app.recordingManager.recordings.forEach {
-            DisplayRecordingItem(it, app.recordingManager.load(it))
+        app.recordingManager.list().forEach {
+            DisplayRecordingItem(it)
         }
     }
 }

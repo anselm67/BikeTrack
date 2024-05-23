@@ -17,7 +17,11 @@ class AltitudeFilter: AverageFilter(3) {
     override fun update(sample: Sample) {
         super.update(sample)
         sumAltitude += sample.altitude
-        sample.avgAltitude = sumAltitude / sample.seqno
+        sample.avgAltitude =
+            if ( sample.seqno > 0 )
+                sumAltitude / sample.seqno
+            else
+                0.0
         if ( lastSample != null ) {
             val lastSample = lastSample!!
             val verticalDistance = sample.altitude - lastSample.altitude

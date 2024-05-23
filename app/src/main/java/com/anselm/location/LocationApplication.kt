@@ -133,6 +133,10 @@ class LocationApplication: Application() {
         applicationScope.launch(Dispatchers.Main) { block() }
     }
 
+    fun launch(block: () -> Unit) {
+        applicationScope.launch { block() }
+    }
+
     companion object {
         @SuppressLint("StaticFieldLeak")
         lateinit var app: LocationApplication

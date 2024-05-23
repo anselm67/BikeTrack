@@ -14,6 +14,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -104,6 +106,10 @@ private fun FlipCardInternal(
     }
 }
 
+val LocalFaceController = compositionLocalOf<() -> Unit> {
+    error("LocalFaceController: none provided.")
+}
+
 @Composable
 fun FlipCard(
     key: String,
@@ -114,16 +120,19 @@ fun FlipCard(
     back: @Composable () -> Unit
 ) {
     var cardFace by remember { mutableStateOf(CardFace.Front) }
-    FlipCardInternal(
-        cardFace = cardFace,
-        onClick = { cardFace = cardFace.next },
-        modifier = modifier,
-        drawableId = drawableId,
-        front = {
-            BasicCard(key, title) {
-                front()
-            }
-        },
-        back = back
-    )
+    val flip = { cardFace = cardFace.next }
+    CompositionLocalProvider(LocalFaceController provides flip) {
+        FlipCardInternal(
+            cardFace = cardFace,
+            onClick = { cardFace = cardFace.next },
+            modifier = modifier,
+            drawableId = drawableId,
+            front = {
+                BasicCard(key, title) {
+                    front()
+                }
+            },
+            back = back
+        )
+    }
 }

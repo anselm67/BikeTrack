@@ -26,13 +26,18 @@ private fun Front(recordingId: String?, sample: Sample) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
-        Text(
-            text = "%.1f".format(sample.avgAltitude),
-            style = MaterialTheme.typography.displayLarge,
-        )
         if ( isLive ) {
             Text(
-                text = sample.grade.formatIf("--", "%.1f%%") { !it.isFinite() },
+                text = sample.altitude.formatIf("--", "%.1f") { ! it.isFinite() },
+                style = MaterialTheme.typography.displayLarge,
+            )
+            Text(
+                text = sample.grade.formatIf("--", "%.1f%%") { ! it.isFinite() },
+                style = MaterialTheme.typography.displayLarge,
+            )
+        } else {
+            Text(
+                text = sample.avgAltitude.formatIf("--", "%.1f") { ! it.isFinite() },
                 style = MaterialTheme.typography.displayLarge,
             )
         }

@@ -20,8 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -111,18 +110,19 @@ private var trackerConnection: LocationApplication.TrackerConnection? = null
 
 @Composable
 fun RecordingScreen() {
-    val title = remember { mutableStateOf("Happy Ride!") }
-    val bottomBarVisible = app.hideBottomBar.value
+    val bottomBarVisible = rememberSaveable { app.hideBottomBar.value }
+    val appBarTitle = rememberSaveable {app.appBarTitle.value }
 
     DisposableEffect(LocalContext.current) {
         Log.d(TAG, "RecordingScreen.connect()")
         trackerConnection = app.connect()
-
+        app.appBarTitle.value = "Happy Riding !"
         onDispose {
             Log.d(TAG, "RecordingScreen.close")
             trackerConnection?.close()
             trackerConnection = null
             app.hideBottomBar.value = bottomBarVisible
+            app.appBarTitle.value = appBarTitle
         }
     }
     Column(
@@ -136,7 +136,8 @@ fun RecordingScreen() {
             } else {
                 app.hideBottomBar.value = false
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .paint(
                             painter = painterResource(id = R.drawable.cyclist_start),
                             contentScale = ContentScale.FillHeight,

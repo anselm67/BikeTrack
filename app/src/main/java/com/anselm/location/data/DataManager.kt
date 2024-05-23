@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.anselm.location.AutoPause
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -13,12 +14,13 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.float
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 import java.io.Closeable
-
+@Serializable
 data class LocationStub(
     val time: Long,
     val latitude: Double,
@@ -77,7 +79,7 @@ fun LocationStub.toJson(): String {
 
 fun JsonElement.toLocationStub(): LocationStub {
     if ( this !is JsonObject ) {
-        throw Exception("Expected JSON object")
+        error("Expected a JsonObject, got ${this.javaClass::class.simpleName}")
     }
     val obj = this.jsonObject
     return LocationStub(
@@ -91,6 +93,7 @@ fun JsonElement.toLocationStub(): LocationStub {
     )
 }
 
+@Serializable
 data class Sample(
     val seqno: Int,
     val location: LocationStub,
@@ -107,6 +110,28 @@ data class Sample(
     var descent: Double,
     var grade: Double,
 )
+
+fun JsonElement.toSample(): Sample {
+    if ( this !is JsonObject ) {
+        error("Expected a JsonObject, got ${this.javaClass::class.simpleName}")
+    }
+    val obj = this.jsonObject
+    return Sample(
+        seqno = obj["seqno"]?.jsonPrimitive?.int ?: 0,
+        location = obj["location"]?.jsonPrimitive?.jsonObject?.toLocationStub() ?: LocationStub(),
+        elapsedTime = obj["elapsedTime"]?.jsonPrimitive?.long ?: 0,
+        distance = obj["distance"]?.jsonPrimitive?.double ?: 0.0,
+        totalDistance = obj["totalDistance"]?.jsonPrimitive?.double ?: 0.0,
+        avgSpeed = obj["avgSpeed"]?.jsonPrimitive?.double ?: 0.0,
+        maxSpeed = obj["maxSpeed"]?.jsonPrimitive?.double ?: 0.0,
+        altitude = obj["altitude"]?.jsonPrimitive?.double ?: 0.0,
+        avgAltitude = obj["avgAltitude"]?.jsonPrimitive?.double ?: 0.0,
+        verticalDistance = obj["verticalDistance"]?.jsonPrimitive?.double ?: 0.0,
+        climb = obj["climb"]?.jsonPrimitive?.double ?: 0.0,
+        descent = obj["descent"]?.jsonPrimitive?.double ?: 0.0,
+        grade = obj["grade"]?.jsonPrimitive?.double ?: 0.0,
+    )
+}
 
 val defaultSample = Sample(
     seqno = 0,

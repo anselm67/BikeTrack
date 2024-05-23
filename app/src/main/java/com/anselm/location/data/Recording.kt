@@ -5,7 +5,7 @@ import com.anselm.location.LocationApplication.Companion.app
 import kotlinx.serialization.json.JsonArray
 
 class Recording(
-    val id: String,
+    private val entry: Entry,
     jsonArray: JsonArray
 ) {
     private var dataPoints: List<Sample> =
@@ -13,27 +13,32 @@ class Recording(
 
     private var updated = false
 
-    var title: String = id
+    var title: String
+        get() = entry.title
         set(value) {
-            field = value
+            entry.title = value
             updated = true
         }
 
     var time: Long = dataPoints.last().location.time
+
+    var description: String
+        get() = entry.description
         set(value) {
-            field = value
+            entry.description = value
             updated = true
         }
 
-    var description: String = ""
-        set(value) {
-            field = value
-            updated = true
-        }
-    val endTime: Long = dataPoints.last().location.time
+    val id: String = entry.id
 
     val size: Int
         get() = dataPoints.size
+
+    fun saveEntry() {
+        if (updated) {
+            entry.save()
+        }
+    }
 
     fun lastSample(): Sample = dataPoints.last()
 
