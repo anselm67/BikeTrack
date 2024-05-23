@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class RecordingDetailsViewModel(
-    private val recordingId: String,
+    recordingId: String,
 ): ViewModel() {
     // TODO Handle errors.
     private val recordingFlow = MutableStateFlow(
@@ -28,7 +28,9 @@ class RecordingDetailsViewModel(
     class   Factory(private val recordingId: String) :
         ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return RecordingDetailsViewModel(recordingId) as T
+            return requireNotNull(RecordingDetailsViewModel(recordingId) as? T) {
+                "Cannot create an instance of $modelClass"
+            }
         }
     }
 }

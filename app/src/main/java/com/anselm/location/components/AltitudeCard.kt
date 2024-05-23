@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.R
 import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
 
@@ -37,7 +38,7 @@ private fun Front(recordingId: String?, sample: Sample) {
             )
         } else {
             Text(
-                text = sample.avgAltitude.formatIf("--", "%.1f") { ! it.isFinite() },
+                text = sample.avgAltitude.formatIf("--", "%.1f") { ! it.isFinite() || it == 0.0 },
                 style = MaterialTheme.typography.displayLarge,
             )
         }
@@ -106,6 +107,7 @@ fun AltitudeCard(sample: Sample, recordingId: String? = null) {
         key = "AltitudeCard",
         title = "Altitude",
         modifier = Modifier.padding(0.dp, 4.dp),
+        drawableId = R.drawable.ic_show_chart,
         front = {
             Front(recordingId, sample)
         },
