@@ -39,7 +39,7 @@ fun RecordingDetailsScreen(recordingId: String?) {
     ) {
         RecordingMetaData(viewModel)
         TimeElapsedCard(sample = lastSample)
-        SpeedCard(recordingId = recordingId, sample = lastSample)
-        AltitudeCard(recordingId = recordingId, sample = lastSample)
+        SpeedCard(recording = recording, sample = lastSample)
+        AltitudeCard(recording = recording, sample = lastSample)
     }
 }

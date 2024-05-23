@@ -16,7 +16,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -121,9 +120,9 @@ private fun Front(viewModel: RecordingDetailsViewModel) {
 @Composable
 fun RecordingMetaData(viewModel: RecordingDetailsViewModel) {
     val recording by viewModel.recordingState.collectAsState()
-    val updatedState = rememberUpdatedState(recording)
 
-    Log.d("com.anselm.location", "RecordingMetaData renders $recording $updatedState")
+    Log.d("com.anselm.location", "RecordingMetaData renders $recording")
+
     FlipCard(
         key = "RecordingMetaData",
         title = recording.title,

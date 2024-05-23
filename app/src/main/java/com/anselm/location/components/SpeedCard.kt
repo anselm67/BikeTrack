@@ -18,14 +18,15 @@ import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.R
+import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
 
 private const val MIN_SPEED = 0.0001
 
 @Composable
-private fun Front(recordingId: String?, sample: Sample) {
-    val isLive = (recordingId == null)
+private fun Front(recording: Recording? = null, sample: Sample) {
+    val isLive = (recording == null)
     val speedInKilometersPerHour =
         if ( isLive )
             sample.location.speed * 3.6
@@ -65,13 +66,8 @@ private fun Front(recordingId: String?, sample: Sample) {
 }
 
 @Composable
-private fun Back(recordingId: String?) {
-    val recording =
-        if ( recordingId == null )
-            app.recordingManager.lastRecording()
-        else
-            app.recordingManager.load(recordingId)
-
+private fun Back(optionalRecording: Recording?) {
+    val recording = optionalRecording ?: app.recordingManager.lastRecording()
     if ( recording == null ) {
         Column(
             modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer),
@@ -105,17 +101,17 @@ private fun Back(recordingId: String?) {
     }
 }
 @Composable
-fun SpeedCard(sample: Sample, recordingId: String? = null) {
+fun SpeedCard(sample: Sample, recording: Recording? = null) {
     FlipCard(
         key = "SpeedCard",
         title = "Speed",
         modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
         drawableId = R.drawable.ic_show_chart,
         front = {
-            Front(recordingId, sample)
+            Front(recording, sample)
         },
         back = {
-            Back(recordingId)
+            Back(recording)
         }
     )
 }

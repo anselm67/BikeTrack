@@ -17,12 +17,13 @@ import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.R
+import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
 
 @Composable
-private fun Front(recordingId: String?, sample: Sample) {
-    val isLive = (recordingId == null)
+private fun Front(recording: Recording?, sample: Sample) {
+    val isLive = (recording == null)
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround,
@@ -58,12 +59,8 @@ private fun Front(recordingId: String?, sample: Sample) {
     }
 }
 @Composable
-private fun Back(recordingId: String?) {
-    val recording =
-        if ( recordingId != null )
-            app.recordingManager.load(recordingId)
-        else
-            app.recordingManager.lastRecording()
+private fun Back(optionalRecording: Recording?) {
+    val recording = optionalRecording ?: app.recordingManager.lastRecording()
 
     if ( recording == null ) {
         Column(
@@ -102,15 +99,15 @@ private fun Back(recordingId: String?) {
 }
 
 @Composable
-fun AltitudeCard(sample: Sample, recordingId: String? = null) {
+fun AltitudeCard(sample: Sample, recording: Recording? = null) {
     FlipCard(
         key = "AltitudeCard",
         title = "Altitude",
         modifier = Modifier.padding(0.dp, 4.dp),
         drawableId = R.drawable.ic_show_chart,
         front = {
-            Front(recordingId, sample)
+            Front(recording, sample)
         },
-        back = { Back(recordingId) }
+        back = { Back(recording) }
     )
 }
