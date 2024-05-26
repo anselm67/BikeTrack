@@ -38,20 +38,23 @@ private fun Front(sample: Sample, recording: Recording?) {
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
             if (isLive) {
-                Text(
-                    text = sample.altitude.formatIf("--", "%.1f") { !it.isFinite() },
+                NumberWithUnits(
+                    value = sample.altitude.formatIf("--", "%.1f") { !it.isFinite() },
+                    units = "m",
                     style = MaterialTheme.typography.displayLarge,
                 )
-                Text(
-                    text = sample.grade.formatIf("--", "%.1f%%") { !it.isFinite() },
+                NumberWithUnits(
+                    value = sample.grade.formatIf("--", "%.1f") { !it.isFinite() },
+                    units = "%",
                     style = MaterialTheme.typography.displayLarge,
                 )
             } else {
-                Text(
-                    text = sample.avgAltitude.formatIf(
+                NumberWithUnits(
+                    value = sample.avgAltitude.formatIf(
                         "--",
                         "%.1f"
                     ) { !it.isFinite() || it == 0.0 },
+                    units = "m",
                     style = MaterialTheme.typography.displayLarge,
                 )
             }

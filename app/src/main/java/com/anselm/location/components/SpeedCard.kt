@@ -44,8 +44,9 @@ private fun Front(sample: Sample, recording: Recording? = null) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(
-                text = speedInKilometersPerHour.formatIf("--", "%.1f") { it <= MIN_SPEED },
+            NumberWithUnits(
+                value = speedInKilometersPerHour.formatIf("--", "%.1f") { it <= MIN_SPEED },
+                units = "km/h",
                 style = MaterialTheme.typography.displayLarge,
             )
         }
@@ -53,18 +54,20 @@ private fun Front(sample: Sample, recording: Recording? = null) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = averageSpeedInKilometersPerHour.formatIf(
+            NumberWithUnits(
+                value = averageSpeedInKilometersPerHour.formatIf(
                     "Average: --",
                     "Average: %.1f"
                 ) { !it.isFinite() || it <= MIN_SPEED },
+                units = "km/h",
                 style = MaterialTheme.typography.titleLarge,
             )
-            Text(
-                text = maxSpeedInKilometersPerHour.formatIf(
+            NumberWithUnits(
+                value = maxSpeedInKilometersPerHour.formatIf(
                     "Maximum: --",
                     "Maximum: %.1f"
                 ) { !it.isFinite() || it < MIN_SPEED },
+                units = "km/h",
                 style = MaterialTheme.typography.titleLarge,
             )
         }

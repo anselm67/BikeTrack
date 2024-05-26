@@ -82,15 +82,10 @@ fun TimeElapsedCard(
             Row (
                 modifier = Modifier.padding(top = 12.dp)
             ){
-                Text(
-                    text = "%.2f".format(distanceInKilometers),
+                NumberWithUnits(
+                    value = "%.2f".format(distanceInKilometers),
+                    units = "km",
                     style = MaterialTheme.typography.displayLarge,
-                    modifier = Modifier.alignByBaseline(),
-                )
-                Text(
-                    modifier = Modifier.alignByBaseline(),
-                    text = "km",
-                    style = MaterialTheme.typography.titleLarge,
                 )
             }
         }

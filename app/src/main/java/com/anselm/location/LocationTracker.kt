@@ -34,9 +34,12 @@ import kotlinx.coroutines.flow.callbackFlow
 
 private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 
+// Update period of our geo location.
+public const val UPDATE_PERIOD_MILLISECONDS = 5000L
+
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
-    private val liveContext = app.dataManager.createContext(true)
+    private val liveContext = app.dataManager.createContext(/* TODO true */ false)
 
     override fun onDestroy() {
         super.onDestroy()
@@ -73,7 +76,7 @@ class LocationTracker: Service() {
                 fusedLocationClient?.requestLocationUpdates(
                     LocationRequest.Builder(
                         Priority.PRIORITY_HIGH_ACCURACY,
-                        5000
+                        UPDATE_PERIOD_MILLISECONDS,
                     ).build(),
                     locationCallback,
                     Looper.getMainLooper()

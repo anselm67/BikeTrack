@@ -3,6 +3,7 @@ package com.anselm.location.data
 import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
+import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -75,10 +76,13 @@ class RecordingManager() {
         }
     }
 
+    // We want to flush once quickly so we record the ride, and then every minute.
+    private var nextFlush = 3
     fun record(location: LocationStub) {
         buffer.add(location)
-        if ( buffer.size > 50 ) {
+        if ( buffer.size > nextFlush ) {
             flush()
+            nextFlush = (60000L / UPDATE_PERIOD_MILLISECONDS).toInt().coerceAtLeast(1)
         }
     }
 

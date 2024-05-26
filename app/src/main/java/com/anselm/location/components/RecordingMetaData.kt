@@ -1,19 +1,17 @@
 package com.anselm.location.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,29 +40,32 @@ private fun Back(
     Column(
         modifier =modifier.fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 5.dp)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .border(2.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(10.dp))
+//            .background(
+//                color = MaterialTheme.colorScheme.surfaceVariant,
+//                shape = RoundedCornerShape(10.dp)
+//            )
+//            .border(2.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(10.dp))
     ) {
-        TextField(
+        OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = { value -> title = value.replaceFirstChar { it.uppercase() } },
             label = { Text("Title") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Enter a title.") }
         )
-        TextField(
+        OutlinedTextField(
             value = description,
-            onValueChange = { description = it },
+            onValueChange = { value -> description = value.replaceFirstChar { it.uppercase() } },
             label = { Text("Description") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Enter a description.") }
         )
         Row (
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            IconButton(
+            Button(
                 onClick = {
                   viewModel.isEditing.value = false
                 },
@@ -72,11 +73,15 @@ private fun Back(
                 Icon(
                     modifier = modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_cancel),
-                    contentDescription = "Save",
-                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Cancel",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+                Text(
+                    text = "Cancel",
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
-            IconButton(
+            Button(
                 onClick = {
                     recording.title = title
                     recording.description = description
@@ -88,7 +93,11 @@ private fun Back(
                     modifier = modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_check),
                     contentDescription = "Save",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+                Text(
+                    text = "Save",
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
@@ -105,6 +114,7 @@ private fun Front(
 
     Column (
         modifier = modifier.fillMaxWidth()
+            .padding(vertical = 12.dp, horizontal = 5.dp)
     ) {
         Row (
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -136,7 +146,7 @@ private fun Front(
         }
         Text(
             text = recording.description,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding()
         )
     }
