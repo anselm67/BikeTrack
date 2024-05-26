@@ -21,7 +21,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -30,9 +33,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.LocationTracker
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
@@ -40,9 +45,29 @@ import com.anselm.location.components.DebugCard
 import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
+import com.anselm.location.components.YesNoDialog
 import com.anselm.location.models.LocalAppViewModel
 
 private const val TAG = "com.anselm.location.components.HomeScreen"
+
+private fun stopRecording(
+    liveContext: LocationTracker.TrackerBinder,
+    navController: NavHostController,
+) {
+    val entry = liveContext.stopRecording()
+    if ( entry == null ) {
+        app.toast("Ride discarded because it is too short.")
+        navController.navigate(NavigationItem.ViewRecordings.route)
+    } else {
+        navController.navigate(
+            NavigationItem.RecordingDetails.route + "/${entry.id}"
+        ) {
+            popUpTo(NavigationItem.ViewRecordings.route) {
+                inclusive = true
+            }
+        }
+    }
+}
 
 @Composable
 fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
@@ -78,7 +103,10 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
 }
 
 @Composable
-private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnection) {
+private fun DisplayScreen(
+    trackerConnection: LocationApplication.TrackerConnection,
+    showStopRecordingDialog: MutableState<Boolean>,
+) {
     val navController = LocalNavController.current
     val liveContext = trackerConnection.binder ?: return
     Column (
@@ -89,7 +117,8 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
     ) {
         if ( liveContext.isAutoPause.value ) {
             Column (
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.primary),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -109,19 +138,8 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             IconButton(
                 onClick = {
                     if ( liveContext.isRecording.value ) {
-                        val entry = liveContext.stopRecording()
-                        if ( entry == null ) {
-                            app.toast("Ride discarded because it is too short.")
-                            navController.navigate(NavigationItem.ViewRecordings.route)
-                        } else {
-                            navController.navigate(
-                                NavigationItem.RecordingDetails.route + "/${entry.id}"
-                            ) {
-                                popUpTo(NavigationItem.ViewRecordings.route) {
-                                    inclusive = true
-                                }
-                            }
-                        }
+                        showStopRecordingDialog.value = true
+//                        stopRecording(liveContext, navController)
                     } else {
                         liveContext.startRecording()
                     }
@@ -151,6 +169,8 @@ private var trackerConnection: LocationApplication.TrackerConnection? = null
 
 @Composable
 fun RecordingScreen() {
+    val showStopRecordingDialog = remember { mutableStateOf(false) }
+    val navController = LocalNavController.current
     val appViewModel = LocalAppViewModel.current
     appViewModel
         .updateTitle(title = "Enjoy your ride!")
@@ -177,7 +197,10 @@ fun RecordingScreen() {
                         showOnLockScreen = true
                     )
                 }
-                DisplayScreen(trackerConnection!!)
+                DisplayScreen(
+                    trackerConnection!!,
+                    showStopRecordingDialog,
+                )
             } else {
                 appViewModel.updateApplicationState {
                     it.copy(
@@ -207,6 +230,20 @@ fun RecordingScreen() {
                         )
                     }
                 }
+            }
+            if ( showStopRecordingDialog.value ) {
+                YesNoDialog(
+                    onDismiss = {
+                        showStopRecordingDialog.value = false
+                    },
+                    onConfirm = {
+                        showStopRecordingDialog.value = false
+                        stopRecording(trackerConnection!!.binder!!, navController)
+                    },
+                    title = "Save this ride ?",
+                    text = "If you have finished your ride, press Yes to save your ride. " +
+                            "Otherwise, cancel will resume tracking."
+                )
             }
         } else {
             LoadingDisplay()
