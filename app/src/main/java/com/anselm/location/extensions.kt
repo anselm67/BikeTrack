@@ -33,3 +33,5 @@ fun DoubleArray.shift(position: Int) {
 }
 
 val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy 'at' HH:mm", Locale.US)
+
+val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
