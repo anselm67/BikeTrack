@@ -11,6 +11,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import com.anselm.location.data.DataManager
@@ -36,13 +37,6 @@ class LocationApplication: Application() {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
     val dataManager by lazy { DataManager() }
-
-    // Dynamic screen configuration.
-    val hideTopBar = mutableStateOf(false)
-    val hideBottomBar = mutableStateOf(false)
-    val appBarTitle by lazy {
-        mutableStateOf(getString(R.string.app_name))
-    }
 
     override fun onCreate() {
         super.onCreate()
@@ -135,6 +129,12 @@ class LocationApplication: Application() {
 
     fun launch(block: () -> Unit) {
         applicationScope.launch { block() }
+    }
+
+    fun toast(msg: String) {
+        applicationScope.launch(Dispatchers.Main) {
+            Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
+        }
     }
 
     companion object {

@@ -1,6 +1,7 @@
 package com.anselm.location.data
 
 import android.location.Location
+import com.google.android.gms.maps.model.LatLng
 
 class Recording(
     private val entry: Entry,
@@ -33,10 +34,6 @@ class Recording(
         }
     }
 
-    fun delete() {
-        entry.delete()
-    }
-
     fun lastSample(): Sample = dataPoints.last()
 
     fun extractTime(): List<Float> {
@@ -62,4 +59,7 @@ class Recording(
         return chunks.map { distance += it; distance.toFloat() }
     }
     fun extractSpeed(): List<Float> = dataPoints.map { 3.6f * it.location.speed }
+
+    fun extractLatLng(): List<LatLng>
+        = dataPoints.map { LatLng(it.location.latitude, it.location.longitude) }
 }

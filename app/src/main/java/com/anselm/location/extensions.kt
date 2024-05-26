@@ -1,5 +1,8 @@
 package com.anselm.location
 
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 val Any.TAG: String
     get() {
         return if (!javaClass.isAnonymousClass) {
@@ -28,3 +31,5 @@ fun DoubleArray.shift(position: Int) {
         this.copyInto(this, -position, 0, this.size + position)
     }
 }
+
+val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy 'at' HH:mm", Locale.US)

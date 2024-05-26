@@ -16,6 +16,7 @@ import androidx.compose.runtime.MutableState
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.data.Entry
 import com.anselm.location.data.LocationStub
 import com.anselm.location.data.Sample
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -164,9 +165,10 @@ class LocationTracker: Service() {
             liveContext.startRecording()
         }
 
-        fun stopRecording() {
-            liveContext.stopRecording()
+        fun stopRecording(): Entry? {
+            val entry = liveContext.stopRecording()
             stopLocationRequests()
+            return entry
         }
 
         val isRecording: MutableState<Boolean>

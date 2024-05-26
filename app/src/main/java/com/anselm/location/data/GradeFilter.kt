@@ -1,12 +1,9 @@
 package com.anselm.location.data
 
-import android.util.Log
-import com.anselm.location.TAG
 import com.anselm.location.shift
 
 private const val  MIN_DISTANCE_IN_METERS = 5.0
 
-// TODO Keep an array of pendingDistance / pendingAltitude
 class GradeFilter : DataFilter {
     private var lastSample: Sample? = null
     private var cursor = -1
@@ -28,7 +25,6 @@ class GradeFilter : DataFilter {
                 pendingAltitudes[cursor] = sample.verticalDistance
                 cursor++
             } else {
-                Log.d(TAG, "Missing space in pending arrays.")
                 pendingDistances.shift(-1)
                 pendingAltitudes.shift(-1)
                 pendingDistances[cursor - 1] = sample.distance

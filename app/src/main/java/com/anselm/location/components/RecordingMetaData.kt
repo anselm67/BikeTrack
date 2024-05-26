@@ -1,11 +1,11 @@
 package com.anselm.location.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,23 +20,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.anselm.location.LocalNavController
 import com.anselm.location.R
-import com.anselm.location.TAG
+import com.anselm.location.dateFormat
 import com.anselm.location.models.RecordingDetailsViewModel
-import java.text.SimpleDateFormat
-import java.util.Locale
+
 
 @Composable
-private fun Back(viewModel: RecordingDetailsViewModel) {
-    val recording by viewModel.recordingState.collectAsState()
+private fun Back(
+    viewModel: RecordingDetailsViewModel,
+    modifier: Modifier
+) {
+    val recordingWrapper by viewModel.recordingState.collectAsState()
+    val recording = recordingWrapper.value
 
     var title by remember { mutableStateOf(recording.title) }
     var description by remember { mutableStateOf(recording.description) }
-    val flip = LocalFaceController.current
 
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier =modifier.fillMaxWidth()
     ) {
         TextField(
             value = title,
@@ -56,8 +57,7 @@ private fun Back(viewModel: RecordingDetailsViewModel) {
         ) {
             IconButton(
                 onClick = {
-                  Log.d(TAG, "cancel")
-                  flip()
+                  viewModel.isEditing.value = false
                 },
             ) {
                 Icon(
@@ -71,7 +71,7 @@ private fun Back(viewModel: RecordingDetailsViewModel) {
                     recording.title = title
                     recording.description = description
                     viewModel.updateRecording(recording)
-                    flip()
+                    viewModel.isEditing.value = false
                 },
             ) {
                 Icon(
@@ -85,50 +85,60 @@ private fun Back(viewModel: RecordingDetailsViewModel) {
 }
 
 @Composable
-private fun Front(viewModel: RecordingDetailsViewModel) {
-    val recording by viewModel.recordingState.collectAsState()
-    val navController = LocalNavController.current
+private fun Front(
+    viewModel: RecordingDetailsViewModel,
+    modifier: Modifier
+) {
+    val recordingWrapper by viewModel.recordingState.collectAsState()
+    val recording = recordingWrapper.value
 
-    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy 'at' HH:mm", Locale.US)
     Column (
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
-        Text(
-            text = dateFormat.format(recording.time),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom=4.dp)
-        )
+        Row (
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column {
+                Text(
+                    text = recording.title,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = dateFormat.format(recording.time),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+            IconButton(
+                onClick = {
+                    viewModel.isEditing.value = true
+                }
+            ) {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "Save",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
         Text(
             text = recording.description,
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding()
         )
-        IconButton (
-            onClick = {
-                recording.delete()
-                navController.popBackStack()
-            }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_trash),
-                contentDescription = "Delete",
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }
     }
 }
 @Composable
-fun RecordingMetaData(viewModel: RecordingDetailsViewModel) {
-    val recording by viewModel.recordingState.collectAsState()
-
-    Log.d("com.anselm.location", "RecordingMetaData renders $recording")
-
-    FlipCard(
-        key = "RecordingMetaData",
-        title = recording.title,
-        drawableId = R.drawable.ic_edit,
-        front = { Front(viewModel) },
-        back = { Back(viewModel) },
-    )
+fun RecordingMetaData(
+    viewModel: RecordingDetailsViewModel,
+    modifier : Modifier = Modifier,
+) {
+    if ( viewModel.isEditing.value ) {
+        Back(viewModel, modifier = modifier)
+    } else {
+        Front(viewModel, modifier = modifier)
+    }
 }
 

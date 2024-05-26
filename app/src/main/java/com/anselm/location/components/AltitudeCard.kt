@@ -99,11 +99,15 @@ private fun Back(optionalRecording: Recording?) {
 }
 
 @Composable
-fun AltitudeCard(sample: Sample, recording: Recording? = null) {
+fun AltitudeCard(
+    sample: Sample,
+    modifier: Modifier = Modifier,
+    recording: Recording? = null
+) {
     FlipCard(
         key = "AltitudeCard",
         title = "Altitude",
-        modifier = Modifier.padding(0.dp, 4.dp),
+        modifier = modifier.padding(0.dp, 4.dp),
         drawableId = R.drawable.ic_show_chart,
         front = {
             Front(recording, sample)

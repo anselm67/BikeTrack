@@ -6,11 +6,11 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -53,7 +53,7 @@ private fun FlipCardInternal(
     drawableId: Int,
     back: @Composable () -> Unit = { },
     front: @Composable () -> Unit = { },
-    ) {
+) {
     var frontCardSize by remember { mutableStateOf(IntSize.Zero) }
     val rotation = animateFloatAsState(
         targetValue = cardFace.angle,
@@ -62,12 +62,13 @@ private fun FlipCardInternal(
             easing = FastOutSlowInEasing,
         ), label = "FlipCard rotation."
     )
-    Card(
-        onClick = { onClick(cardFace) },
+    Box (
         modifier = modifier
             .graphicsLayer {
                 rotationY = rotation.value
                 cameraDistance = 12f * density
+            }.clickable {
+                onClick(cardFace)
             },
     ) {
         Box(

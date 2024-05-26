@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,25 +41,17 @@ fun BasicCard(
         Context.MODE_PRIVATE)
     var folded by remember { mutableStateOf(sharedPreferences.getBoolean("${key}.folded", false)) }
 
-    Card (
+    Box (
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        )
     ) {
         Box (
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (foldable == true) {
                 IconButton(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .offset((-10).dp, 10.dp)
+                        .offset((-10).dp, 0.dp)
                         .size(24.dp)
                         .zIndex(2f),
                     onClick = {
@@ -82,17 +73,19 @@ fun BasicCard(
             ) {
                 if (title != null) {
                     Text(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.displaySmall,
+                        style = MaterialTheme.typography.titleLarge,
                     )
                 }
                 if (!folded) {
-                    Spacer(modifier = Modifier.padding(8.dp))
+                    Spacer(modifier = Modifier.padding(4.dp))
                     content()
+                    Spacer(modifier = Modifier.padding(4.dp))
                 }
+                HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
             }
         }
-        Spacer(modifier = Modifier.padding(4.dp))
     }
 }

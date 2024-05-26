@@ -101,11 +101,15 @@ private fun Back(optionalRecording: Recording?) {
     }
 }
 @Composable
-fun SpeedCard(sample: Sample, recording: Recording? = null) {
+fun SpeedCard(
+    sample: Sample,
+    modifier: Modifier = Modifier,
+    recording: Recording? = null
+) {
     FlipCard(
         key = "SpeedCard",
         title = "Speed",
-        modifier = Modifier.padding(horizontal = 0.dp, vertical = 4.dp),
+        modifier = modifier.padding(horizontal = 0.dp, vertical = 4.dp),
         drawableId = R.drawable.ic_show_chart,
         front = {
             Front(recording, sample)

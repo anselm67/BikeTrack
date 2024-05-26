@@ -121,7 +121,7 @@ class DataManager {
             app.recordingManager.start()
         }
 
-        fun stopRecording(): Entry {
+        fun stopRecording(): Entry? {
             isRecording.value = false
             return app.recordingManager.stop(lastSample)
         }

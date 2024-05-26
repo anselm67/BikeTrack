@@ -1,6 +1,7 @@
 package com.anselm.location.screens
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -29,14 +29,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.DebugCard
 import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
+import com.anselm.location.models.LocalAppViewModel
 
 private const val TAG = "com.anselm.location.components.HomeScreen"
 
@@ -63,6 +66,7 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
 
 @Composable
 private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnection) {
+    val navController = LocalNavController.current
     val liveContext = trackerConnection.binder ?: return
     Column (
         modifier = Modifier
@@ -70,6 +74,20 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             .padding(vertical = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        if ( liveContext.isAutoPause.value ) {
+            Column (
+                modifier = Modifier.fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Auto-Paused",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+        }
         LocationDisplay(trackerConnection)
         Row (
             modifier = Modifier.fillMaxWidth(),
@@ -77,10 +95,23 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
         ) {
             IconButton(
                 onClick = {
-                    if ( liveContext.isRecording.value )
-                        liveContext.stopRecording()
-                    else
+                    if ( liveContext.isRecording.value ) {
+                        val entry = liveContext.stopRecording()
+                        if ( entry == null ) {
+                            app.toast("Ride discarded because it is too short.")
+                            navController.navigate(NavigationItem.ViewRecordings.route)
+                        } else {
+                            navController.navigate(
+                                NavigationItem.RecordingDetails.route + "/${entry.id}"
+                            ) {
+                                popUpTo(NavigationItem.ViewRecordings.route) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    } else {
                         liveContext.startRecording()
+                    }
                 }  ,
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -95,10 +126,7 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
                             R.drawable.ic_start_recording,
                     ),
                     contentDescription = "Toggle recording.",
-                    tint = if ( liveContext.isAutoPause.value )
-                        Color.Red
-                    else
-                        MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -110,19 +138,17 @@ private var trackerConnection: LocationApplication.TrackerConnection? = null
 
 @Composable
 fun RecordingScreen() {
-    val bottomBarVisible = rememberSaveable { app.hideBottomBar.value }
-    val appBarTitle = rememberSaveable {app.appBarTitle.value }
-
+    val appViewModel = LocalAppViewModel.current
+    appViewModel
+        .updateTitle(title = "Enjoy your ride!")
     DisposableEffect(LocalContext.current) {
         Log.d(TAG, "RecordingScreen.connect()")
         trackerConnection = app.connect()
-        app.appBarTitle.value = "Happy Riding !"
+
         onDispose {
             Log.d(TAG, "RecordingScreen.close")
             trackerConnection?.close()
             trackerConnection = null
-            app.hideBottomBar.value = bottomBarVisible
-            app.appBarTitle.value = appBarTitle
         }
     }
     Column(
@@ -131,10 +157,23 @@ fun RecordingScreen() {
         Log.d(TAG, "Recording.connected? ${app.isTrackerBound.value}")
         if ( app.isTrackerBound.value ) {
             if (trackerConnection?.binder?.isRecording?.value == true) {
-                app.hideBottomBar.value = true
+                Log.d("com.anselm.location.Foo", "hideBottomBar")
+                appViewModel.updateApplicationState {
+                    it.copy(
+                        hideBottomBar = true,
+                        hideTopBar = true,
+                        showOnLockScreen = true
+                    )
+                }
                 DisplayScreen(trackerConnection!!)
             } else {
-                app.hideBottomBar.value = false
+                appViewModel.updateApplicationState {
+                    it.copy(
+                        hideBottomBar = false,
+                        hideTopBar = false,
+                        showOnLockScreen = false
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -147,9 +186,13 @@ fun RecordingScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Button(
-                        onClick = { trackerConnection?.binder?.startRecording() }
+                        onClick = { trackerConnection?.binder?.startRecording() },
                     ) {
-                        Text("Start Recording")
+                        Text(
+                            text = "Start Recording",
+                            style = MaterialTheme.typography.headlineLarge,
+                            modifier = Modifier.padding(16.dp, 8.dp)
+                        )
                     }
                 }
             }

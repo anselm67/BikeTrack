@@ -51,23 +51,28 @@ class RecordingManager() {
             buffer.clear()
         }
     }
-    fun stop(lastSample: Sample?): Entry {
-        assert(recordingFile != null)
-        val recordingFile = recordingFile!!
-        Log.d(TAG, "stopRecording")
-        flush()
-        // Add a new entry to the catalog for this ride.
-        val entry = Entry(
-            id = recordingFile.name,
-            title = "",
-            time = System.currentTimeMillis(),
-            description = "",
-            lastSample = lastSample ?: defaultSample,
-        )
-        addEntry(entry)
-        doRecordingProlog = true
-        this.recordingFile = null
-        return entry
+    fun stop(lastSample: Sample?): Entry? {
+        // Don't record small rides.
+        if ( lastSample == null || buffer.size < 5 ) {
+            return null
+        } else {
+            assert(recordingFile != null)
+            val recordingFile = recordingFile!!
+            Log.d(TAG, "stopRecording")
+            flush()
+            // Add a new entry to the catalog for this ride.
+            val entry = Entry(
+                id = recordingFile.name,
+                title = "",
+                time = System.currentTimeMillis(),
+                description = "",
+                lastSample = lastSample ?: defaultSample,
+            )
+            addEntry(entry)
+            doRecordingProlog = true
+            this.recordingFile = null
+            return entry
+        }
     }
 
     fun record(location: LocationStub) {
@@ -77,25 +82,30 @@ class RecordingManager() {
         }
     }
 
-    fun load(recordingId: String): Recording {
-        val entry = catalog.find { it.id == recordingId }
-        if ( entry == null ) {
-            error("No such recording $recordingId")
+    fun load(recordingId: String): Recording? {
+        catalog.find { it.id == recordingId }?.let {
+            return@load load(it)
         }
-        return load(entry)
+        return null
     }
 
-    fun load(entry: Entry): Recording {
+    fun load(entry: Entry): Recording? {
         Log.d(TAG, "load ${entry.id}")
-        with ( File(home, entry.id) ) {
-            val jsonText = "[" + this.readText() + "]"
-            return Recording(
-                entry,
-                app.dataManager.process(
-                    Json.decodeFromString<List<LocationStub>>(jsonText)
+        try {
+            with ( File(home, entry.id) ) {
+                val jsonText = "[" + this.readText() + "]"
+                return Recording(
+                    entry,
+                    app.dataManager.process(
+                        Json.decodeFromString<List<LocationStub>>(jsonText)
+                    )
                 )
-            )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load file ${entry.id} - removing from catalog.")
+            delete(entry)
         }
+        return null
     }
 
     fun lastRecording(): Recording? {
@@ -125,12 +135,13 @@ class RecordingManager() {
                     description = "",
                     lastSample = defaultSample
                 )
-                val recording = load(entry)
-                catalog.add(entry.apply {
-                    title = id
-                    time = recording.time
-                    lastSample = recording.lastSample()
-                })
+                load(entry)?.let { recording ->
+                    catalog.add(entry.apply {
+                        title = id
+                        time = recording.time
+                        lastSample = recording.lastSample()
+                    })
+                }
             }
         }
         // TODO We should save this, right now it's recomputed on each launch until
@@ -174,8 +185,18 @@ class RecordingManager() {
         }
     }
 
+    fun delete(recordingId: String): Boolean {
+        val entry = catalog.find { it.id == recordingId }
+        if ( entry != null ) {
+            delete(entry)
+            return true
+        } else {
+            return false
+        }
+    }
+
     fun list(): List<Entry> {
-        return catalog.toList()
+        return catalog.toList().sortedByDescending { it.time }
     }
 }
 
@@ -189,7 +210,7 @@ class Entry (
 ) {
     @Contextual val recordingManager = app.recordingManager
 
-    fun load(): Recording {
+    fun load(): Recording? {
         return recordingManager.load(this)
     }
 

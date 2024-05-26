@@ -15,13 +15,16 @@ import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 @Composable
-fun TimeElapsedCard(sample: Sample) {
+fun TimeElapsedCard(
+    sample: Sample,
+    modifier: Modifier = Modifier
+) {
     val timeMillis = sample.elapsedTime
     val distanceInKilometers = sample.totalDistance / 1000.0
 
     BasicCard(
         key = "TimeElapsedCard",
-        modifier = Modifier.padding(0.dp, 4.dp)
+        modifier = modifier.padding(0.dp, 4.dp)
     ) {
         Column (
             modifier = Modifier.fillMaxWidth(),

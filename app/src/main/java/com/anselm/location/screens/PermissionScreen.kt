@@ -30,6 +30,7 @@ import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
+import com.anselm.location.models.LocalAppViewModel
 
 @Composable
 fun PermissionScreen() {
@@ -43,20 +44,20 @@ fun PermissionScreen() {
         }
     }
 
-    DisposableEffect(LocalContext.current) {
-        app.hideTopBar.value = true
-        app.hideBottomBar.value = true
+    val appViewModel = LocalAppViewModel.current
+    appViewModel
+        .updateTitle("Permissions")
+        .setShowOnLockScreen(false)
 
+    DisposableEffect(LocalContext.current) {
         if ( ! app.checkPermissions() ) {
             launcher.launch(app.allPermissions)
         } else {
             // We shouldn't be there in the first place.
             navController.navigate(NavigationItem.Recording.route)
         }
-        onDispose {
-            app.hideTopBar.value = false
-            app.hideBottomBar.value = false
-        }
+
+        onDispose { }
     }
 
     Column (

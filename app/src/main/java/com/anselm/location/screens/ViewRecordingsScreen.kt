@@ -1,7 +1,8 @@
 package com.anselm.location.screens
 
-import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,26 +12,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.data.Entry
+import com.anselm.location.dateFormat
+import com.anselm.location.models.LocalAppViewModel
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
-
-private const val TAG = "com.anselm.location.components.RecordingsScreen"
-
 
 @Composable
 private fun StatBox(value: Double, units: String) {
@@ -51,49 +48,59 @@ private fun StatBox(value: Double, units: String) {
 @Composable
 private fun DisplayRecordingItem(entry: Entry) {
     val navController = LocalNavController.current
-    Card(
-        modifier = Modifier.padding(8.dp),
-        onClick = {
-            navController.navigate(
-                "${NavigationItem.RecordingDetails.route}/${entry.id}"
-            )
-        },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 6.dp
-        )
+    Box (
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable {
+                navController.navigate(
+                    "${NavigationItem.RecordingDetails.route}/${entry.id}"
+                )
+            },
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Top,
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(
-                    text = entry.title,
-                    style = MaterialTheme.typography.titleLarge,
-                )
+                Row (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column( ) {
+                        Text(
+                            text = entry.title.ifEmpty { "Untitled" },
+                            style = MaterialTheme.typography.titleLarge,
+                            fontStyle =
+                                if ( entry.title.isEmpty() )
+                                    FontStyle.Italic
+                                else
+                                    FontStyle.Normal
+                        )
+                        Text(
+                            text = dateFormat.format(entry.time),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    Text(
+                        text = "%02d:%02d:%02d".format(
+                            *(entry.lastSample.elapsedTime).toDuration(DurationUnit.MILLISECONDS)
+                                .toComponents { hours, minutes, seconds, _ ->
+                                    arrayOf(hours, minutes, seconds)
+                                }
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.align(Alignment.Top)
+                    )
+                }
             }
             Spacer(modifier = Modifier.size(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    text = "Duration %02d:%02d:%02d".format(
-                        *(entry.lastSample.elapsedTime).toDuration(DurationUnit.MILLISECONDS)
-                            .toComponents { hours, minutes, seconds, _ ->
-                                arrayOf(hours, minutes, seconds)
-                            }
-                    ),
-                    style = MaterialTheme.typography.titleLarge
-                )
             }
             Row (
                 modifier = Modifier.fillMaxWidth(),
@@ -114,6 +121,7 @@ private fun DisplayRecordingItem(entry: Entry) {
                     )
                 }
             }
+            HorizontalDivider(modifier = Modifier.padding(4.dp))
         }
     }
 }
@@ -121,15 +129,10 @@ private fun DisplayRecordingItem(entry: Entry) {
 
 @Composable
 fun ViewRecordingsScreen() {
-    Log.d(TAG, "RecordingScreen")
-    val appBarTitle = rememberSaveable { app.appBarTitle.value }
-
-    DisposableEffect (LocalContext.current ){
-        app.appBarTitle.value = "Your Rides"
-        onDispose {
-            app.appBarTitle.value = appBarTitle
-        }
-    }
+    val appViewModel = LocalAppViewModel.current
+    appViewModel
+        .updateTitle(title = "Your rides")
+        .setShowOnLockScreen(false)
 
     Column(
         modifier = Modifier
