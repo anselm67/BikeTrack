@@ -1,5 +1,6 @@
 package com.anselm.location.screens
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.foundation.border
@@ -123,6 +124,7 @@ private fun RecordingMap(viewModel: RecordingDetailsViewModel) {
     }
 }
 
+@SuppressLint("ReturnFromAwaitPointerEventScope")
 @Composable
 fun RecordingDetailsScreen(recordingId: String?) {
     val appViewModel = LocalAppViewModel.current

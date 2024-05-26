@@ -59,13 +59,12 @@ fun tagPosition(latlngString: String) {
 }
 
 fun tagRecording(recording: Recording) {
-
     app.launch {
-        val positions = recording?.extractLatLng()?.mapIndexed { index, it ->
+        val positions = recording.extractLatLng().mapIndexed { index, it ->
             if (index % 2 == 0) "${it.latitude},${it.longitude}" else null
-        }?.filterNotNull()
+        }.filterNotNull()
 
-        positions?.forEach {
+        positions.forEach {
             tagPosition(it)
             delay(1000)
         }
