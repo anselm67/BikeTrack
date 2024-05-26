@@ -195,7 +195,9 @@ fun RecordingDetailsScreen(recordingId: String?) {
         )
         RecordingMap(viewModel)
         TimeElapsedCard(
-            sample = lastSample, modifier = butMapModifier
+            recording = recording,
+            sample = lastSample,
+            modifier = butMapModifier
         )
         SpeedCard(
             recording = recording,

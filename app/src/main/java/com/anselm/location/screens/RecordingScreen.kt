@@ -58,10 +58,22 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
             .fillMaxHeight(),
         verticalArrangement = Arrangement.Top,
     ) {
-        TimeElapsedCard(sample)
-        SpeedCard(sample, modifier = Modifier.defaultMinSize(minHeight = 250.dp))
-        AltitudeCard(sample, modifier = Modifier.defaultMinSize(minHeight = 250.dp))
-        DebugCard(trackerConnection.binder?.isAutoPause?.value ?: false, sample)
+        TimeElapsedCard(
+            sample = sample,
+            isAutoPaused = trackerConnection.binder?.isAutoPause,
+        )
+        SpeedCard(
+            sample = sample,
+            modifier = Modifier.defaultMinSize(minHeight = 250.dp)
+        )
+        AltitudeCard(
+            sample = sample,
+            modifier = Modifier.defaultMinSize(minHeight = 250.dp)
+        )
+        DebugCard(
+            sample = sample,
+            isAutoPaused = trackerConnection.binder?.isAutoPause,
+        )
     }
 }
 
@@ -83,7 +95,7 @@ private fun DisplayScreen(trackerConnection: LocationApplication.TrackerConnecti
             ) {
                 Text(
                     text = "Auto-Paused",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.displaySmall,
                     color = Color.White,
                     modifier = Modifier.padding(4.dp)
                 )
@@ -158,7 +170,6 @@ fun RecordingScreen() {
         Log.d(TAG, "Recording.connected? ${app.isTrackerBound.value}")
         if ( app.isTrackerBound.value ) {
             if (trackerConnection?.binder?.isRecording?.value == true) {
-                Log.d("com.anselm.location.Foo", "hideBottomBar")
                 appViewModel.updateApplicationState {
                     it.copy(
                         hideBottomBar = true,
