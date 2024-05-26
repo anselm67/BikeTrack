@@ -58,7 +58,7 @@ data class Sample(
     val seqno: Int,
     val location: LocationStub,
     // All remaining values are computed / updated through filters.
-    val elapsedTime: Long,
+    var elapsedTime: Long,
     var distance: Double,
     var totalDistance: Double,
     var avgSpeed:  Double,
@@ -158,6 +158,11 @@ class DataManager {
         if ( context.canAutoPause ) {
             shouldRun = !AutoPause.get().isAutoPause(location)
             if (shouldRun && context.isAutoPause.value) {
+                // We're leaving auto-pause, adjust elapsed time by subtracting the pause time.
+                context.lastSample?.let {
+                    val pauseTime = location.time - it.location.time
+                    it.elapsedTime -= pauseTime
+                }
                 context.isAutoPause.value = false
             } else if (!shouldRun && !context.isAutoPause.value) {
                 Log.d(TAG, "Entering auto pause.")

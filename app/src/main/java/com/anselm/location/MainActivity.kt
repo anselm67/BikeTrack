@@ -1,7 +1,4 @@
 package com.anselm.location
-// REDACTED
-// Google map API key
-// REDACTED
 // To setup google maps, follow this *exactly* don't skip a beat
 // https://developers.google.com/maps/documentation/android-sdk/config?hl=en#kotlin_3
 
