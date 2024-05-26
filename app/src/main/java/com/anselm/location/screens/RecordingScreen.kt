@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -107,7 +106,6 @@ private fun DisplayScreen(
     trackerConnection: LocationApplication.TrackerConnection,
     showStopRecordingDialog: MutableState<Boolean>,
 ) {
-    val navController = LocalNavController.current
     val liveContext = trackerConnection.binder ?: return
     Column (
         modifier = Modifier
@@ -125,7 +123,7 @@ private fun DisplayScreen(
                 Text(
                     text = "Auto-Paused",
                     style = MaterialTheme.typography.displaySmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(4.dp)
                 )
             }

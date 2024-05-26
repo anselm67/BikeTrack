@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 
 class LocationApplication: Application() {
     private val applicationScope = CoroutineScope(SupervisorJob())
@@ -37,6 +38,7 @@ class LocationApplication: Application() {
         RecordingManager.getInstance(applicationContext!!.filesDir)
     }
     val dataManager by lazy { DataManager() }
+    val okHttpClient = OkHttpClient()
 
     override fun onCreate() {
         super.onCreate()
@@ -127,8 +129,8 @@ class LocationApplication: Application() {
         applicationScope.launch(Dispatchers.Main) { block() }
     }
 
-    fun launch(block: () -> Unit) {
-        applicationScope.launch { block() }
+    fun launch(block: suspend () -> Unit) {
+        applicationScope.launch(Dispatchers.Default) { block() }
     }
 
     fun toast(msg: String) {

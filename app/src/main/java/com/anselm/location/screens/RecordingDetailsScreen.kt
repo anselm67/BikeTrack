@@ -209,5 +209,11 @@ fun RecordingDetailsScreen(recordingId: String?) {
             sample = lastSample,
             modifier = butMapModifier,
         )
+//        Button (
+//            onClick = { tagRecording(recording) }
+//        ) {
+//            Text("TAG")
+//        }
+
     }
 }
