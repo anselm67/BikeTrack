@@ -39,7 +39,7 @@ public const val UPDATE_PERIOD_MILLISECONDS = 5000L
 
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
-    private val liveContext = app.dataManager.createContext(/* TODO true */ false)
+    private val liveContext = app.dataManager.createContext(true)
 
     override fun onDestroy() {
         super.onDestroy()
