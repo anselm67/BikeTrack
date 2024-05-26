@@ -34,6 +34,8 @@ class RecordingDetailsViewModel(
 
     val columnScrollingEnabled = mutableStateOf(true)
 
+    val showDeleteDialog = mutableStateOf(false)
+
     class Factory(private val recording: Recording) :
         ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,7 +26,7 @@ import com.anselm.location.formatIf
 private const val MIN_SPEED = 0.0001
 
 @Composable
-private fun Front(recording: Recording? = null, sample: Sample) {
+private fun Front(sample: Sample, recording: Recording? = null) {
     val isLive = (recording == null)
     val speedInKilometersPerHour =
         if ( isLive )
@@ -35,33 +36,38 @@ private fun Front(recording: Recording? = null, sample: Sample) {
     val averageSpeedInKilometersPerHour = sample.avgSpeed * 3.6
     val maxSpeedInKilometersPerHour = sample.maxSpeed * 3.6
 
-    Row (
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
+    Column (
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.SpaceAround,
     ) {
-        Text(
-            text = speedInKilometersPerHour.formatIf("--", "%.1f") { it <= MIN_SPEED },
-            style = MaterialTheme.typography.displayLarge,
-        )
-    }
-    Row (
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = averageSpeedInKilometersPerHour.formatIf(
-                "Average: --",
-                "Average: %.1f"
-            ) { ! it.isFinite() || it <= MIN_SPEED },
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Text(
-            text = maxSpeedInKilometersPerHour.formatIf(
-                "Maximum: --",
-                "Maximum: %.1f"
-            ) { ! it.isFinite() || it < MIN_SPEED },
-            style = MaterialTheme.typography.titleLarge,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = speedInKilometersPerHour.formatIf("--", "%.1f") { it <= MIN_SPEED },
+                style = MaterialTheme.typography.displayLarge,
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = averageSpeedInKilometersPerHour.formatIf(
+                    "Average: --",
+                    "Average: %.1f"
+                ) { !it.isFinite() || it <= MIN_SPEED },
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = maxSpeedInKilometersPerHour.formatIf(
+                    "Maximum: --",
+                    "Maximum: %.1f"
+                ) { !it.isFinite() || it < MIN_SPEED },
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
     }
 }
 
@@ -70,7 +76,9 @@ private fun Back(optionalRecording: Recording?) {
     val recording = optionalRecording ?: app.recordingManager.lastRecording()
     if ( recording == null ) {
         Column(
-            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.errorContainer),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -108,11 +116,13 @@ fun SpeedCard(
 ) {
     FlipCard(
         key = "SpeedCard",
-        title = "Speed",
-        modifier = modifier.padding(horizontal = 0.dp, vertical = 4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 200.dp)
+            .padding(horizontal = 0.dp, vertical = 4.dp),
         drawableId = R.drawable.ic_show_chart,
         front = {
-            Front(recording, sample)
+            Front(sample, recording)
         },
         back = {
             Back(recording)

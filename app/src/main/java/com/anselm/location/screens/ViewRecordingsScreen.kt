@@ -13,16 +13,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
+import com.anselm.location.R
 import com.anselm.location.data.Entry
 import com.anselm.location.dateFormat
 import com.anselm.location.models.LocalAppViewModel
@@ -36,11 +39,11 @@ private fun StatBox(value: Double, units: String) {
     ){
         Text(
             text = "%.2f".format(value),
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.bodyLarge,
         )
         Text(
             text = units,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
         )
     }
 }
@@ -72,7 +75,7 @@ private fun DisplayRecordingItem(entry: Entry) {
                     Column( ) {
                         Text(
                             text = entry.title.ifEmpty { "Untitled" },
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontStyle =
                                 if ( entry.title.isEmpty() )
                                     FontStyle.Italic
@@ -92,7 +95,7 @@ private fun DisplayRecordingItem(entry: Entry) {
                                 }
                         ),
                         style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.align(Alignment.Top)
+                        modifier = Modifier.align(Alignment.CenterVertically)
                     )
                 }
             }
@@ -111,14 +114,34 @@ private fun DisplayRecordingItem(entry: Entry) {
                 Column (
                     horizontalAlignment = Alignment.Start,
                 ) {
-                    Text(
-                        text = "%.1f up".format(entry.lastSample.climb),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                    Text(
-                        text = "%.1f dn".format(entry.lastSample.descent),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
+                    Row {
+                        Icon (
+                            modifier = Modifier.size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
+                                .align(Alignment.Bottom)
+                                .padding(2.dp),
+                            painter = painterResource(id = R.drawable.ic_arrow_up),
+                            contentDescription = "Climb in meters.",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "%.1f".format(entry.lastSample.climb),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    Row {
+                        Icon (
+                            modifier = Modifier.size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
+                                .align(Alignment.Bottom)
+                                .padding(2.dp),
+                            painter = painterResource(id = R.drawable.ic_arrow_down),
+                            contentDescription = "Climb in meters.",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "%.1f".format(entry.lastSample.descent),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
             }
             HorizontalDivider(modifier = Modifier.padding(4.dp))

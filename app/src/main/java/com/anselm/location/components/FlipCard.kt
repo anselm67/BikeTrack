@@ -64,15 +64,16 @@ private fun FlipCardInternal(
     )
     Box (
         modifier = modifier
+            .fillMaxSize()
             .graphicsLayer {
                 rotationY = rotation.value
                 cameraDistance = 12f * density
             }.clickable {
                 onClick(cardFace)
-            },
+            }
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.matchParentSize()
         ) {
             if (cardFace == CardFace.Front) {
                 Icon(
@@ -86,10 +87,13 @@ private fun FlipCardInternal(
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
-            if ( rotation.value <= 90f) {
-                Box(modifier = Modifier.onGloballyPositioned {
-                    coordinates -> frontCardSize = coordinates.size
-                }) {
+            if ( rotation.value <= 90f ) {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                        .onGloballyPositioned {
+                            coordinates -> frontCardSize = coordinates.size
+                        }
+                ) {
                     front()
                 }
             } else {
@@ -114,8 +118,8 @@ val LocalFaceController = compositionLocalOf<() -> Unit> {
 @Composable
 fun FlipCard(
     key: String,
-    title: String,
     modifier: Modifier = Modifier,
+    title: String? = null,
     drawableId: Int = R.drawable.ic_flip_card,
     front: @Composable () -> Unit,
     back: @Composable () -> Unit
@@ -129,7 +133,7 @@ fun FlipCard(
             modifier = modifier,
             drawableId = drawableId,
             front = {
-                BasicCard(key, title) {
+                BasicCard(key, title, modifier = Modifier.fillMaxSize()) {
                     front()
                 }
             },

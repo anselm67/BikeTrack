@@ -36,6 +36,7 @@ import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.RecordingMetaData
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
+import com.anselm.location.components.YesNoDialog
 import com.anselm.location.models.AppAction
 import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.models.RecordingDetailsViewModel
@@ -53,14 +54,9 @@ import kotlinx.coroutines.withContext
 // https://stackoverflow.com/questions/70836603/how-to-scroll-zoom-a-map-inside-a-vertically-scrolling-in-jetpack-compose
 
 @Composable
-private fun DeleteAction(recordingId: String) {
-    val navController = LocalNavController.current
-
+private fun DeleteAction(viewModel: RecordingDetailsViewModel) {
     IconButton(
-        onClick = {
-            app.recordingManager.delete(recordingId)
-            navController.popBackStack()
-        }
+        onClick = { viewModel.showDeleteDialog.value = true }
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_trash),
@@ -100,6 +96,7 @@ private fun RecordingMap(viewModel: RecordingDetailsViewModel) {
                            viewModel.columnScrollingEnabled.value = false
                            false
                        }
+
                        else -> {
                            true
                        }
@@ -126,7 +123,6 @@ private fun RecordingMap(viewModel: RecordingDetailsViewModel) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RecordingDetailsScreen(recordingId: String?) {
     val appViewModel = LocalAppViewModel.current
@@ -153,7 +149,7 @@ fun RecordingDetailsScreen(recordingId: String?) {
             actions = listOf(object : AppAction {
                 @Composable
                 override fun Action() {
-                    DeleteAction(recordingId)
+                    DeleteAction(viewModel)
                 }
             })
         )
@@ -179,9 +175,24 @@ fun RecordingDetailsScreen(recordingId: String?) {
             .padding(8.dp)
             .verticalScroll(rememberScrollState(), viewModel.columnScrollingEnabled.value)
     ) {
+        if ( viewModel.showDeleteDialog.value ) {
+            YesNoDialog(
+                title = "Delete Recording",
+                text = "Are you sure you want to delete this recording?",
+                onDismiss = {
+                    viewModel.showDeleteDialog.value = false
+                },
+                onConfirm = {
+                    viewModel.showDeleteDialog.value = false
+                    app.recordingManager.delete(recordingId)
+                    navController.popBackStack()
+                }
+            )
+        }
         RecordingMetaData(
             viewModel,
-            modifier = butMapModifier)
+            modifier = butMapModifier
+        )
         RecordingMap(viewModel)
         TimeElapsedCard(
             sample = lastSample, modifier = butMapModifier

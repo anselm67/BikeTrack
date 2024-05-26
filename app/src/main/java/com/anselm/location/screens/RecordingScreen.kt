@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -58,8 +59,8 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
         verticalArrangement = Arrangement.Top,
     ) {
         TimeElapsedCard(sample)
-        SpeedCard(sample)
-        AltitudeCard(sample)
+        SpeedCard(sample, modifier = Modifier.defaultMinSize(minHeight = 250.dp))
+        AltitudeCard(sample, modifier = Modifier.defaultMinSize(minHeight = 250.dp))
         DebugCard(trackerConnection.binder?.isAutoPause?.value ?: false, sample)
     }
 }

@@ -1,11 +1,14 @@
 package com.anselm.location.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,12 @@ private fun Back(
 
     Column(
         modifier =modifier.fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 5.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(10.dp)
+            )
+            .border(2.dp, MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(10.dp))
     ) {
         TextField(
             value = title,
@@ -61,6 +70,7 @@ private fun Back(
                 },
             ) {
                 Icon(
+                    modifier = modifier.size(24.dp),
                     painter = painterResource(id = R.drawable.ic_cancel),
                     contentDescription = "Save",
                     tint = MaterialTheme.colorScheme.primary,
@@ -75,7 +85,8 @@ private fun Back(
                 },
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_save),
+                    modifier = modifier.size(24.dp),
+                    painter = painterResource(id = R.drawable.ic_check),
                     contentDescription = "Save",
                     tint = MaterialTheme.colorScheme.primary,
                 )
