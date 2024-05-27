@@ -102,6 +102,8 @@ fun tagRecording(recording: Recording) {
             if ( ! boundsChecker.isWithinBounds(it)) {
                 tagPosition("${it.latitude},${it.longitude}")
                 delay(1000)
+            } else {
+//                Log.d(TAG, "Skip ${it.latitude},${it.longitude}")
             }
         }
     }
