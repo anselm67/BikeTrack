@@ -54,6 +54,7 @@ private fun stopRecording(
     navController: NavHostController,
 ) {
     val entry = liveContext.stopRecording()
+    app.onRecordingChanged(false)
     if ( entry == null ) {
         app.toast("Ride discarded because it is too short.")
         navController.navigate(NavigationItem.ViewRecordings.route)
@@ -137,8 +138,6 @@ private fun DisplayScreen(
                 onClick = {
                     if ( liveContext.isRecording.value ) {
                         showStopRecordingDialog.value = true
-                    } else {
-                        liveContext.startRecording()
                     }
                 }  ,
                 colors = IconButtonDefaults.iconButtonColors(
@@ -218,7 +217,10 @@ fun RecordingScreen() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Button(
-                        onClick = { trackerConnection?.binder?.startRecording() },
+                        onClick = {
+                            trackerConnection?.binder?.startRecording()
+                            app.onRecordingChanged(true)
+                        },
                     ) {
                         Text(
                             text = "Start Recording",

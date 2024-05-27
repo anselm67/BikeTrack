@@ -22,6 +22,7 @@ import com.anselm.location.data.defaultSample
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -137,6 +138,13 @@ class LocationApplication: Application() {
         applicationScope.launch(Dispatchers.Main) {
             Toast.makeText(applicationContext, msg, Toast.LENGTH_LONG).show()
         }
+    }
+
+    val isRecordingFlow = MutableStateFlow(false)
+
+    fun onRecordingChanged(recording: Boolean) {
+        Log.d(TAG, "onRecordingChanged: $recording")
+        isRecordingFlow.value = recording
     }
 
     companion object {
