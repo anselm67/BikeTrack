@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.MIN_SAMPLES_FOR_PLOT
 import com.anselm.location.R
 import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
@@ -76,8 +77,8 @@ private fun Front(sample: Sample, recording: Recording? = null) {
 
 @Composable
 private fun Back(optionalRecording: Recording?) {
-    val recording = optionalRecording ?: app.recordingManager.lastRecording()
-    if ( recording == null ) {
+    val recording = optionalRecording ?: app.recordingManager.liveRecording()
+    if ( recording == null || recording.size < MIN_SAMPLES_FOR_PLOT) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,7 +87,7 @@ private fun Back(optionalRecording: Recording?) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "No data available",
+                text = "Ride some more!",
                 style = MaterialTheme.typography.titleLarge,
             )
         }

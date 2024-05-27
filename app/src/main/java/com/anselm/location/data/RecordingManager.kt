@@ -113,8 +113,16 @@ class RecordingManager() {
         return null
     }
 
-    fun lastRecording(): Recording? {
-        return list().lastOrNull()?.load()
+    fun liveRecording(): Recording? {
+        return recordingFile?.name?.let {
+            load(Entry(
+                id = it,
+                title = "Current ride.",
+                time = System.currentTimeMillis(),
+                description = "",
+                lastSample = defaultSample      // TODO This will cause troubles.
+            ))
+        }
     }
 
     companion object {
@@ -183,7 +191,7 @@ class RecordingManager() {
         saveCatalog()
     }
 
-    fun delete(entry: Entry) {
+    private fun delete(entry: Entry) {
         if ( catalog.remove(entry) ) {
             File(home, entry.id).delete()
             saveCatalog()

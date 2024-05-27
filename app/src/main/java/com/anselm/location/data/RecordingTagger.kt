@@ -39,6 +39,7 @@ fun tagPosition(latlngString: String) {
                 val json = response.body?.string()?.let {
                     Json.parseToJsonElement(it)
                 }
+                Log.d(TAG, "Json: $json")
                 val locality = json?.jsonObject?.get("results")
                     ?.jsonArray
                     ?.get(0)

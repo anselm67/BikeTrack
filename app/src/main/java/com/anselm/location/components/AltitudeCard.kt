@@ -1,5 +1,6 @@
 package com.anselm.location.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.Graph
 import com.anselm.location.GraphAppearance
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.MIN_SAMPLES_FOR_PLOT
 import com.anselm.location.R
 import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
@@ -97,18 +99,21 @@ private fun Front(sample: Sample, recording: Recording?) {
 
 @Composable
 private fun Back(optionalRecording: Recording?) {
-    val recording = optionalRecording ?: app.recordingManager.lastRecording()
+    val recording = optionalRecording ?: app.recordingManager.liveRecording()
 
-    if ( recording == null ) {
+    if ( recording == null || recording.size < MIN_SAMPLES_FOR_PLOT ) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.errorContainer),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "No recording available"
+                text = "Ride some more!",
+                style = MaterialTheme.typography.titleLarge,
             )
-        }
-    } else {
+        }    } else {
         val altitude = recording.extractAltitude()
         var distance = recording.extractDistances()
         if ( distance.max() <= 2.5 ) {

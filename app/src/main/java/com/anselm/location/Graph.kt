@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.floor
 
+const val MIN_SAMPLES_FOR_PLOT = 10
+
 data class GraphAppearance(
     val graphColor: Color,
     val graphAxisColor: Color,
