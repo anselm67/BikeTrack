@@ -164,14 +164,16 @@ class RecordingManager() {
 
     private fun loadCatalog(): MutableList<Entry> {
         if ( catalogFile.exists() ) {
-            // TODO Handle errors.
-            with ( catalogFile ) {
-                val jsonText = this.readText()
-                return Json.decodeFromString<MutableList<Entry>>(jsonText)
+            try {
+                with(catalogFile) {
+                    val jsonText = this.readText()
+                    return Json.decodeFromString<MutableList<Entry>>(jsonText)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load catalog - rebuilding.", e)
             }
-        } else {
-            return rebuildCatalog()
         }
+        return rebuildCatalog()
     }
 
     @OptIn(ExperimentalSerializationApi::class)
@@ -222,10 +224,6 @@ class Entry (
     var lastSample: Sample,
 ) {
     @Contextual val recordingManager = app.recordingManager
-
-    fun load(): Recording? {
-        return recordingManager.load(this)
-    }
 
     fun save() {
         recordingManager.saveCatalog()
