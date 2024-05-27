@@ -54,7 +54,7 @@ class RecordingManager() {
     }
     fun stop(lastSample: Sample?): Entry? {
         // Don't record small rides.
-        if ( lastSample == null || buffer.size < 5 ) {
+        if ( lastSample == null || lastSample.seqno < 5 ) {
             return null
         } else {
             assert(recordingFile != null)
@@ -78,6 +78,7 @@ class RecordingManager() {
 
     // We want to flush once quickly so we record the ride, and then every minute.
     private var nextFlush = 3
+
     fun record(location: LocationStub) {
         buffer.add(location)
         if ( buffer.size > nextFlush ) {
