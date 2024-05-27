@@ -137,7 +137,6 @@ private fun DisplayScreen(
                 onClick = {
                     if ( liveContext.isRecording.value ) {
                         showStopRecordingDialog.value = true
-//                        stopRecording(liveContext, navController)
                     } else {
                         liveContext.startRecording()
                     }
