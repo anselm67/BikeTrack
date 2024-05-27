@@ -67,7 +67,7 @@ class RecordingManager() {
                 title = "",
                 time = System.currentTimeMillis(),
                 description = "",
-                lastSample = lastSample ?: defaultSample,
+                lastSample = lastSample,
             )
             addEntry(entry)
             doRecordingProlog = true
@@ -221,9 +221,5 @@ class Entry (
 
     fun save() {
         recordingManager.saveCatalog()
-    }
-
-    fun delete() {
-        recordingManager.delete(this)
     }
 }
