@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
 import com.anselm.location.timeFormat
@@ -34,7 +34,6 @@ fun TimeElapsedCard(
     sample: Sample,
     modifier: Modifier = Modifier,
     recording: Recording? = null,
-    isAutoPaused: MutableState<Boolean>? = null,
 ) {
     val isLive = (recording == null)
 
@@ -67,7 +66,7 @@ fun TimeElapsedCard(
                     LaunchedEffect(Unit) {
                         while (true) {
                             currentTime = getCurrentTime()
-                            if (isAutoPaused?.value != true) {
+                            if ( ! app.isAutoPaused.value ) {
                                 timeMillis += 1000
                             }
                             delay(1000)

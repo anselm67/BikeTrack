@@ -1,6 +1,5 @@
 package com.anselm.location.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,23 +19,21 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.anselm.location.LocalNavController
-import com.anselm.location.LocationApplication
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.LocationTracker
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
@@ -45,16 +42,18 @@ import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.components.YesNoDialog
+import com.anselm.location.data.Entry
+import com.anselm.location.data.Sample
 import com.anselm.location.models.LocalAppViewModel
+import com.anselm.location.models.RecordingViewModel
+import kotlinx.coroutines.flow.StateFlow
 
 private const val TAG = "com.anselm.location.components.HomeScreen"
 
-private fun stopRecording(
-    liveContext: LocationTracker.TrackerBinder,
+private fun finishRecording(
+    entry: Entry?,
     navController: NavHostController,
 ) {
-    val entry = liveContext.stopRecording()
-    app.onRecordingChanged(false)
     if ( entry == null ) {
         app.toast("Ride discarded because it is too short.")
         navController.navigate(NavigationItem.ViewRecordings.route)
@@ -70,12 +69,8 @@ private fun stopRecording(
 }
 
 @Composable
-fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
-    val sample = trackerConnection.flow?.collectAsState()?.value
-    if ( sample == null ) {
-        LoadingDisplay()
-        return
-    }
+fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
+    val sample = sampleFlow.collectAsState()
     // We're on pause? Skip everything.
     Column (
         modifier = Modifier
@@ -84,37 +79,34 @@ fun LocationDisplay(trackerConnection: LocationApplication.TrackerConnection) {
         verticalArrangement = Arrangement.Top,
     ) {
         TimeElapsedCard(
-            sample = sample,
-            isAutoPaused = trackerConnection.binder?.isAutoPause,
+            sample = sample.value,
         )
         SpeedCard(
-            sample = sample,
+            sample = sample.value,
             modifier = Modifier.defaultMinSize(minHeight = 250.dp)
         )
         AltitudeCard(
-            sample = sample,
+            sample = sample.value,
             modifier = Modifier.defaultMinSize(minHeight = 250.dp)
         )
         DebugCard(
-            sample = sample,
-            isAutoPaused = trackerConnection.binder?.isAutoPause,
+            sample = sample.value,
         )
     }
 }
 
 @Composable
 private fun DisplayScreen(
-    trackerConnection: LocationApplication.TrackerConnection,
+    sampleFlow: StateFlow<Sample>,
     showStopRecordingDialog: MutableState<Boolean>,
 ) {
-    val liveContext = trackerConnection.binder ?: return
     Column (
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        if ( liveContext.isAutoPause.value ) {
+        if ( app.isAutoPaused.value ) {
             Column (
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,14 +121,14 @@ private fun DisplayScreen(
                 )
             }
         }
-        LocationDisplay(trackerConnection)
+        LocationDisplay(sampleFlow)
         Row (
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
             IconButton(
                 onClick = {
-                    if ( liveContext.isRecording.value ) {
+                    if ( app.isRecording.value ) {
                         showStopRecordingDialog.value = true
                     }
                 }  ,
@@ -147,7 +139,7 @@ private fun DisplayScreen(
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if ( liveContext.isRecording.value )
+                        id = if ( app.isRecording.value )
                             R.drawable.ic_stop_recording
                         else
                             R.drawable.ic_start_recording,
@@ -161,8 +153,6 @@ private fun DisplayScreen(
     }
 }
 
-private var trackerConnection: LocationApplication.TrackerConnection? = null
-
 @Composable
 fun RecordingScreen() {
     val showStopRecordingDialog = remember { mutableStateOf(false) }
@@ -170,22 +160,18 @@ fun RecordingScreen() {
     val appViewModel = LocalAppViewModel.current
     appViewModel
         .updateTitle(title = "Enjoy your ride!")
-    DisposableEffect(LocalContext.current) {
-        Log.d(TAG, "RecordingScreen.connect()")
-        trackerConnection = app.connect()
 
-        onDispose {
-            Log.d(TAG, "RecordingScreen.close")
-            trackerConnection?.close()
-            trackerConnection = null
-        }
-    }
+    val viewModel = viewModel<RecordingViewModel>()
+    viewModel.connect()
+
+    val isConnected by viewModel.isConnected
+    val isRecording by app.isRecording
+
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        Log.d(TAG, "Recording.connected? ${app.isTrackerBound.value}")
-        if ( app.isTrackerBound.value ) {
-            if (trackerConnection?.binder?.isRecording?.value == true) {
+        if ( isConnected ) {
+            if ( isRecording ) {
                 appViewModel.updateApplicationState {
                     it.copy(
                         hideBottomBar = true,
@@ -194,7 +180,7 @@ fun RecordingScreen() {
                     )
                 }
                 DisplayScreen(
-                    trackerConnection!!,
+                    viewModel.sampleFlow!!,
                     showStopRecordingDialog,
                 )
             } else {
@@ -218,7 +204,7 @@ fun RecordingScreen() {
                 ) {
                     Button(
                         onClick = {
-                            trackerConnection?.binder?.startRecording()
+                            viewModel.startRecording()
                             app.onRecordingChanged(true)
                         },
                     ) {
@@ -237,7 +223,7 @@ fun RecordingScreen() {
                     },
                     onConfirm = {
                         showStopRecordingDialog.value = false
-                        stopRecording(trackerConnection!!.binder!!, navController)
+                        finishRecording(viewModel.stopRecording(), navController)
                     },
                     title = "Save this ride ?",
                     text = "If you have finished your ride, press Yes to save your ride. " +

@@ -83,7 +83,7 @@ fun AppBottomBar(viewModel: ApplicationViewModel) {
         return
     }
 
-    val isRecording by app.isRecordingFlow.collectAsState()
+    val isRecording by app.isRecording
 
     BottomAppBar (
         containerColor = MaterialTheme.colorScheme.primaryContainer,

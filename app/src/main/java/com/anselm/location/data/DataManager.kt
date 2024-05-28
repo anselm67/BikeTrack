@@ -2,7 +2,6 @@ package com.anselm.location.data
 
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.anselm.location.AutoPause
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
@@ -105,8 +104,6 @@ class DataManager {
             AltitudeFilter(),
             GradeFilter(),
         )
-        val isRecording = mutableStateOf(false)
-        val isAutoPause = mutableStateOf(false)
 
         var lastSample: Sample? = null
 
@@ -117,12 +114,10 @@ class DataManager {
 
         fun startRecording() {
             reset()
-            isRecording.value = true
             app.recordingManager.start()
         }
 
         fun stopRecording(): Entry? {
-            isRecording.value = false
             return app.recordingManager.stop(lastSample)
         }
 
@@ -157,20 +152,20 @@ class DataManager {
         var shouldRun = true
         if ( context.canAutoPause ) {
             shouldRun = !AutoPause.get().isAutoPause(location)
-            if (shouldRun && context.isAutoPause.value) {
+            if (shouldRun && app.isAutoPaused.value) {
                 // We're leaving auto-pause, adjust elapsed time by subtracting the pause time.
                 context.lastSample?.let {
                     val pauseTime = location.time - it.location.time
                     it.elapsedTime -= pauseTime
                 }
-                context.isAutoPause.value = false
-            } else if (!shouldRun && !context.isAutoPause.value) {
+                app.onAutoPausedChanged(false)
+            } else if (!shouldRun && !app.isAutoPaused.value) {
                 Log.d(TAG, "Entering auto pause.")
-                context.isAutoPause.value = true
+                app.onAutoPausedChanged(true)
             }
         }
         if ( shouldRun ) {
-            if ( context.isRecording.value ) {
+            if ( app.isRecording.value ) {
                 app.recordingManager.record(location)
             }
             val nextSample = if (context.lastSample == null)

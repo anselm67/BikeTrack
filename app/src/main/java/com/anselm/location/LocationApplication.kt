@@ -4,28 +4,19 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.Application
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import com.anselm.location.data.DataManager
-import com.anselm.location.data.LocationStub
 import com.anselm.location.data.RecordingManager
-import com.anselm.location.data.Sample
-import com.anselm.location.data.defaultSample
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
@@ -44,13 +35,6 @@ class LocationApplication: Application() {
     override fun onCreate() {
         super.onCreate()
         app = this
-    }
-
-    override fun onTerminate() {
-        super.onTerminate()
-        trackerConnections.forEach {
-            it.close()
-        }
     }
 
     // Really quit, killing the service if needed.
@@ -79,51 +63,16 @@ class LocationApplication: Application() {
         }
     }
 
-    var isTrackerBound = mutableStateOf(false)
-
-    val trackerConnections = mutableListOf<TrackerConnection>()
-
-    inner class TrackerConnection : ServiceConnection {
-        var binder: LocationTracker.TrackerBinder? = null
-        var flow: StateFlow<Sample>? = null
-
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            binder = (service as LocationTracker.TrackerBinder)
-            flow = binder!!.flow
-                .stateIn(
-                    applicationScope,   // TODO
-                    SharingStarted.Eagerly,
-                    defaultSample.copy(location = LocationStub())
-                )
-            isTrackerBound.value = true
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            Log.d(TAG, "onServiceDisconnected")
-            close()
-        }
-
-        fun close() {
-            val isRecording = binder?.isRecording?.value == true
-            binder?.close()
-            binder = null
-            flow = null
-            isTrackerBound.value = false
-            applicationContext.unbindService(this)
-            trackerConnections.remove(this)
-            // If no one is recording, we can shutdown the service.
-            if ( ! isRecording ) {
-                Log.d(TAG, "isRecording false => shutdown service.")
-                stopService(trackerServiceIntent)
-            }
-        }
+    fun connect(serviceConnection: ServiceConnection) {
+        bindService(trackerServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    fun connect(): TrackerConnection {
-        val connection = TrackerConnection()
-        bindService(trackerServiceIntent, connection, Context.BIND_AUTO_CREATE)
-        trackerConnections.add(connection)
-        return connection
+    fun disconnect(serviceConnection: ServiceConnection) {
+        unbindService(serviceConnection)
+        if ( ! isRecording.value ) {
+            Log.d(TAG, "isRecording false => shutdown service.")
+            stopService(trackerServiceIntent)
+        }
     }
 
     private fun postOnUiThread(block: () ->Unit) {
@@ -140,11 +89,18 @@ class LocationApplication: Application() {
         }
     }
 
-    val isRecordingFlow = MutableStateFlow(false)
+    // Managed by RecordingManager.
+    val isRecording = mutableStateOf(false)
 
     fun onRecordingChanged(recording: Boolean) {
-        Log.d(TAG, "onRecordingChanged: $recording")
-        isRecordingFlow.value = recording
+        isRecording.value = recording
+    }
+
+    // Managed by DataManager
+    val isAutoPaused = mutableStateOf(false)
+
+    fun onAutoPausedChanged(autoPaused: Boolean) {
+        isAutoPaused.value = autoPaused
     }
 
     companion object {

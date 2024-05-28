@@ -37,6 +37,7 @@ class RecordingManager() {
             recordingFile = File(home, "recording-$dateString.json")
             doRecordingProlog = true
         }
+        app.onRecordingChanged(true)
     }
 
     private fun flush() {
@@ -53,6 +54,7 @@ class RecordingManager() {
         }
     }
     fun stop(lastSample: Sample?): Entry? {
+        app.onRecordingChanged(false)
         // Don't record small rides.
         if ( lastSample == null || lastSample.seqno < 5 ) {
             return null

@@ -12,7 +12,6 @@ import android.os.Binder
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.anselm.location.LocationApplication.Companion.app
@@ -89,7 +88,7 @@ class LocationTracker: Service() {
     private fun stopLocationTracker() {
         Log.d(TAG, "stopLocationTracker")
         // Stops the recording if any was ongoing.
-        if ( liveContext.isRecording.value ) {
+        if ( app.isRecording.value ) {
             liveContext.stopRecording()
         }
         // Stops receiving location updates.
@@ -173,12 +172,6 @@ class LocationTracker: Service() {
             stopLocationRequests()
             return entry
         }
-
-        val isRecording: MutableState<Boolean>
-            get() = liveContext.isRecording
-
-        val isAutoPause: MutableState<Boolean>
-            get() = liveContext.isAutoPause
 
         fun close() {
             pair.second?.close()

@@ -58,26 +58,6 @@ class ApplicationViewModel(
         return this
     }
 
-    fun hideBottomBar(usePrevState: Boolean? = true)
-        : ApplicationViewModel
-    {
-        updateApplicationState {
-            val state = if ( usePrevState == true ) it else defaultApplicationState
-            state.copy(hideBottomBar = true)
-        }
-        return this
-    }
-
-    fun showBottomBar(usePrevState: Boolean? = true)
-        : ApplicationViewModel
-    {
-        updateApplicationState {
-            val state = if ( usePrevState == true ) it else defaultApplicationState
-            state.copy(hideBottomBar = false)
-        }
-        return this
-    }
-
     companion object {
         val defaultApplicationState = ApplicationState (
             hideTopBar = false,
