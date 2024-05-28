@@ -48,8 +48,6 @@ import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.models.RecordingViewModel
 import kotlinx.coroutines.flow.StateFlow
 
-private const val TAG = "com.anselm.location.components.HomeScreen"
-
 private fun finishRecording(
     entry: Entry?,
     navController: NavHostController,

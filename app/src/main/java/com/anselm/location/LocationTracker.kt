@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.callbackFlow
 private const val CHANNEL_ID = "LocationTrackerForegroundServiceChannel"
 
 // Update period of our geo location.
-public const val UPDATE_PERIOD_MILLISECONDS = 5000L
+const val UPDATE_PERIOD_MILLISECONDS = 5000L
 
 class LocationTracker: Service() {
     private var fusedLocationClient: FusedLocationProviderClient? = null
