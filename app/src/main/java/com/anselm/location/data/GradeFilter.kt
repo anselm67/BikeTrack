@@ -2,7 +2,7 @@ package com.anselm.location.data
 
 import com.anselm.location.shift
 
-private const val  MIN_DISTANCE_IN_METERS = 5.0
+private const val  MIN_DISTANCE_IN_METERS = 10.0
 
 class GradeFilter : DataFilter {
     private var lastSample: Sample? = null
@@ -46,8 +46,6 @@ class GradeFilter : DataFilter {
                 sample.grade = lastSample?.grade ?: 0.0
             }
         }
-//        Log.d(TAG, "sample.grade ${sample.grade} cursor $cursor " +
-//                "altitude ${sample.altitude} distance ${sample.distance}")
         lastSample = sample
     }
 

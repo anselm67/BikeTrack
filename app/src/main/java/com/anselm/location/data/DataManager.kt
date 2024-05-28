@@ -106,6 +106,7 @@ class DataManager {
         )
 
         var lastSample: Sample? = null
+        var pausedTime = 0L
 
         private fun reset() {
             lastSample = null
@@ -137,7 +138,9 @@ class DataManager {
         val nextSample = defaultSample.copy(
             seqno = lastSample.seqno + 1,
             location = location,
-            elapsedTime = lastSample.elapsedTime + location.time - lastSample.location.time,
+            elapsedTime = (lastSample.elapsedTime
+                    + location.time - lastSample.location.time  // Time since last sample
+                    - context.pausedTime),                      // Cumulative paused time
         )
         context.lastSample = nextSample
         return nextSample
@@ -155,8 +158,7 @@ class DataManager {
             if (shouldRun && app.isAutoPaused.value) {
                 // We're leaving auto-pause, adjust elapsed time by subtracting the pause time.
                 context.lastSample?.let {
-                    val pauseTime = location.time - it.location.time
-                    it.elapsedTime -= pauseTime
+                    context.pausedTime += location.time - it.location.time
                 }
                 app.onAutoPausedChanged(false)
             } else if (!shouldRun && !app.isAutoPaused.value) {

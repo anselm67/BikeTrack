@@ -57,19 +57,19 @@ private fun Front(sample: Sample, recording: Recording? = null) {
         ) {
             NumberWithUnits(
                 value = averageSpeedInKilometersPerHour.formatIf(
-                    "Average: --",
-                    "Average: %.1f"
+                    "--",
+                    "%.1f"
                 ) { !it.isFinite() || it <= MIN_SPEED },
-                units = "km/h",
-                style = MaterialTheme.typography.titleLarge,
+                units = "Average",
+                style = MaterialTheme.typography.displaySmall,
             )
             NumberWithUnits(
                 value = maxSpeedInKilometersPerHour.formatIf(
-                    "Maximum: --",
-                    "Maximum: %.1f"
+                    "--",
+                    "%.1f"
                 ) { !it.isFinite() || it < MIN_SPEED },
-                units = "km/h",
-                style = MaterialTheme.typography.titleLarge,
+                units = "Maximum",
+                style = MaterialTheme.typography.displaySmall,
             )
         }
     }
