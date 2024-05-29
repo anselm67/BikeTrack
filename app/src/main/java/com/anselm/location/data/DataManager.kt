@@ -107,7 +107,6 @@ class DataManager {
         )
 
         var lastSample: Sample? = null
-        var pausedTime = 0L
 
         private fun reset() {
             lastSample = null
