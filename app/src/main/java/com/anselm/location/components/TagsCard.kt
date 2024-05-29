@@ -36,7 +36,7 @@ fun TagsCard(
             Button(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 onClick = {
-                    RecordingTagger(recording).tag() {
+                    RecordingTagger(recording).tag {
                         isTagged.value = true
                     }
                 }

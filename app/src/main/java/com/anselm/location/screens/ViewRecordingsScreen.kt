@@ -72,7 +72,7 @@ private fun DisplayRecordingItem(entry: Entry) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column( ) {
+                    Column {
                         Text(
                             text = entry.title.ifEmpty { "Untitled" },
                             style = MaterialTheme.typography.titleMedium,
