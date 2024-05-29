@@ -5,6 +5,7 @@ import android.util.Log
 import com.anselm.location.AutoPause
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
+import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
 import kotlinx.serialization.Serializable
 import java.io.Closeable
 
@@ -134,13 +135,15 @@ class DataManager {
         if ( context.lastSample == null ) {
             throw Exception("No sample available")
         }
+        // If the amount of time elapsed since the last sample is (much) greater than the update
+        // period, we were in pause. So we don't count that time as active/elapsed time.
         val lastSample = context.lastSample!!
+        val lastElapsed = location.time - lastSample.location.time
         val nextSample = defaultSample.copy(
             seqno = lastSample.seqno + 1,
             location = location,
-            elapsedTime = (lastSample.elapsedTime
-                    + location.time - lastSample.location.time  // Time since last sample
-                    - context.pausedTime),                      // Cumulative paused time
+            elapsedTime = lastSample.elapsedTime +
+                    if ( lastElapsed < 2 * UPDATE_PERIOD_MILLISECONDS ) lastElapsed else 0,
         )
         context.lastSample = nextSample
         return nextSample
@@ -156,10 +159,6 @@ class DataManager {
         if ( context.canAutoPause ) {
             shouldRun = !AutoPause.get().isAutoPause(location)
             if (shouldRun && app.isAutoPaused.value) {
-                // We're leaving auto-pause, adjust elapsed time by subtracting the pause time.
-                context.lastSample?.let {
-                    context.pausedTime += location.time - it.location.time
-                }
                 app.onAutoPausedChanged(false)
             } else if (!shouldRun && !app.isAutoPaused.value) {
                 Log.d(TAG, "Entering auto pause.")
