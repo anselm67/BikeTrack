@@ -8,6 +8,12 @@ class Recording(
     private val dataPoints: List<Sample>
 ) {
     private var updated = false
+    private val _tags = mutableListOf<String>()
+    val tags: List<String>
+        get() = _tags.toList()
+
+    val id: String
+        get() = entry.id
 
     var title: String
         get() = entry.title
@@ -32,6 +38,10 @@ class Recording(
         if ( updated ) {
             entry.save()
         }
+    }
+
+    fun addTag(tag: String) {
+        _tags.add(tag)
     }
 
     fun lastSample(): Sample = dataPoints.last()

@@ -36,6 +36,7 @@ import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
 import com.anselm.location.components.RecordingMetaData
 import com.anselm.location.components.SpeedCard
+import com.anselm.location.components.TagsCard
 import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.components.YesNoDialog
 import com.anselm.location.models.AppAction
@@ -211,11 +212,9 @@ fun RecordingDetailsScreen(recordingId: String?) {
             sample = lastSample,
             modifier = butMapModifier,
         )
-//        Button (
-//            onClick = { tagRecording(recording) }
-//        ) {
-//            Text("TAG")
-//        }
-
+        TagsCard(
+            recording = recording,
+            modifier = butMapModifier,
+        )
     }
 }
