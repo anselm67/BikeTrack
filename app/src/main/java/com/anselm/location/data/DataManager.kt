@@ -98,8 +98,9 @@ interface DataFilter {
 
 class DataManager {
     inner class Context(
-        val canAutoPause: Boolean = true
+        val isLiveContext: Boolean = false
     ): Closeable {
+
         val filters = mutableListOf(
             SpeedFilter(),
             AltitudeFilter(),
@@ -155,7 +156,8 @@ class DataManager {
 
     fun onLocation(context: Context, location: LocationStub): Sample {
         var shouldRun = true
-        if ( context.canAutoPause ) {
+        // Only the live context can auto pause.
+        if ( context.isLiveContext ) {
             shouldRun = !AutoPause.get().isAutoPause(location)
             if (shouldRun && app.isAutoPaused.value) {
                 app.onAutoPausedChanged(false)
@@ -165,7 +167,8 @@ class DataManager {
             }
         }
         if ( shouldRun ) {
-            if ( app.isRecording.value ) {
+            // Only the live context can request recording.
+            if ( context.isLiveContext && app.isRecording.value ) {
                 app.recordingManager.record(location)
             }
             val nextSample = if (context.lastSample == null)
