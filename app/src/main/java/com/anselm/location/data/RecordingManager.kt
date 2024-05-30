@@ -96,7 +96,7 @@ class RecordingManager() {
         return null
     }
 
-    fun load(entry: Entry): Recording? {
+    private fun load(entry: Entry): Recording? {
         Log.d(TAG, "load ${entry.id}")
         try {
             with ( File(home, entry.id) ) {

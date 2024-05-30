@@ -20,7 +20,7 @@ class RecordingTagger(
     private val recording: Recording,
 ) {
     private var boundsChecker = BoundsChecker()
-    private val localities = mutableSetOf<String>()
+    private val localities = mutableListOf<String>()
 
     fun tag(onDone: () -> Unit) {
         val positions = recording.extractLatLng()
@@ -65,9 +65,8 @@ class RecordingTagger(
                 boundsChecker.updateBounds(extractBounds(result))
 
                 locality?.let {
-                    if (localities.add(it)) {
+                    localities.add(it)
                         recording.addTag(it)
-                    }
                 }
             }
         } catch (e: IOException) {
