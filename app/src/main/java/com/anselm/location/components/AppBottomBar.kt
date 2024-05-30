@@ -118,7 +118,9 @@ fun AppBottomBar(viewModel: ApplicationViewModel) {
                 )
             }
             IconButton(
-                onClick = { }
+                onClick = {
+                    navController.navigate(NavigationItem.Settings.route)
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_settings),

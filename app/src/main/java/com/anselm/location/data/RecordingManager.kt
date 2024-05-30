@@ -136,11 +136,13 @@ class RecordingManager() {
         }
     }
 
-    private val catalog by lazy { loadCatalog() }
+    private var _catalog: MutableList<Entry>? = null
+    private val catalog: MutableList<Entry>
+        get() = _catalog ?: loadCatalog()
 
-    private fun rebuildCatalog(): MutableList<Entry> {
+    fun rebuildCatalog() {
         Log.d(TAG, "rebuildCatalog")
-        val catalog = mutableListOf<Entry>()
+        val newCatalog = mutableListOf<Entry>()
         home.list()?.forEach { id ->
             if ( id != "catalog.json") {
                 val entry = Entry(
@@ -151,8 +153,10 @@ class RecordingManager() {
                     lastSample = defaultSample
                 )
                 load(entry)?.let { recording ->
-                    catalog.add(entry.apply {
-                        title = id
+                    val oldEntry = _catalog?.find { it.id == id }
+                    newCatalog.add(entry.apply {
+                        title = oldEntry?.title ?: id
+                        description = oldEntry?.description ?: ""
                         time = recording.time
                         lastSample = recording.lastSample()
                     })
@@ -161,21 +165,28 @@ class RecordingManager() {
         }
         // TODO We should save this, right now it's recomputed on each launch until
         // saved through adding/modifying a recording
-        return catalog
+        _catalog = newCatalog
     }
 
     private fun loadCatalog(): MutableList<Entry> {
-        if ( catalogFile.exists() ) {
-            try {
-                with(catalogFile) {
-                    val jsonText = this.readText()
-                    return Json.decodeFromString<MutableList<Entry>>(jsonText)
+        if ( _catalog == null ) {
+            synchronized(this) {
+                if (catalogFile.exists()) {
+                    try {
+                        with(catalogFile) {
+                            val jsonText = this.readText()
+                            _catalog = Json.decodeFromString<MutableList<Entry>>(jsonText)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to load catalog - rebuilding.", e)
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to load catalog - rebuilding.", e)
+                if ( _catalog == null ) {
+                    rebuildCatalog()
+                }
             }
         }
-        return rebuildCatalog()
+        return catalog
     }
 
     @OptIn(ExperimentalSerializationApi::class)

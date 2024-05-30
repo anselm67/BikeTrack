@@ -5,6 +5,7 @@ enum class Screen {
     RECORDING,
     VIEW_RECORDINGS,
     RECORDING_DETAILS,
+    SETTINGS,
 }
 
 sealed class NavigationItem(val route: String) {
@@ -12,5 +13,6 @@ sealed class NavigationItem(val route: String) {
     data object Recording : NavigationItem(Screen.RECORDING.name)
     data object ViewRecordings: NavigationItem(Screen.VIEW_RECORDINGS.name)
     data object RecordingDetails: NavigationItem(Screen.RECORDING_DETAILS.name)
+    data object Settings: NavigationItem(Screen.SETTINGS.name)
 }
 

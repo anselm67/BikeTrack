@@ -28,6 +28,7 @@ import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.screens.PermissionScreen
 import com.anselm.location.screens.RecordingDetailsScreen
 import com.anselm.location.screens.RecordingScreen
+import com.anselm.location.screens.SettingsScreen
 import com.anselm.location.screens.ViewRecordingsScreen
 import com.anselm.location.ui.theme.LocationTheme
 
@@ -100,6 +101,9 @@ class MainActivity : ComponentActivity() {
                     arguments = listOf(navArgument("recordingId") { type = NavType.StringType }),
                 ) {recordingId ->
                     RecordingDetailsScreen(recordingId.arguments?.getString("recordingId"))
+                }
+                composable(NavigationItem.Settings.route) {
+                    SettingsScreen()
                 }
             }
         }
