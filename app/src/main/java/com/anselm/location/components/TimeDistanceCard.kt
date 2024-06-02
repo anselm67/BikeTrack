@@ -36,7 +36,7 @@ private fun getCurrentTime(): String {
     return timeFormat.format(System.currentTimeMillis())
 }
 
-@Composable fun LiveRunningTime(timeMillis: Long) {
+@Composable fun AutoPausedRunningTime(timeMillis: Long) {
     val alpha by rememberInfiniteTransition(label = "Blinking text.").animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -106,8 +106,8 @@ fun TimeElapsedCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
-                if ( isLive ) {
-                    LiveRunningTime(timeMillis)
+                if ( app.isAutoPaused.value ) {
+                    AutoPausedRunningTime(timeMillis)
                 } else {
                     RunningTime(timeMillis)
                 }
