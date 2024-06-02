@@ -3,6 +3,7 @@ package com.anselm.location.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +73,10 @@ fun TimeElapsedCard(
                             delay(1000)
                         }
                     }
+                    GradientCircle(
+                        accuracy = sample.location.accuracy,
+                        modifier = Modifier.defaultMinSize(minHeight = 50.dp, minWidth = 50.dp)
+                    )
                     Text(
                         text = currentTime,
                         style = MaterialTheme.typography.displaySmall,

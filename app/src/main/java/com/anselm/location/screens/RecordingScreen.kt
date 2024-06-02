@@ -37,7 +37,6 @@ import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
-import com.anselm.location.components.DebugCard
 import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
@@ -79,6 +78,7 @@ private fun finishRecording(
 @Composable
 fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
     val sample = sampleFlow.collectAsState()
+
     // We're on pause? Skip everything.
     Column (
         modifier = Modifier
@@ -97,9 +97,9 @@ fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
             sample = sample.value,
             modifier = Modifier.defaultMinSize(minHeight = 250.dp)
         )
-        DebugCard(
-            sample = sample.value,
-        )
+//        DebugCard(
+//            sample = sample.value,
+//        )
     }
 }
 
@@ -125,7 +125,7 @@ private fun DisplayScreen(
                     text = "Auto-Paused",
                     style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(4.dp),
                 )
             }
         }
