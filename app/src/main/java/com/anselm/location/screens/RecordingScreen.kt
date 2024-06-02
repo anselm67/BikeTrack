@@ -43,6 +43,7 @@ import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
 import com.anselm.location.components.YesNoDialog
 import com.anselm.location.data.Entry
+import com.anselm.location.data.RecordingTagger
 import com.anselm.location.data.Sample
 import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.models.RecordingViewModel
@@ -56,11 +57,20 @@ private fun finishRecording(
         app.toast("Ride discarded because it is too short.")
         navController.navigate(NavigationItem.ViewRecordings.route)
     } else {
-        navController.navigate(
-            NavigationItem.RecordingDetails.route + "/${entry.id}"
-        ) {
-            popUpTo(NavigationItem.ViewRecordings.route) {
-                inclusive = true
+        // Tag this ride.
+        app.recordingManager.load(entry.id)?.let {
+            RecordingTagger(it).tag {
+                it.save()
+                // Navigate to the details screen.
+                app.postOnUiThread {
+                    navController.navigate(
+                        NavigationItem.RecordingDetails.route + "/${entry.id}"
+                    ) {
+                        popUpTo(NavigationItem.ViewRecordings.route) {
+                            inclusive = true
+                        }
+                    }
+                }
             }
         }
     }

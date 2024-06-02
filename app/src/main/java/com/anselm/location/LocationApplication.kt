@@ -75,7 +75,7 @@ class LocationApplication: Application() {
         }
     }
 
-    private fun postOnUiThread(block: () ->Unit) {
+    fun postOnUiThread(block: () ->Unit) {
         applicationScope.launch(Dispatchers.Main) { block() }
     }
 
