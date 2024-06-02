@@ -124,7 +124,7 @@ private fun DisplayScreen(
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(96.dp)
             ) {
                 Icon(
                     painter = painterResource(
@@ -137,15 +137,6 @@ private fun DisplayScreen(
                     contentDescription = "Toggle recording.",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxSize()
-                )
-            }
-            if ( app.isAutoPaused.value ) {
-                Text(
-                    text = "Auto-Paused",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(horizontal = 32.dp, vertical = 8.dp)
                 )
             }
         }
