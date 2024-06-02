@@ -1,9 +1,7 @@
 package com.anselm.location.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -97,9 +95,6 @@ fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
             sample = sample.value,
             modifier = Modifier.defaultMinSize(minHeight = 250.dp)
         )
-//        DebugCard(
-//            sample = sample.value,
-//        )
     }
 }
 
@@ -114,40 +109,27 @@ private fun DisplayScreen(
             .padding(vertical = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        if ( app.isAutoPaused.value ) {
-            Column (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Auto-Paused",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(4.dp),
-                )
-            }
-        }
         LocationDisplay(sampleFlow)
-        Row (
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
+        Column (
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconButton(
                 onClick = {
-                    if ( app.isRecording.value ) {
+                    if (app.isRecording.value) {
                         showStopRecordingDialog.value = true
                     }
-                }  ,
+                },
                 colors = IconButtonDefaults.iconButtonColors(
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 ),
-                modifier = Modifier.size(96.dp)
+                modifier = Modifier.size(64.dp)
             ) {
                 Icon(
                     painter = painterResource(
-                        id = if ( app.isRecording.value )
+                        id =
+                        if (app.isRecording.value)
                             R.drawable.ic_stop_recording
                         else
                             R.drawable.ic_start_recording,
@@ -155,6 +137,15 @@ private fun DisplayScreen(
                     contentDescription = "Toggle recording.",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.fillMaxSize()
+                )
+            }
+            if ( app.isAutoPaused.value ) {
+                Text(
+                    text = "Auto-Paused",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(horizontal = 32.dp, vertical = 8.dp)
                 )
             }
         }
