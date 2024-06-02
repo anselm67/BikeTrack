@@ -38,7 +38,7 @@ private fun PulseRecordButton(onClick: () -> Unit) {
         targetValue = 48.dp,
         typeConverter = Dp.VectorConverter,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1000, easing = LinearEasing),
+            animation = tween(durationMillis = 750, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ), label = "pulse_button"
     )
