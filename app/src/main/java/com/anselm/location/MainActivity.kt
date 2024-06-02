@@ -43,7 +43,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Sets up the UI.
         enableEdgeToEdge()
-        // TODO Make this settings available to all screens via view model.
         setShowWhenLocked(true)
         setContent {
             LocationTheme {
