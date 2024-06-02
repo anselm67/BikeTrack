@@ -8,9 +8,8 @@ class Recording(
     private val dataPoints: List<Sample>
 ) {
     private var updated = false
-    private val _tags = mutableListOf<String>()
     val tags: List<String>
-        get() = _tags.toList()
+        get() = entry.tags.toList()
 
     val id: String
         get() = entry.id
@@ -41,7 +40,8 @@ class Recording(
     }
 
     fun addTag(tag: String) {
-        _tags.add(tag)
+        entry.tags.add(tag)
+        updated = true
     }
 
     fun lastSample(): Sample = dataPoints.last()

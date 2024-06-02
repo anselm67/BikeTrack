@@ -38,6 +38,7 @@ fun TagsCard(
                 onClick = {
                     RecordingTagger(recording).tag {
                         isTagged.value = true
+                        recording.save()
                     }
                 }
             ) {

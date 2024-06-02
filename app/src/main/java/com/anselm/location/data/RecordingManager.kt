@@ -70,6 +70,7 @@ class RecordingManager() {
                 time = System.currentTimeMillis(),
                 description = "",
                 lastSample = lastSample,
+                tags = mutableListOf(),
             )
             addEntry(entry)
             doRecordingProlog = true
@@ -122,7 +123,8 @@ class RecordingManager() {
                 title = "Current ride.",
                 time = System.currentTimeMillis(),
                 description = "",
-                lastSample = defaultSample      // TODO This will cause troubles.
+                lastSample = defaultSample,      // TODO This will cause troubles.
+                tags = mutableListOf()
             ))
         }
     }
@@ -150,7 +152,8 @@ class RecordingManager() {
                     title = "",
                     time = 0,
                     description = "",
-                    lastSample = defaultSample
+                    lastSample = defaultSample,
+                    tags = mutableListOf(),
                 )
                 load(entry)?.let { recording ->
                     val oldEntry = _catalog?.find { it.id == id }
@@ -234,6 +237,7 @@ class Entry (
     var title: String,
     var time: Long,
     var description: String,
+    val tags: MutableList<String>,
     var lastSample: Sample,
 ) {
     @Contextual val recordingManager = app.recordingManager
