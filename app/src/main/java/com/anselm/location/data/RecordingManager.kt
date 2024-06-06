@@ -65,7 +65,7 @@ class RecordingManager() {
     fun stop(lastSample: Sample?): Entry? {
         app.onRecordingChanged(false)
         // Don't record small rides.
-        if ( lastSample == null || lastSample.seqno <  MIN_RECORDING_LENGTH /* TODO */) {
+        if ( lastSample == null || lastSample.seqno <  MIN_RECORDING_LENGTH ) {
             return null
         } else {
             assert(recordingFile != null)
