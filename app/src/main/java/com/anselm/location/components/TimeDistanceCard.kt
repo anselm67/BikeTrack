@@ -1,5 +1,6 @@
 package com.anselm.location.components
 
+import android.content.Context
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.data.Recording
@@ -42,9 +44,9 @@ private fun getCurrentTime(): String {
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = keyframes {
-                durationMillis = 2000
-                0.25f at  500
-                1f at 1500
+                durationMillis = 2500
+                0.25f at  0
+                1f at 1000
             },
             repeatMode = RepeatMode.Restart
         ), label = "Blinking text."
@@ -90,6 +92,12 @@ fun TimeElapsedCard(
     recording: Recording? = null,
 ) {
     val isLive = (recording == null)
+    val sharedPreferences = LocalContext.current.getSharedPreferences(
+        "LocationPreferences",
+        Context.MODE_PRIVATE)
+    val showAccuracyMeter by remember {
+        mutableStateOf(sharedPreferences.getBoolean("showAccuracyMeter", false))
+    }
 
     var timeMillis by remember { mutableLongStateOf(sample.elapsedTime) }
     val distanceInKilometers = sample.totalDistance / 1000.0
@@ -113,10 +121,12 @@ fun TimeElapsedCard(
                 }
                 if ( isLive ) {
                     // Displays the current gps accuracy.
-                    GradientCircle(
-                        accuracy = sample.location.accuracy,
-                        modifier = Modifier.defaultMinSize(minHeight = 50.dp, minWidth = 50.dp)
-                    )
+                    if ( showAccuracyMeter ) {
+                        GradientCircle(
+                            accuracy = sample.location.accuracy,
+                            modifier = Modifier.defaultMinSize(minHeight = 50.dp, minWidth = 50.dp)
+                        )
+                    }
                     // Displays the current time.
                     var currentTime by remember { mutableStateOf(getCurrentTime()) }
                     LaunchedEffect(Unit) {

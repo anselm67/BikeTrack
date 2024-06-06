@@ -1,5 +1,6 @@
 package com.anselm.location.screens
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,6 +37,7 @@ import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.components.AltitudeCard
+import com.anselm.location.components.DebugCard
 import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.components.SpeedCard
 import com.anselm.location.components.TimeElapsedCard
@@ -75,6 +78,13 @@ private fun finishRecording(
 
 @Composable
 fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
+    val sharedPreferences = LocalContext.current.getSharedPreferences(
+        "LocationPreferences",
+        Context.MODE_PRIVATE)
+    val showDebugCard by remember {
+        mutableStateOf(sharedPreferences.getBoolean("showDebugCard", false))
+    }
+
     val sample = sampleFlow.collectAsState()
 
     // We're on pause? Skip everything.
@@ -95,6 +105,9 @@ fun LocationDisplay(sampleFlow: StateFlow<Sample>) {
             sample = sample.value,
             modifier = Modifier.defaultMinSize(minHeight = 250.dp)
         )
+        if ( showDebugCard ) {
+            DebugCard(sample.value)
+        }
     }
 }
 

@@ -98,7 +98,7 @@ interface DataFilter {
 
 class DataManager {
     inner class Context(
-        val isLiveContext: Boolean = false
+        var isLiveContext: Boolean = false
     ): Closeable {
 
         val filters = mutableListOf(
@@ -120,6 +120,7 @@ class DataManager {
         }
 
         fun stopRecording(): Entry? {
+            isLiveContext = false
             return app.recordingManager.stop(lastSample)
         }
 
