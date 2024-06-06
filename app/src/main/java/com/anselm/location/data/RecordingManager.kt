@@ -14,6 +14,9 @@ import java.io.File
 import java.time.format.DateTimeFormatter
 
 private const val CATALOG_FILENAME = "catalog.json"
+/* Should be greater than FIRST_FLUSH_LENGTH */
+private const val MIN_RECORDING_LENGTH = 5
+private const val FIRST_FLUSH_LENGTH = 3
 
 class RecordingManager() {
     private var recordingFile: File? = null
@@ -21,6 +24,12 @@ class RecordingManager() {
     private lateinit var catalogFile: File
     private val buffer = mutableListOf<LocationStub>()
     private var doRecordingProlog = true
+
+    init {
+        // This is needed to ensure the recording file is created.
+        assert(MIN_RECORDING_LENGTH > FIRST_FLUSH_LENGTH)
+    }
+
     constructor(recordingDirectory: File) : this() {
         home = File(recordingDirectory, "recordings")
         catalogFile = File(home, CATALOG_FILENAME)
@@ -56,7 +65,7 @@ class RecordingManager() {
     fun stop(lastSample: Sample?): Entry? {
         app.onRecordingChanged(false)
         // Don't record small rides.
-        if ( lastSample == null || lastSample.seqno < 5 ) {
+        if ( lastSample == null || lastSample.seqno <  MIN_RECORDING_LENGTH /* TODO */) {
             return null
         } else {
             assert(recordingFile != null)
@@ -80,7 +89,7 @@ class RecordingManager() {
     }
 
     // We want to flush once quickly so we record the ride, and then every minute.
-    private var nextFlush = 3
+    private var nextFlush = FIRST_FLUSH_LENGTH
 
     fun record(location: LocationStub) {
         buffer.add(location)

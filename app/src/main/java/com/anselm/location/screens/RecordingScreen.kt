@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -128,7 +129,8 @@ private fun DisplayScreen(
     ) {
         LocationDisplay(sampleFlow)
         Column (
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(top = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -178,14 +180,13 @@ fun SavingRide() {
                 .background(
                     color = MaterialTheme.colorScheme.primary,
                     shape = RoundedCornerShape(25.dp),
-                ).padding(24.dp),
+                )
+                .padding(24.dp),
             text = "Saving ride...",
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onPrimary,
         )
     }
-
-
 }
 
 
@@ -200,6 +201,13 @@ fun RecordingScreen() {
 
     val viewModel = viewModel<RecordingViewModel>()
     viewModel.connect()
+
+    // Setting isSaving to false is the very last thing we want to do on this screen.
+    DisposableEffect(key1 = viewModel) {
+        onDispose {
+            viewModel.isSaving.value = false
+        }
+    }
 
     val isConnected by viewModel.isConnected
     val isRecording by app.isRecording
