@@ -23,6 +23,7 @@ class RecordingViewModel: ViewModel() {
     private var serviceConnection: TrackerConnection? = null
 
     val isConnected = mutableStateOf(false)
+    val isSaving = mutableStateOf(false)
     var sampleFlow: StateFlow<Sample>? = null
 
     fun connect() {
@@ -45,6 +46,7 @@ class RecordingViewModel: ViewModel() {
     fun startRecording() {
         serviceConnection?.startRecording()
     }
+
     fun stopRecording(): Entry? {
         return serviceConnection?.stopRecording()
     }

@@ -1,6 +1,7 @@
 package com.anselm.location.screens
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -51,6 +53,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 private fun finishRecording(
     entry: Entry?,
+    isSaving: MutableState<Boolean>,
     navController: NavHostController,
 ) {
     if ( entry == null ) {
@@ -58,6 +61,7 @@ private fun finishRecording(
         navController.navigate(NavigationItem.ViewRecordings.route)
     } else {
         // Tag this ride.
+        isSaving.value = true
         app.recordingManager.load(entry.id)?.let {
             RecordingTagger(it).tag {
                 it.save()
@@ -157,8 +161,38 @@ private fun DisplayScreen(
 }
 
 @Composable
+fun SavingRide() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .paint(
+                painter = painterResource(id = R.drawable.cyclist_start),
+                contentScale = ContentScale.FillHeight,
+                alpha = 0.45f
+            ),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(25.dp),
+                ).padding(24.dp),
+            text = "Saving ride...",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onPrimary,
+        )
+    }
+
+
+}
+
+
+@Composable
 fun RecordingScreen() {
     val showStopRecordingDialog = remember { mutableStateOf(false) }
+
     val navController = LocalNavController.current
     val appViewModel = LocalAppViewModel.current
     appViewModel
@@ -173,7 +207,9 @@ fun RecordingScreen() {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        if ( isConnected ) {
+        if ( viewModel.isSaving.value ) {
+            SavingRide()
+        } else if ( isConnected ) {
             if ( isRecording ) {
                 appViewModel.updateApplicationState {
                     it.copy(
@@ -226,7 +262,11 @@ fun RecordingScreen() {
                     },
                     onConfirm = {
                         showStopRecordingDialog.value = false
-                        finishRecording(viewModel.stopRecording(), navController)
+                        finishRecording(
+                            viewModel.stopRecording(),
+                            viewModel.isSaving,
+                            navController
+                        )
                     },
                     title = "Save this ride ?",
                     text = "If you have finished your ride, press Yes to save your ride. " +
