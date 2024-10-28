@@ -5,4 +5,5 @@
 build/
 local.properties
 local.default.properties
+local.defaults.properties
 secrets.properties
