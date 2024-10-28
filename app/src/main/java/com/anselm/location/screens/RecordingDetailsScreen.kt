@@ -3,7 +3,9 @@ package com.anselm.location.screens
 import android.annotation.SuppressLint
 import android.util.Log
 import android.view.MotionEvent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,15 +13,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,7 +82,9 @@ private fun DeleteAction(viewModel: RecordingDetailsViewModel) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun RecordingMap(viewModel: RecordingDetailsViewModel) {
+private fun RecordingMap(viewModel: RecordingDetailsViewModel,
+                         isFullScreen: Boolean = false,
+                         onToggleFullScreen: () -> Unit) {
     val recordingWrapper by viewModel.recordingState.collectAsState()
     val recording = recordingWrapper.value
     val scope = rememberCoroutineScope()
@@ -85,42 +99,75 @@ private fun RecordingMap(viewModel: RecordingDetailsViewModel) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(bounds.center, 1f)
     }
-    Box (
-       modifier = Modifier
-           .fillMaxWidth()
-           .height(300.dp)
-           .border(2.dp, Color(0xffcccccc), shape = RoundedCornerShape(10.dp))
-           .pointerInteropFilter(
-               onTouchEvent = {
-                   Log.d("com.anselm.location.Touch", "onToucheEvent: $it")
-                   when (it.action) {
-                       MotionEvent.ACTION_DOWN -> {
-                           viewModel.columnScrollingEnabled.value = false
-                           false
-                       }
-
-                       else -> {
-                           true
-                       }
-                   }
-               })
+    Box(
+        modifier = if (isFullScreen)
+            Modifier.fillMaxSize()
+        else
+            Modifier
+                .fillMaxWidth()
+                .height(300.dp)
     ) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            onMapLoaded = {
-                val update  = CameraUpdateFactory.newLatLngBounds(bounds, 100)
-                scope.launch {
-                    withContext(Dispatchers.Main) {
-                        cameraPositionState.animate(update, 500)
+        Box (
+           modifier = Modifier
+               .fillMaxSize()
+               .border(2.dp, Color(0xffcccccc), shape = RoundedCornerShape(10.dp))
+               .pointerInteropFilter(
+                   onTouchEvent = {
+                       Log.d("com.anselm.location.Touch", "onToucheEvent: $it")
+                       when (it.action) {
+                           MotionEvent.ACTION_DOWN -> {
+                               viewModel.columnScrollingEnabled.value = false
+                               false
+                           }
+
+                           else -> {
+                               true
+                           }
+                       }
+                   })
+        ) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                onMapLoaded = {
+                    val update = CameraUpdateFactory.newLatLngBounds(bounds, 100)
+                    scope.launch {
+                        withContext(Dispatchers.Main) {
+                            cameraPositionState.animate(update, 500)
+                        }
                     }
                 }
+            ) {
+                Polyline(
+                    points = recording.extractLatLng(),
+                    color = Color.Red
+                )
             }
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .wrapContentHeight()
+                .padding(8.dp)
+                .background(
+                    Color.Black.copy(alpha=0.2f),
+                    shape= RoundedCornerShape(8.dp)
+                )
         ) {
-            Polyline(
-                points = recording.extractLatLng(),
-                color = Color.Red
-            )
+            IconButton(
+                onClick = onToggleFullScreen,
+                modifier = Modifier.wrapContentSize(),
+            ) {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(id = if (isFullScreen)
+                        R.drawable.ic_cancel
+                    else
+                        R.drawable.ic_full_screen),
+                    contentDescription = "Expand map.",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
@@ -158,63 +205,73 @@ fun RecordingDetailsScreen(recordingId: String?) {
         )
     }.setShowOnLockScreen(false)
 
-    val butMapModifier = Modifier.pointerInput(Unit) {
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent()
-                when (event.type) {
-                    PointerEventType.Press -> {
-                        viewModel.columnScrollingEnabled.value = true
+    var isMapFullScreen by remember { mutableStateOf(false) }
+    
+    if (isMapFullScreen) {
+        RecordingMap(viewModel, true) {
+            isMapFullScreen = false
+        }
+    } else {
+        val butMapModifier = Modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    when (event.type) {
+                        PointerEventType.Press -> {
+                            viewModel.columnScrollingEnabled.value = true
+                        }
+                        else -> { }
                     }
-                    else -> { }
                 }
             }
         }
-    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp)
-            .verticalScroll(rememberScrollState(), viewModel.columnScrollingEnabled.value)
-    ) {
-        if ( viewModel.showDeleteDialog.value ) {
-            YesNoDialog(
-                title = "Delete Recording",
-                text = "Are you sure you want to delete this recording?",
-                onDismiss = {
-                    viewModel.showDeleteDialog.value = false
-                },
-                onConfirm = {
-                    viewModel.showDeleteDialog.value = false
-                    app.recordingManager.delete(recordingId)
-                    navController.popBackStack()
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState(), viewModel.columnScrollingEnabled.value)
+        ) {
+            if (viewModel.showDeleteDialog.value) {
+                YesNoDialog(
+                    title = "Delete Recording",
+                    text = "Are you sure you want to delete this recording?",
+                    onDismiss = {
+                        viewModel.showDeleteDialog.value = false
+                    },
+                    onConfirm = {
+                        viewModel.showDeleteDialog.value = false
+                        app.recordingManager.delete(recordingId)
+                        navController.popBackStack()
+                    }
+                )
+            }
+            RecordingMetaData(
+                viewModel,
+                modifier = butMapModifier
+            )
+            RecordingMap(viewModel, isMapFullScreen) {
+                isMapFullScreen = true
+            }
+            TimeElapsedCard(
+                recording = recording,
+                sample = lastSample,
+                modifier = butMapModifier
+            )
+            SpeedCard(
+                recording = recording,
+                sample = lastSample,
+                modifier = butMapModifier,
+            )
+            AltitudeCard(
+                recording = recording,
+                sample = lastSample,
+                modifier = butMapModifier,
+            )
+            TagsCard(
+                recording = recording,
+                modifier = butMapModifier,
             )
         }
-        RecordingMetaData(
-            viewModel,
-            modifier = butMapModifier
-        )
-        RecordingMap(viewModel)
-        TimeElapsedCard(
-            recording = recording,
-            sample = lastSample,
-            modifier = butMapModifier
-        )
-        SpeedCard(
-            recording = recording,
-            sample = lastSample,
-            modifier = butMapModifier,
-        )
-        AltitudeCard(
-            recording = recording,
-            sample = lastSample,
-            modifier = butMapModifier,
-        )
-        TagsCard(
-            recording = recording,
-            modifier = butMapModifier,
-        )
     }
 }
