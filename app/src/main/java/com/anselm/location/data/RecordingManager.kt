@@ -186,7 +186,7 @@ class RecordingManager() {
                         .aggregate(newEntry.lastSample)
                     byMonth[month] = byMonth.getOrDefault(month, StatsEntry(month))
                         .aggregate(newEntry.lastSample)
-                    byYear[year] = byYear.getOrDefault(month, StatsEntry(month))
+                    byYear[year] = byYear.getOrDefault(year, StatsEntry(month))
                         .aggregate(newEntry.lastSample)
                 }
             }
