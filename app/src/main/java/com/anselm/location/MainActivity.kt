@@ -29,6 +29,7 @@ import com.anselm.location.screens.PermissionScreen
 import com.anselm.location.screens.RecordingDetailsScreen
 import com.anselm.location.screens.RecordingScreen
 import com.anselm.location.screens.SettingsScreen
+import com.anselm.location.screens.StatsScreen
 import com.anselm.location.screens.ViewRecordingsScreen
 import com.anselm.location.ui.theme.LocationTheme
 
@@ -94,6 +95,9 @@ class MainActivity : ComponentActivity() {
                 }
                 composable(NavigationItem.ViewRecordings.route) {
                     ViewRecordingsScreen()
+                }
+                composable(NavigationItem.Stats.route) {
+                    StatsScreen()
                 }
                 composable(
                     "${NavigationItem.RecordingDetails.route}/{recordingId}",

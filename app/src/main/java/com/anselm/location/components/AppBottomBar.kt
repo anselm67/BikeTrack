@@ -119,6 +119,17 @@ fun AppBottomBar(viewModel: ApplicationViewModel) {
             }
             IconButton(
                 onClick = {
+                    navController.navigate(NavigationItem.Stats.route)
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_stats),
+                    contentDescription = "Navigate to the statistics screen.",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            IconButton(
+                onClick = {
                     navController.navigate(NavigationItem.Settings.route)
                 }
             ) {

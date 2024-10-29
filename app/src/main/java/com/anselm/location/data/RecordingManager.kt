@@ -4,6 +4,10 @@ import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
+import com.anselm.location.asLocalDate
+import com.anselm.location.startOfMonth
+import com.anselm.location.startOfWeek
+import com.anselm.location.startOfYear
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -12,6 +16,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.format.DateTimeFormatter
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 private const val CATALOG_FILENAME = "catalog.json"
 /* Should be greater than FIRST_FLUSH_LENGTH */
@@ -100,7 +106,7 @@ class RecordingManager() {
     }
 
     fun load(recordingId: String): Recording? {
-        catalog.find { it.id == recordingId }?.let {
+        catalog.rides.find { it.id == recordingId }?.let {
             return@load load(it)
         }
         return null
@@ -147,13 +153,17 @@ class RecordingManager() {
         }
     }
 
-    private var _catalog: MutableList<Entry>? = null
-    private val catalog: MutableList<Entry>
+    private var _catalog: Catalog? = null
+    private val catalog: Catalog
         get() = _catalog ?: loadCatalog()
 
     fun rebuildCatalog() {
         Log.d(TAG, "rebuildCatalog")
-        val newCatalog = mutableListOf<Entry>()
+        val newCatalog = Catalog()
+        val byWeek = mutableMapOf<Long, StatsEntry>()
+        val byMonth = mutableMapOf<Long, StatsEntry>()
+        val byYear = mutableMapOf<Long, StatsEntry>()
+        val total = StatsEntry(0)
         home.list()?.forEach { id ->
             if ( id != "catalog.json") {
                 val entry = Entry(
@@ -165,29 +175,53 @@ class RecordingManager() {
                     tags = mutableListOf(),
                 )
                 load(entry)?.let { recording ->
-                    val oldEntry = _catalog?.find { it.id == id }
-                    newCatalog.add(entry.apply {
+                    val oldEntry = _catalog?.rides?.find { it.id == id }
+                    val newEntry = entry.apply {
                         title = oldEntry?.title ?: id
                         description = oldEntry?.description ?: ""
                         time = recording.time
                         lastSample = recording.lastSample()
-                    })
+                    }
+                    newCatalog.rides.add(newEntry)
+                    val week = startOfWeek(newEntry.time)
+                    val month = startOfMonth(newEntry.time)
+                    val year = startOfYear(newEntry.time)
+                    byWeek[week] = byWeek.getOrDefault(week, StatsEntry(week))
+                        .aggregate(newEntry.lastSample)
+                    byMonth[month] = byMonth.getOrDefault(month, StatsEntry(month))
+                        .aggregate(newEntry.lastSample)
+                    byYear[year] = byYear.getOrDefault(month, StatsEntry(month))
+                        .aggregate(newEntry.lastSample)
+                    total.aggregate(newEntry.lastSample)
                 }
+            }
+        }
+        for ((stats, by) in listOf(
+            Pair(newCatalog.weeklyStats, byWeek),
+            Pair(newCatalog.monthlyStats, byMonth),
+            Pair(newCatalog.annualStats, byYear))) {
+            for ((_, statsEntry) in by.toSortedMap()) {
+                stats.add(statsEntry)
             }
         }
         // TODO We should save this, right now it's recomputed on each launch until
         // saved through adding/modifying a recording
         _catalog = newCatalog
+        try {
+            saveCatalog()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save catalog.", e)
+        }
     }
 
-    private fun loadCatalog(): MutableList<Entry> {
+    private fun loadCatalog(): Catalog {
         if ( _catalog == null ) {
             synchronized(this) {
                 if (catalogFile.exists()) {
                     try {
                         with(catalogFile) {
                             val jsonText = this.readText()
-                            _catalog = Json.decodeFromString<MutableList<Entry>>(jsonText)
+                            _catalog = Json.decodeFromString<Catalog>(jsonText)
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to load catalog - rebuilding.", e)
@@ -203,7 +237,7 @@ class RecordingManager() {
 
     @OptIn(ExperimentalSerializationApi::class)
     fun saveCatalog() {
-        Log.d(TAG, "saveCatalog: ${catalog.size} entries.")
+        Log.d(TAG, "saveCatalog: ${catalog.rides.size} entries.")
         val prettyJson = Json {
             prettyPrint = true
             prettyPrintIndent = "  "
@@ -214,19 +248,19 @@ class RecordingManager() {
     }
 
     private fun addEntry(entry: Entry) {
-        catalog.add(entry)
+        catalog.rides.add(entry)
         saveCatalog()
     }
 
     private fun delete(entry: Entry) {
-        if ( catalog.remove(entry) ) {
+        if ( catalog.rides.remove(entry) ) {
             File(home, entry.id).delete()
             saveCatalog()
         }
     }
 
     fun delete(recordingId: String): Boolean {
-        val entry = catalog.find { it.id == recordingId }
+        val entry = catalog.rides.find { it.id == recordingId }
         if ( entry != null ) {
             delete(entry)
             return true
@@ -236,9 +270,29 @@ class RecordingManager() {
     }
 
     fun list(): List<Entry> {
-        return catalog.toList().sortedByDescending { it.time }
+        return catalog.rides.toList().sortedByDescending { it.time }
+    }
+
+    fun annualStats(): List<StatsEntry> {
+        return catalog.annualStats
+    }
+
+    fun monthlyStats(): List<StatsEntry> {
+        return catalog.monthlyStats
+    }
+
+    fun weeklyStats(): List<StatsEntry> {
+        return catalog.weeklyStats
     }
 }
+
+@Serializable
+private data class Catalog(
+    val rides: MutableList<Entry> = mutableListOf(),
+    val weeklyStats: MutableList<StatsEntry> = mutableListOf(),
+    val monthlyStats: MutableList<StatsEntry> = mutableListOf(),
+    val annualStats: MutableList<StatsEntry> = mutableListOf(),
+)
 
 @Serializable
 class Entry (
@@ -253,5 +307,22 @@ class Entry (
 
     fun save() {
         recordingManager.saveCatalog()
+    }
+}
+
+@Serializable
+class StatsEntry(
+    val timestamp: Long = 0L,
+    var distance: Double = 0.0,
+    var elapsedTime: Long = 0L,
+    var climb: Double = 0.0,
+    var descent: Double = 0.0
+) {
+    fun aggregate(sample: Sample) : StatsEntry {
+        this.distance += sample.totalDistance
+        this.elapsedTime += sample.elapsedTime
+        this.climb += sample.climb
+        this.descent += sample.descent
+        return this
     }
 }

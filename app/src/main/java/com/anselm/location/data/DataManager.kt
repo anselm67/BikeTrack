@@ -182,6 +182,7 @@ class DataManager {
             return context.lastSample ?: firstSample(context, location)
         }
     }
+
     fun process(input: List<LocationStub>): List<Sample> {
         createContext(false).use { context ->
             return input.map { onLocation(context, it) }
