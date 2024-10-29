@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.asLocalDate
 import com.anselm.location.components.StatsCard
+import com.anselm.location.models.LocalAppViewModel
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 
@@ -37,6 +38,11 @@ private val ANNUAL_FORMATTER = DateTimeFormatterBuilder()
 
 @Composable
 fun StatsScreen() {
+    val appViewModel = LocalAppViewModel.current
+    appViewModel
+        .updateTitle(title = "Your statistics")
+        .setShowOnLockScreen(false)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
