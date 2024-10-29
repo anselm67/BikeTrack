@@ -1,7 +1,11 @@
-import typing
-import matplotlib.pyplot as plt
+#type: ignore
+
 import json
+import typing
+
 import geopy.distance
+import matplotlib.pyplot as plt
+
 
 def load(recordFile: str):
     with open(f"data/{recordFile}") as f:
