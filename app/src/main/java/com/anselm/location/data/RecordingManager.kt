@@ -122,7 +122,7 @@ class RecordingManager() {
                 )
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load file ${entry.id} - removing from catalog.")
+            Log.e(TAG, "Failed to load file ${entry.id} - removing from catalog.", e)
             delete(entry)
         }
         return null
