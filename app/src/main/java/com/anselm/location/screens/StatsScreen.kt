@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.asLocalDate
 import com.anselm.location.components.StatsCard
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 

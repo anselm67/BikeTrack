@@ -73,19 +73,6 @@ private fun getCurrentTime(): String {
 }
 
 @Composable
-private fun RunningTime(timeMillis: Long) {
-    Text(
-        text = "%02d:%02d:%02d".format(
-            *(timeMillis).toDuration(DurationUnit.MILLISECONDS)
-                .toComponents { hours, minutes, seconds, _ ->
-                    arrayOf(hours, minutes, seconds)
-                }
-        ),
-        style = MaterialTheme.typography.displaySmall,
-    )
-}
-
-@Composable
 fun TimeElapsedCard(
     sample: Sample,
     modifier: Modifier = Modifier,

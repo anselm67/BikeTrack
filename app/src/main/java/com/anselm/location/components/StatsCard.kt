@@ -1,11 +1,13 @@
 package com.anselm.location.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
@@ -13,24 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.anselm.location.Graph
+import com.anselm.location.GraphAppearance
+import com.anselm.location.MIN_SAMPLES_FOR_PLOT
 import com.anselm.location.R
 import com.anselm.location.data.StatsEntry
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
-
-
-@Composable
-private fun RunningTime(timeMillis: Long) {
-    Text(
-        text = "%02d:%02d:%02d".format(
-            *(timeMillis).toDuration(DurationUnit.MILLISECONDS)
-                .toComponents { hours, minutes, seconds, _ ->
-                    arrayOf(hours, minutes, seconds)
-                }
-        ),
-        style = MaterialTheme.typography.displaySmall,
-    )
-}
 
 @Composable
 private fun Stats(
@@ -94,6 +85,44 @@ private fun Front(titleFormatter: (Long) -> String, statsEntries: List<StatsEntr
 }
 
 @Composable
+private fun Back(statsEntries: List<StatsEntry>) {
+    if ( statsEntries.size < MIN_SAMPLES_FOR_PLOT ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.errorContainer),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Ride some more!",
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+    } else {
+        val period = (1..statsEntries.size).map { it.toFloat() }
+        val values = statsEntries.map { (it.distance / 1000).toFloat() }
+        Graph(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp),
+            xValues = period,
+            yValues = values,
+            graphAppearance = GraphAppearance(
+                graphColor = Color.Blue,
+                graphAxisColor = MaterialTheme.colorScheme.primary,
+                graphThickness = 3f,
+                isColorAreaUnderChart = true,
+                colorAreaUnderChart = Color.Green,
+                isCircleVisible = false,
+                circleColor = MaterialTheme.colorScheme.secondary,
+                backgroundColor = MaterialTheme.colorScheme.background
+            )
+        )
+    }
+}
+
+@Composable
 fun StatsCard(
     key: String,
     titleFormatter: (Long) -> String,
@@ -108,17 +137,7 @@ fun StatsCard(
             Front(titleFormatter, statsEntries)
         },
         back = {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text("Back")
-                }
-            }
+            Back(statsEntries)
         }
     )
 }

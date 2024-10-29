@@ -4,7 +4,6 @@ import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
-import com.anselm.location.asLocalDate
 import com.anselm.location.startOfMonth
 import com.anselm.location.startOfWeek
 import com.anselm.location.startOfYear
@@ -16,8 +15,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.format.DateTimeFormatter
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 private const val CATALOG_FILENAME = "catalog.json"
 /* Should be greater than FIRST_FLUSH_LENGTH */
@@ -163,7 +160,6 @@ class RecordingManager() {
         val byWeek = mutableMapOf<Long, StatsEntry>()
         val byMonth = mutableMapOf<Long, StatsEntry>()
         val byYear = mutableMapOf<Long, StatsEntry>()
-        val total = StatsEntry(0)
         home.list()?.forEach { id ->
             if ( id != "catalog.json") {
                 val entry = Entry(
@@ -192,7 +188,6 @@ class RecordingManager() {
                         .aggregate(newEntry.lastSample)
                     byYear[year] = byYear.getOrDefault(month, StatsEntry(month))
                         .aggregate(newEntry.lastSample)
-                    total.aggregate(newEntry.lastSample)
                 }
             }
         }
