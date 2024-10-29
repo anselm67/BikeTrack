@@ -66,9 +66,6 @@ class Ride:
                 out.write("\n")
                 prolog_str = ","
         
-def get(which: str):
-    return fitfile.get_messages(which)
-
 def all(which: str = None):
     # Iterate over all messages in the FIT file
     for record in fitfile.get_messages(which):
