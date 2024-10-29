@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -152,20 +154,17 @@ private fun DisplayRecordingItem(entry: Entry) {
 
 @Composable
 fun ViewRecordingsScreen() {
+    val rides = app.recordingManager.list()
+
     val appViewModel = LocalAppViewModel.current
     appViewModel
-        .updateTitle(title = "Your rides")
+        .updateTitle(title = "Your ${rides.size} rides")
         .setShowOnLockScreen(false)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        app.recordingManager.list().forEach {
-            DisplayRecordingItem(it)
-        }
+        items(rides) { ride -> DisplayRecordingItem(ride) }
     }
 }
