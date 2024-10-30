@@ -4,7 +4,6 @@ import android.net.Uri
 import android.os.FileUtils.copy
 import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
-import com.anselm.location.R
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
 import com.anselm.location.startOfMonth
@@ -24,7 +23,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.time.format.DateTimeFormatter
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
