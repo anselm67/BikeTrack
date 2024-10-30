@@ -1,12 +1,17 @@
 package com.anselm.location.data
 
+import android.net.Uri
+import android.os.FileUtils.copy
 import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.R
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
 import com.anselm.location.startOfMonth
 import com.anselm.location.startOfWeek
 import com.anselm.location.startOfYear
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -14,7 +19,14 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import java.time.format.DateTimeFormatter
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 
 private const val CATALOG_FILENAME = "catalog.json"
 /* Should be greater than FIRST_FLUSH_LENGTH */
@@ -154,13 +166,15 @@ class RecordingManager() {
     private val catalog: Catalog
         get() = _catalog ?: loadCatalog()
 
-    fun rebuildCatalog() {
+    fun rebuildCatalog(progress: ((Float) -> Unit)? = null) {
         Log.d(TAG, "rebuildCatalog")
         val newCatalog = Catalog()
         val byWeek = mutableMapOf<Long, StatsEntry>()
         val byMonth = mutableMapOf<Long, StatsEntry>()
         val byYear = mutableMapOf<Long, StatsEntry>()
-        home.list()?.forEach { id ->
+        var done = 0
+        val rides = home.list()
+        rides?.forEach { id ->
             if ( id != "catalog.json") {
                 val entry = Entry(
                     id = id,
@@ -176,6 +190,7 @@ class RecordingManager() {
                         title = oldEntry?.title ?: id
                         description = oldEntry?.description ?: ""
                         time = recording.time
+                        tags = recording.tags.toMutableList()
                         lastSample = recording.lastSample()
                     }
                     newCatalog.rides.add(newEntry)
@@ -188,6 +203,7 @@ class RecordingManager() {
                         .aggregate(newEntry.lastSample)
                     byYear[year] = byYear.getOrDefault(year, StatsEntry(month))
                         .aggregate(newEntry.lastSample)
+                    progress?.let { progress(done++.toFloat() / rides.size) }
                 }
             }
         }
@@ -279,6 +295,117 @@ class RecordingManager() {
     fun weeklyStats(): List<StatsEntry> {
         return catalog.weeklyStats
     }
+
+    fun checkTags(howMany: Int = 25, observer: ((Int) -> Unit)? = null) {
+        var done = 0
+        for (entry in list()) {
+            if ( done >= howMany ) {
+                return
+            }
+            if ( entry.tags.isEmpty() ) {
+                load(entry)?.let {
+                    if ( done++ < howMany ) {
+                        RecordingTagger(it).tag {
+                            observer?.let { it(done) }
+                            it.save()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun exportZipFile(zipFile: File, dest: Uri, progress: ((Float) -> Unit)? = null) {
+        val zipOut = ZipOutputStream(zipFile.outputStream())
+        val rides = home.list()
+        var done = 0
+        zipOut.use { zip ->
+            rides?.forEach { file ->
+                zip.putNextEntry(ZipEntry(file))
+                FileInputStream(File(home, file)).use { inputStream -> inputStream.copyTo(zip) }
+                progress?.let { it(done++.toFloat() / rides.size) }
+            }
+        }
+        // Copies the temp file into the provided destination.
+        app.contentResolver.openFileDescriptor(dest, "w").use { fd ->
+            FileOutputStream(fd?.fileDescriptor).use {
+                FileInputStream(zipFile).copyTo(it)
+            }
+        }
+    }
+
+    fun exportFiles(dest: Uri, progress: ((Float) -> Unit)? = null) {
+        val zipFile = File(app.cacheDir, "rides.zip")
+        try {
+            return exportZipFile(zipFile, dest, progress)
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to export rides as zip file.", e)
+        } finally {
+            zipFile.delete()
+        }
+    }
+
+    private fun countEntries(uri: Uri): Int {
+        var count = 0
+        app.contentResolver.openInputStream(uri)?.use { input ->
+            input.buffered(128 * 1024).use { zipInputStream ->
+                ZipInputStream(zipInputStream).use {
+                    var entry: ZipEntry? = it.nextEntry
+                    while (entry != null) {
+                        entry = it.nextEntry
+                        count++
+                    }
+                }
+            }
+        }
+        return count
+    }
+
+    private suspend fun importZipInputStream(
+        zipInputStream: ZipInputStream,
+        entryCount: Int,
+        progress: ((Float) -> Unit)? = null
+    ) {
+        var entry: ZipEntry? = zipInputStream.nextEntry
+        var done = 0
+        while (entry != null) {
+            val file = File(home, entry.name)
+            if (entry.isDirectory) {
+                file.mkdirs()
+            } else {
+                withContext(Dispatchers.IO) {
+                    FileOutputStream(file).use { out ->
+                        copy(zipInputStream, out)
+                        progress?.let { it(done++.toFloat() / entryCount) }
+                    }
+                }
+            }
+            entry = zipInputStream.nextEntry
+        }
+    }
+
+    suspend fun importZipFile(zipUri: Uri, progress: ((Float) -> Unit)? = null) {
+        val backupHome = File(home.parentFile, "recordings.backup")
+        try {
+            if ( home.exists() && ! home.renameTo(backupHome) ) {
+                throw IOException("Failed to rename $home to $backupHome")
+            }
+            home.mkdirs()
+            val entryCount = countEntries(zipUri)
+            app.contentResolver.openInputStream(zipUri)?.use { input ->
+                input.buffered(128 * 1024).use { zipInputStream ->
+                    ZipInputStream(zipInputStream).use {
+                        importZipInputStream(it, entryCount, progress)
+                    }
+                }
+            }
+            loadCatalog()
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to import zip file $zipUri", e)
+        } finally {
+            backupHome.deleteRecursively()
+        }
+    }
 }
 
 @Serializable
@@ -295,7 +422,7 @@ class Entry (
     var title: String,
     var time: Long,
     var description: String,
-    val tags: MutableList<String>,
+    var tags: MutableList<String>,
     var lastSample: Sample,
 ) {
     @Contextual val recordingManager = app.recordingManager

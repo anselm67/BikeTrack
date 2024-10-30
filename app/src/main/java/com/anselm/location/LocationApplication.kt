@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
 class LocationApplication: Application() {
-    private val applicationScope = CoroutineScope(SupervisorJob())
+    val applicationScope = CoroutineScope(SupervisorJob())
     private val trackerServiceIntent by lazy {
         Intent(this, LocationTracker::class.java)
     }

@@ -1,6 +1,10 @@
 package com.anselm.location.screens
 
 import android.content.Context
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -21,23 +26,138 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.anselm.location.LocationApplication.Companion.app
+import com.anselm.location.TAG
 import com.anselm.location.components.LoadingDisplay
 import com.anselm.location.models.LocalAppViewModel
+import kotlinx.coroutines.launch
+
+@Composable
+fun ImportFiles() {
+    val recordingManager = app.recordingManager
+    val importingFiles = remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0f) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            if (uri == null) {
+                app.toast("No file selected.")
+            } else {
+                importingFiles.value = true
+                app.applicationScope.launch {
+                    try {
+                        recordingManager.importZipFile(uri) { progress = it }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to import rides.", e)
+                    }
+                }.invokeOnCompletion {
+                    // We're running on the application lifecycle scope, so this view that we're
+                    importingFiles.value = false
+                    app.toast("All rides imported.")
+                }
+            }
+        }
+    )
+
+    if (importingFiles.value) {
+        LoadingDisplay { progress }
+    } else {
+        Button(
+            onClick = {
+                launcher.launch("*/*")
+            }
+        ) {
+            Text("Export Rides")
+        }
+    }
+}
+
+@Composable
+fun ExportFiles() {
+    val recordingManager = app.recordingManager
+    val exportingFiles = remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0f) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip"),
+        onResult = { uri: Uri? ->
+            if (uri == null) {
+                app.toast("No destination file selected.")
+            } else {
+                exportingFiles.value = true
+                app.applicationScope.launch {
+                    try {
+                        recordingManager.exportFiles(uri) { progress = it }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to export rides.", e)
+                    }
+                }.invokeOnCompletion {
+                    // We're running on the application lifecycle scope, so this view that we're
+                    exportingFiles.value = false
+                    app.toast("All rides exported.")
+                }
+            }
+        }
+    )
+
+    if (exportingFiles.value) {
+        LoadingDisplay { progress }
+    } else {
+        Button(
+            onClick = {
+                launcher.launch("rides.zip")
+            }
+        ) {
+            Text("Export Rides")
+        }
+    }
+}
+
+@Composable
+fun CheckTags() {
+    val recordingManager = app.recordingManager
+    val checkingTags = remember { mutableStateOf(false) }
+    val howMany = 25
+    var progress by remember { mutableFloatStateOf(0f) }
+
+    if (checkingTags.value) {
+        LoadingDisplay() { progress }
+    } else {
+        Button(
+            onClick = {
+                checkingTags.value = true
+                app.launch {
+                    try {
+                        recordingManager.checkTags(howMany) { done ->
+                            progress = done.toFloat() / howMany
+                        }
+                    } finally {
+                        checkingTags.value = false
+                        app.toast("$howMany rides tagged.")
+                    }
+                }
+            }
+        ) {
+            Text("Tag rides")
+        }
+    }
+}
 
 @Composable
 fun RebuildCatalog() {
     val recordingManager = app.recordingManager
     val rebuildingCatalog = remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0f) }
 
     if (rebuildingCatalog.value) {
-        LoadingDisplay()
+        LoadingDisplay() { progress }
     } else {
         Button(
             onClick = {
                 rebuildingCatalog.value = true
                 app.launch {
                     try {
-                        recordingManager.rebuildCatalog()
+                        recordingManager.rebuildCatalog { progress = it }
                     } finally {
                         rebuildingCatalog.value = false
                         app.toast("${recordingManager.list().size} rides saved.")
@@ -113,5 +233,8 @@ fun SettingsScreen() {
             )
         )
         RebuildCatalog()
+        CheckTags()
+        ExportFiles()
+        ImportFiles()
     }
 }

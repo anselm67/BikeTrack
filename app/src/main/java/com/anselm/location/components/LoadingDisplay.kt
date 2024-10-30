@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoadingDisplay() {
+fun LoadingDisplay(progress: (() -> Float)? = null) {
     Column (
         modifier = Modifier
             .padding(8.dp, 8.dp)
@@ -24,12 +24,22 @@ fun LoadingDisplay() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.width(96.dp),
-            color = MaterialTheme.colorScheme.secondary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            strokeWidth = 7.dp
-        )
+        if (progress != null) {
+            CircularProgressIndicator(
+                modifier = Modifier.width(96.dp),
+                progress = progress,
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeWidth = 7.dp
+            )
+        } else {
+            CircularProgressIndicator(
+                modifier = Modifier.width(96.dp),
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeWidth = 7.dp
+            )
+        }
         Text(
             text = "Loading...",
             style = MaterialTheme.typography.titleSmall,
