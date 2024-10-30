@@ -67,7 +67,7 @@ fun ImportFiles() {
                 launcher.launch("*/*")
             }
         ) {
-            Text("Export Rides")
+            Text("Import Rides")
         }
     }
 }
