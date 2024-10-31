@@ -32,9 +32,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
@@ -224,18 +226,41 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
             ) {
                 viewModel.queryTags.forEach {
                     Box (
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .clickable {
+                                viewModel.queryTags -= it
+                            },
                     ) {
-                        Text(
-                            text = it,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                        Row(
                             modifier = Modifier
                                 .background(
                                     color = MaterialTheme.colorScheme.primary,
                                     shape = RoundedCornerShape(5.dp)
                                 )
                                 .padding(8.dp)
-                        )
+                                .clickable {
+                                    viewModel.queryTags -= it
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                            Spacer(modifier = Modifier.size(18.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_cancel),
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentDescription = "Cancel",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
                     }
                 }
             }
@@ -260,33 +285,45 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
         onDismissRequest = { viewModel.showBottomSheet = false },
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         ) {
-            Text("Select Tags", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Select Tags",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(8.dp)
+            )
             LazyColumn(modifier = Modifier) {
                 items(app.recordingManager.histo(query)) { (tag, count) ->
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Checkbox(
-                            checked = viewModel.queryTags.contains(tag),
-                            onCheckedChange = { checked ->
-                                if (checked) {
-                                    viewModel.queryTags += tag
-                                } else {
-                                    viewModel.queryTags -= tag
-                                }
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.showBottomSheet = false
+                                viewModel.queryTags += tag
+                                viewModel.updateQuery()
+                            }) {
+                        Row(Modifier.fillMaxWidth()) {
+                            HorizontalDivider()
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_check),
+                                    contentDescription = "Checked",
+                                    tint = Color.Green,
+                                    modifier = Modifier.padding(8.dp).size(24.dp)
+                                )
+                                Text(text = tag, fontSize = 16.sp)
                             }
-                        )
-                        Text("$count $tag", modifier = Modifier.padding(start = 8.dp))
-                    }
-                }
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(onClick = {
-                        viewModel.showBottomSheet = false
-                        viewModel.updateQuery()
-                    }) {
-                        Text("Close")
+                            Text(text = "$count", fontSize = 16.sp)
+                        }
                     }
                 }
             }
