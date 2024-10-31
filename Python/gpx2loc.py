@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import gpxpy
+from geopy.distance import geodesic
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser(
@@ -54,7 +55,28 @@ class Ride:
         self.time = 0
         self.pause = False
         self.title = None
-                
+            
+    @staticmethod
+    def pos(sample):
+        return sample['latitude'], sample['longitude']
+    
+    # Update the speed of each point as we go.
+    def update_speed(self):
+        prev = None
+        distance = 0        # meters
+        duration = 0        # milliseconds
+        for sample in reversed(self.locations):
+            if prev is not None:
+                step = geodesic(Ride.pos(prev), Ride.pos(sample)).m
+                distance += step
+                duration += (prev['time'] - sample['time'])
+            prev = sample
+            # We compute the distance over the last 100m:
+            if distance > 50.0:
+                break
+        if distance > 0 and duration > 0:
+            self.locations[-1]['speed'] = distance / (duration / 1000.0)
+                                
     def parse_trackpoint(self, trackpoint):
         if self.pause:
             return
@@ -70,6 +92,7 @@ class Ride:
             "bearing": 0,
         }
         self.locations.append(location)
+        self.update_speed()
 
         
     def finish(self):
