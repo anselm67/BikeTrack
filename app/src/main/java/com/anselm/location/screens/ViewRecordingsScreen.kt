@@ -1,6 +1,7 @@
 package com.anselm.location.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anselm.location.LocalNavController
@@ -266,13 +268,22 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
             }
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            Button(onClick = {
-                viewModel.resetQuery()
-            }) {
-                Text("Reset")
+            IconButton(
+                modifier = Modifier.border(1.dp,
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(8.dp)
+                ).padding(8.dp).size(16.dp),
+                onClick = { viewModel.resetQuery() }) {
+                Icon(
+                    painter= painterResource(id = R.drawable.ic_cancel),
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Cancel search."
+                )
             }
         }
     }
@@ -289,11 +300,22 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                 .fillMaxWidth()
                 .padding(16.dp),
         ) {
-            Text(
-                text = "Select Tags",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(8.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Select Tags",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Button(onClick = { viewModel.showBottomSheet = false }) {
+                    Text("Done")
+                }
+            }
             LazyColumn(modifier = Modifier) {
                 items(app.recordingManager.histo(query)) { (tag, count) ->
                     Column(
@@ -305,13 +327,13 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Checkbox(
                                     checked = viewModel.queryTags.contains(tag),
                                     onCheckedChange = {
-                                        viewModel.showBottomSheet = false
                                         if (viewModel.queryTags.contains(tag)) {
                                             viewModel.queryTags -= tag
                                         } else {
