@@ -278,8 +278,48 @@ class RecordingManager() {
         }
     }
 
-    fun list(): List<Entry> {
-        return catalog.rides.toList().sortedByDescending { it.time }
+    class Query(
+        var rangeInMeters: ClosedFloatingPointRange<Float> = 0f..Query.MAX_DISTANCE,
+        val tags: Set<String> = emptySet()
+    ) {
+        fun match(e: Entry): Boolean {
+            return e.lastSample.totalDistance in rangeInMeters &&
+                    tags.all { tag -> e.tags.contains(tag) }
+        }
+        var rangeInKilometers: ClosedFloatingPointRange<Float>
+            get() {
+                return rangeInMeters.start / 1000f .. rangeInMeters.endInclusive / 1000f
+            }
+            set(value) {
+                rangeInMeters = value.start * 1000f .. value.endInclusive * 1000f
+            }
+
+        companion object {
+            private const val MAX_DISTANCE = 250 * 1000f
+            val default =  Query(0f .. MAX_DISTANCE, emptySet())
+        }
+    }
+
+    fun list(query: Query? = null): List<Entry> {
+        val results = mutableListOf<Entry>()
+        for (entry in catalog.rides.toList().sortedByDescending { it.time }) {
+            if ( query == null || query == Query.default ) {
+                results.add(entry)
+            } else if ( query.match(entry) ) {
+                results.add(entry)
+            }
+
+        }
+        return results
+    }
+
+    fun histo(query: Query? = null): List<Pair<String,Int>> {
+        val counts = list(query).flatMap { it.tags.toList() }
+            .groupingBy { it }
+            .eachCount()
+        return counts.entries.sortedByDescending { it.value }.map {
+            Pair(it.key, it.value)
+        }
     }
 
     fun annualStats(): List<StatsEntry> {

@@ -1,33 +1,53 @@
 package com.anselm.location.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anselm.location.LocalNavController
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.NavigationItem
 import com.anselm.location.R
 import com.anselm.location.data.Entry
+import com.anselm.location.data.RecordingManager
 import com.anselm.location.dateFormat
+import com.anselm.location.models.AppAction
 import com.anselm.location.models.LocalAppViewModel
+import com.anselm.location.models.RecordingDetailsViewModel
+import com.anselm.location.models.ViewRecordingsModel
+import kotlinx.serialization.json.JsonNull.content
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -115,7 +135,8 @@ private fun DisplayRecordingItem(entry: Entry) {
                 ) {
                     Row {
                         Icon (
-                            modifier = Modifier.size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
+                            modifier = Modifier
+                                .size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
                                 .align(Alignment.Bottom)
                                 .padding(2.dp),
                             painter = painterResource(id = R.drawable.ic_arrow_up),
@@ -129,7 +150,8 @@ private fun DisplayRecordingItem(entry: Entry) {
                     }
                     Row {
                         Icon (
-                            modifier = Modifier.size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
+                            modifier = Modifier
+                                .size(MaterialTheme.typography.bodyMedium.fontSize.value.dp)
                                 .align(Alignment.Bottom)
                                 .padding(2.dp),
                             painter = painterResource(id = R.drawable.ic_arrow_down),
@@ -148,20 +170,178 @@ private fun DisplayRecordingItem(entry: Entry) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SearchBox(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Top
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp)
+            ) {
+                RangeSlider(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = viewModel.queryRange,
+                    valueRange = 0f..100f,
+                    onValueChange = {
+                        val step = 5
+                        val start = (it.start / step).toInt() * step
+                        val end = (it.endInclusive / step).toInt() * step
+                        viewModel.queryRange = start.toFloat()..end.toFloat()
+                    },
+                    onValueChangeFinished = {
+                        viewModel.updateQuery()
+                    },
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("${viewModel.queryRange.start.toInt()}km")
+                    Text("${viewModel.queryRange.endInclusive.toInt()}km")
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            Button(onClick = {
+                viewModel.showBottomSheet = true
+            }) {
+                Text("Tags")
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                viewModel.queryTags.forEach {
+                    Box (
+                        modifier = Modifier.padding(4.dp)
+                    ) {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = RoundedCornerShape(5.dp)
+                                )
+                                .padding(8.dp)
+                        )
+                    }
+                }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            Button(onClick = {
+                viewModel.resetQuery()
+            }) {
+                Text("Reset")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
+    ModalBottomSheet(
+        onDismissRequest = { viewModel.showBottomSheet = false },
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        ) {
+            Text("Select Tags", style = MaterialTheme.typography.titleLarge)
+            LazyColumn(modifier = Modifier) {
+                items(app.recordingManager.histo(query)) { (tag, count) ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Checkbox(
+                            checked = viewModel.queryTags.contains(tag),
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    viewModel.queryTags += tag
+                                } else {
+                                    viewModel.queryTags -= tag
+                                }
+                            }
+                        )
+                        Text("$count $tag", modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(onClick = {
+                        viewModel.showBottomSheet = false
+                        viewModel.updateQuery()
+                    }) {
+                        Text("Close")
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
-fun ViewRecordingsScreen() {
-    val rides = app.recordingManager.list()
+private fun SearchAction(viewModel: ViewRecordingsModel) {
+    IconButton(
+        onClick = { viewModel.showSearchBox = ! viewModel.showSearchBox }
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_search),
+            contentDescription = "Search",
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+@Composable
+fun ViewRecordingsScreen(viewModel: ViewRecordingsModel = viewModel()) {
+    val state by viewModel.resultFlow.collectAsState()
+    val (query, rides) = state
 
     val appViewModel = LocalAppViewModel.current
-    appViewModel
-        .updateTitle(title = "Your ${rides.size} rides")
-        .setShowOnLockScreen(false)
+    appViewModel.updateApplicationState {
+        it.copy(
+            title = "Your ${rides.size} rides",
+            actions = listOf(object : AppAction {
+                @Composable
+                override fun Action() {
+                    SearchAction(viewModel)
+                }
+            })
+        )
+    }.setShowOnLockScreen(false)
 
-
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        items(rides) { ride -> DisplayRecordingItem(ride) }
+        if ( viewModel.showSearchBox ) {
+            SearchBox(query, viewModel)
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+        ) {
+            items(rides) { ride -> DisplayRecordingItem(ride) }
+        }
+        if ( viewModel.showBottomSheet ) {
+            SelectTags(query, viewModel)
+        }
     }
 }
