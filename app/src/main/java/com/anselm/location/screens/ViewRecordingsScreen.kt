@@ -1,5 +1,6 @@
 package com.anselm.location.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -241,6 +242,7 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
                                 .padding(8.dp)
                                 .clickable {
                                     viewModel.queryTags -= it
+                                    viewModel.updateQuery()
                                 },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -297,13 +299,7 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
             LazyColumn(modifier = Modifier) {
                 items(app.recordingManager.histo(query)) { (tag, count) ->
                     Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                viewModel.showBottomSheet = false
-                                viewModel.queryTags += tag
-                                viewModel.updateQuery()
-                            }) {
+                        Modifier.fillMaxWidth()) {
                         Row(Modifier.fillMaxWidth()) {
                             HorizontalDivider()
                         }
@@ -314,11 +310,17 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_check),
-                                    contentDescription = "Checked",
-                                    tint = Color.Green,
-                                    modifier = Modifier.padding(8.dp).size(24.dp)
+                                Checkbox(
+                                    checked = viewModel.queryTags.contains(tag),
+                                    onCheckedChange = {
+                                        viewModel.showBottomSheet = false
+                                        if (viewModel.queryTags.contains(tag)) {
+                                            viewModel.queryTags -= tag
+                                        } else {
+                                            viewModel.queryTags += tag
+                                        }
+                                        viewModel.updateQuery()
+                                    }
                                 )
                                 Text(text = tag, fontSize = 16.sp)
                             }
