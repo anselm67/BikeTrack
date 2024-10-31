@@ -279,7 +279,7 @@ class RecordingManager() {
     }
 
     class Query(
-        var rangeInMeters: ClosedFloatingPointRange<Float> = 0f..Query.MAX_DISTANCE,
+        var rangeInMeters: ClosedFloatingPointRange<Float> = 0f..MAX_DISTANCE,
         val tags: Set<String> = emptySet()
     ) {
         fun match(e: Entry): Boolean {

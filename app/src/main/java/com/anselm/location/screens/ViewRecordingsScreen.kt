@@ -45,9 +45,7 @@ import com.anselm.location.data.RecordingManager
 import com.anselm.location.dateFormat
 import com.anselm.location.models.AppAction
 import com.anselm.location.models.LocalAppViewModel
-import com.anselm.location.models.RecordingDetailsViewModel
 import com.anselm.location.models.ViewRecordingsModel
-import kotlinx.serialization.json.JsonNull.content
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -172,7 +170,7 @@ private fun DisplayRecordingItem(entry: Entry) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SearchBox(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
+fun SearchBox(viewModel: ViewRecordingsModel) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Top
@@ -331,7 +329,7 @@ fun ViewRecordingsScreen(viewModel: ViewRecordingsModel = viewModel()) {
         modifier = Modifier.fillMaxSize()
     ) {
         if ( viewModel.showSearchBox ) {
-            SearchBox(query, viewModel)
+            SearchBox(viewModel)
         }
         LazyColumn(
             modifier = Modifier
