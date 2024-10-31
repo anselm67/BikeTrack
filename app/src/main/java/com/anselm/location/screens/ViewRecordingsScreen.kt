@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -273,10 +274,14 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
             horizontalArrangement = Arrangement.End
         ) {
             IconButton(
-                modifier = Modifier.border(1.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(8.dp)
-                ).padding(8.dp).size(16.dp),
+                modifier = Modifier
+                    .border(
+                        1.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(8.dp)
+                    .size(16.dp),
                 onClick = { viewModel.resetQuery() }) {
                 Icon(
                     painter= painterResource(id = R.drawable.ic_cancel),
@@ -284,6 +289,11 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
                     contentDescription = "Cancel search."
                 )
             }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top=4.dp)
+        ) {
+            HorizontalDivider()
         }
     }
 }
