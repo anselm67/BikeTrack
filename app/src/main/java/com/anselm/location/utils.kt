@@ -2,8 +2,10 @@ package com.anselm.location
 
 import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 
 // Function to get the start of the week (previous Monday or current day if it's Monday)
@@ -38,4 +40,10 @@ fun startOfYear(timestamp: Long, zoneId: ZoneId = ZoneId.systemDefault()): Long 
 
 fun asLocalDate(timestamp: Long,  zoneId: ZoneId = ZoneId.systemDefault()): LocalDateTime {
     return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), zoneId)
+}
+
+private val YYYYMMDDFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+fun asYYYYMMDD(date: LocalDate): String {
+    return date.format(YYYYMMDDFormatter)
 }

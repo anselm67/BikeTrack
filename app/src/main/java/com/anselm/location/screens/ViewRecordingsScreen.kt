@@ -188,7 +188,7 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
                     .padding(0.dp)
             ) {
                 RangeSlider(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(start=16.dp, end=16.dp),
                     value = viewModel.queryRange,
                     valueRange = 0f..100f,
                     onValueChange = {
@@ -274,17 +274,19 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
         ) {
             IconButton(
                 modifier = Modifier
-                    .border(
-                        1.dp,
+                    .background(
                         color = MaterialTheme.colorScheme.primary,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(8.dp)
                     .size(16.dp),
-                onClick = { viewModel.resetQuery() }) {
+                onClick = {
+                    viewModel.resetQuery()
+                    viewModel.showSearchBox = false
+                }) {
                 Icon(
                     painter= painterResource(id = R.drawable.ic_cancel),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     contentDescription = "Cancel search."
                 )
             }
@@ -369,7 +371,7 @@ private fun SearchAction(viewModel: ViewRecordingsModel) {
         Icon(
             painter = painterResource(id = R.drawable.ic_search),
             contentDescription = "Search",
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(36.dp),
         )
     }
 }
