@@ -216,7 +216,7 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
             Button(onClick = {
                 viewModel.showBottomSheet = true
             }) {
-                Text("Tags")
+                Text("Places")
             }
         }
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -317,7 +317,7 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Select Tags",
+                    text = "Select Places",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(8.dp)
                 )

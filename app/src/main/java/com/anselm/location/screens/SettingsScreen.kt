@@ -126,7 +126,7 @@ fun CheckTags(viewModel: SettingsScreenModel) {
     val recordingManager = app.recordingManager
     val howMany = 25
 
-    DatabaseAction(title = "Tag Rides") {
+    DatabaseAction(title = "Extract Places from Rides") {
         viewModel.showProgress = true
         app.launch {
             try {

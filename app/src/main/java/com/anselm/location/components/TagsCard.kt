@@ -42,7 +42,7 @@ fun TagsCard(
                     }
                 }
             ) {
-                Text("TAG")
+                Text("Extract Places")
             }
         } else {
             FlowRow(
