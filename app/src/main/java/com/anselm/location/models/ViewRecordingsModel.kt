@@ -19,6 +19,7 @@ class ViewRecordingsModel: ViewModel() {
     var showBottomSheet by mutableStateOf(false)
     var queryRange by mutableStateOf(RecordingManager.Query.default.rangeInKilometers)
     var queryTags by mutableStateOf(setOf<String>())
+    var tagPrefix by mutableStateOf("")
 
     private val queryFlow = MutableStateFlow(RecordingManager.Query.default)
 
@@ -34,7 +35,8 @@ class ViewRecordingsModel: ViewModel() {
     fun updateQuery() {
         queryFlow.value = RecordingManager.Query(
             queryRange.start*1000f..queryRange.endInclusive*1000f,
-            queryTags
+            queryTags,
+            tagPrefix,
         )
     }
 

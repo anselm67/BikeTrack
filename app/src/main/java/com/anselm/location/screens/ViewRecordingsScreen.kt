@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,16 +25,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,6 +53,7 @@ import com.anselm.location.dateFormat
 import com.anselm.location.models.AppAction
 import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.models.ViewRecordingsModel
+import kotlinx.coroutines.launch
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -187,7 +194,9 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
                     .padding(0.dp)
             ) {
                 RangeSlider(
-                    modifier = Modifier.fillMaxWidth().padding(start=16.dp, end=16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
                     value = viewModel.queryRange,
                     valueRange = 0f..100f,
                     onValueChange = {
@@ -291,18 +300,58 @@ fun SearchBox(viewModel: ViewRecordingsModel) {
             }
         }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top=4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
         ) {
             HorizontalDivider()
         }
     }
 }
 
+@Composable
+private fun TagSearchBox(tagPrefix: String, onQueryChange: (String) -> Unit) {
+    OutlinedTextField(
+        modifier = Modifier.fillMaxWidth(),
+        value = tagPrefix,
+        placeholder = { Text("Search...")},
+        leadingIcon = {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(id = R.drawable.ic_search),
+                contentDescription = "Search within places."
+            )
+        },
+        trailingIcon = {
+            if ( tagPrefix.isNotEmpty() ) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(id = R.drawable.ic_cancel),
+                        contentDescription = "Clear search.",
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        keyboardActions = KeyboardActions(
+            onSearch = { onQueryChange(tagPrefix) }
+        ),
+        onValueChange = { onQueryChange(it) }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
     ModalBottomSheet(
         onDismissRequest = { viewModel.showBottomSheet = false },
+        sheetState = sheetState
     ) {
         Column(
             modifier = Modifier
@@ -325,7 +374,13 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                     Text("Done")
                 }
             }
-            LazyColumn(modifier = Modifier) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TagSearchBox(viewModel.tagPrefix) { it ->
+                    viewModel.tagPrefix = it
+                    viewModel.updateQuery()
+                }
+            }
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(app.recordingManager.histo(query)) { (tag, count) ->
                     Column(
                         Modifier.fillMaxWidth()) {
@@ -358,6 +413,11 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                     }
                 }
             }
+        }
+    }
+    LaunchedEffect(sheetState) {
+        scope.launch {
+            sheetState.expand()
         }
     }
 }

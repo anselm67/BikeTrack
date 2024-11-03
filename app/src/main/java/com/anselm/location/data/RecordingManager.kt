@@ -279,8 +279,9 @@ class RecordingManager() {
     }
 
     class Query(
-        var rangeInMeters: ClosedFloatingPointRange<Float> = 0f..MAX_DISTANCE,
-        val tags: Set<String> = emptySet()
+        private var rangeInMeters: ClosedFloatingPointRange<Float> = 0f..MAX_DISTANCE,
+        val tags: Set<String> = emptySet(),
+        val tagPrefix: String = "",
     ) {
         fun match(e: Entry): Boolean {
             return e.lastSample.totalDistance in rangeInMeters &&
@@ -314,8 +315,13 @@ class RecordingManager() {
     }
 
     fun histo(query: Query? = null): List<Pair<String,Int>> {
-        val counts = list(query).flatMap { it.tags.toList() }
-            .groupingBy { it }
+        val counts = list(query).flatMap { entry ->
+            if ( query == null || query.tagPrefix.isEmpty() ) {
+                entry.tags
+            } else {
+                entry.tags.filter { it.startsWith(query.tagPrefix, ignoreCase = true) }
+            }
+        }.groupingBy { it }
             .eachCount()
         return counts.entries.sortedByDescending { it.value }.map {
             Pair(it.key, it.value)
