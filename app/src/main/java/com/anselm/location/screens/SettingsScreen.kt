@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anselm.location.LocationApplication.Companion.app
@@ -44,7 +46,7 @@ private fun DatabaseAction(title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 8.dp, bottom = 4.dp, top = 4.dp)
+            .padding(start = 8.dp, bottom = 8.dp, top = 8.dp)
             .clickable { onClick() },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -200,7 +202,7 @@ fun ImportExport(viewModel: SettingsScreenModel) {
                 .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.Start
         ) {
-            Text("Manage Database")
+            Text("Manage Database", fontWeight = FontWeight.Bold)
         }
         ImportFiles(viewModel)
         ExportFiles(viewModel)

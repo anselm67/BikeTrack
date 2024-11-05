@@ -167,9 +167,6 @@ class RecordingManager() {
     fun rebuildCatalog(progress: ((Float) -> Unit)? = null) {
         Log.d(TAG, "rebuildCatalog")
         val newCatalog = Catalog()
-        val byWeek = mutableMapOf<Long, StatsEntry>()
-        val byMonth = mutableMapOf<Long, StatsEntry>()
-        val byYear = mutableMapOf<Long, StatsEntry>()
         var done = 0
         val rides = home.list()
         rides?.forEach { id ->
@@ -188,29 +185,12 @@ class RecordingManager() {
                         title = oldEntry?.title ?: id
                         description = oldEntry?.description ?: ""
                         time = recording.time
-                        tags = recording.tags.toMutableList()
+                        tags = oldEntry?.tags?.toMutableList() ?: mutableListOf()
                         lastSample = recording.lastSample()
                     }
                     newCatalog.rides.add(newEntry)
-                    val week = startOfWeek(newEntry.time)
-                    val month = startOfMonth(newEntry.time)
-                    val year = startOfYear(newEntry.time)
-                    byWeek[week] = byWeek.getOrDefault(week, StatsEntry(week))
-                        .aggregate(newEntry.lastSample)
-                    byMonth[month] = byMonth.getOrDefault(month, StatsEntry(month))
-                        .aggregate(newEntry.lastSample)
-                    byYear[year] = byYear.getOrDefault(year, StatsEntry(month))
-                        .aggregate(newEntry.lastSample)
                     progress?.let { progress(done++.toFloat() / rides.size) }
                 }
-            }
-        }
-        for ((stats, by) in listOf(
-            Pair(newCatalog.weeklyStats, byWeek),
-            Pair(newCatalog.monthlyStats, byMonth),
-            Pair(newCatalog.annualStats, byYear))) {
-            for ((_, statsEntry) in by.toSortedMap()) {
-                stats.add(statsEntry)
             }
         }
         // TODO We should save this, right now it's recomputed on each launch until
@@ -251,6 +231,7 @@ class RecordingManager() {
             prettyPrint = true
             prettyPrintIndent = "  "
         }
+        catalog.recomputeStatistics()
         with ( catalogFile ) {
             this.writeText(prettyJson.encodeToString(catalog))
         }
@@ -458,7 +439,34 @@ private data class Catalog(
     val weeklyStats: MutableList<StatsEntry> = mutableListOf(),
     val monthlyStats: MutableList<StatsEntry> = mutableListOf(),
     val annualStats: MutableList<StatsEntry> = mutableListOf(),
-)
+) {
+    fun recomputeStatistics() {
+        val byWeek = mutableMapOf<Long, StatsEntry>()
+        val byMonth = mutableMapOf<Long, StatsEntry>()
+        val byYear = mutableMapOf<Long, StatsEntry>()
+
+        for (entry in rides) {
+            val week = startOfWeek(entry.time)
+            val month = startOfMonth(entry.time)
+            val year = startOfYear(entry.time)
+            byWeek[week] = byWeek.getOrDefault(week, StatsEntry(week))
+                .aggregate(entry.lastSample)
+            byMonth[month] = byMonth.getOrDefault(month, StatsEntry(month))
+                .aggregate(entry.lastSample)
+            byYear[year] = byYear.getOrDefault(year, StatsEntry(month))
+                .aggregate(entry.lastSample)
+        }
+        for ((stats, by) in listOf(
+            Pair(weeklyStats, byWeek),
+            Pair(monthlyStats, byMonth),
+            Pair(annualStats, byYear))) {
+            stats.clear()
+            for ((_, statsEntry) in by.toSortedMap()) {
+                stats.add(statsEntry)
+            }
+        }
+    }
+}
 
 @Serializable
 class Entry (
