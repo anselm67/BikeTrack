@@ -77,7 +77,7 @@ private fun DisplayRecordingItem(entry: Entry) {
     val navController = LocalNavController.current
     Box (
         modifier = Modifier
-            .padding(8.dp)
+            .padding(horizontal = 8.dp)
             .clickable {
                 navController.navigate(
                     "${NavigationItem.RecordingDetails.route}/${entry.id}"
@@ -85,7 +85,7 @@ private fun DisplayRecordingItem(entry: Entry) {
             },
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
             verticalArrangement = Arrangement.Top,
         ) {
             Column(
@@ -170,7 +170,7 @@ private fun DisplayRecordingItem(entry: Entry) {
                     }
                 }
             }
-            HorizontalDivider(modifier = Modifier.padding(4.dp))
+            HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
