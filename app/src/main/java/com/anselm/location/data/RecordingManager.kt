@@ -298,13 +298,14 @@ class RecordingManager() {
     fun histo(query: Query? = null): List<Pair<String,Int>> {
         val counts = list(query).flatMap { entry ->
             if ( query == null || query.tagPrefix.isEmpty() ) {
-                entry.tags
+                entry.tags.distinct()
             } else {
-                entry.tags.filter { it.startsWith(query.tagPrefix, ignoreCase = true) }
+                entry.tags.distinct().filter { it.startsWith(query.tagPrefix, ignoreCase = true) }
             }
-        }.groupingBy { it }
-            .eachCount()
-        return counts.entries.sortedByDescending { it.value }.map {
+        }.groupingBy { it }.eachCount()
+        return counts.entries.sortedWith(
+            compareByDescending<Map.Entry<String, Int>> {  query?.tags?.contains(it.key) ?: false }.thenByDescending { it.value }
+        ).map {
             Pair(it.key, it.value)
         }
     }
