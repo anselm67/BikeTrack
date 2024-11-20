@@ -116,7 +116,8 @@ private fun Back(statsEntries: List<StatsEntry>) {
                 colorAreaUnderChart = Color.Green,
                 isCircleVisible = false,
                 circleColor = MaterialTheme.colorScheme.secondary,
-                backgroundColor = MaterialTheme.colorScheme.background
+                backgroundColor = MaterialTheme.colorScheme.background,
+                pointWidth = 10f,
             )
         )
     }

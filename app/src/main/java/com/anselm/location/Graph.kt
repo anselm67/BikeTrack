@@ -9,9 +9,14 @@ import android.graphics.Paint
 import android.graphics.PointF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,7 +46,8 @@ data class GraphAppearance(
     val colorAreaUnderChart: Color,
     val isCircleVisible: Boolean,
     val circleColor: Color,
-    val backgroundColor: Color
+    val backgroundColor: Color,
+    val pointWidth: Float = 0f,
 )
 
 data class Axis(
@@ -104,14 +110,30 @@ fun Graph(
 
     val xAxis = split(xValues.min(), xValues.max(), xValueStepCount)
     val yAxis = split(yValues.min(), yValues.max(), yValueStepCount)
+
+    val (boxModifier, canvasModifier) = if (graphAppearance.pointWidth > 0)
+        Pair(
+            modifier
+                .background(Color.White)
+                .padding(horizontal = 4.dp, vertical = 4.dp)
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            Modifier.fillMaxHeight().width((xValues.size * graphAppearance.pointWidth).dp)
+        )
+    else
+        Pair(
+            modifier
+                .background(Color.White)
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            Modifier.fillMaxSize()
+        )
+
     Box(
-        modifier = modifier
-            .background(Color.White)
-            .padding(horizontal = 4.dp, vertical = 4.dp),
+        modifier = boxModifier,
         contentAlignment = Alignment.Center,
     ) {
         Canvas(
-            modifier = Modifier.fillMaxSize(),
+            modifier = canvasModifier,
         ) {
             val leftMargin = 2f * fontSize
             val bottomMargin = 1.5f * fontSize
