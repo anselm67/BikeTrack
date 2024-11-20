@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.0"
     id("com.google.gms.google-services") version "4.4.2"
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
@@ -8,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.anselm.location"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.anselm.location"
@@ -77,7 +78,6 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
 
 secrets {
