@@ -250,7 +250,7 @@ fun SettingsScreen(viewModel: SettingsScreenModel = viewModel()) {
             )
         )
         if ( viewModel.showProgress ) {
-            LoadingDisplay() { viewModel.progress }
+            LoadingDisplay { viewModel.progress }
         }
     }
 }

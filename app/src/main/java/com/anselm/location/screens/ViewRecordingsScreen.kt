@@ -374,7 +374,7 @@ fun SelectTags(query: RecordingManager.Query, viewModel: ViewRecordingsModel) {
                 }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
-                TagSearchBox(viewModel.tagPrefix) { it ->
+                TagSearchBox(viewModel.tagPrefix) {
                     viewModel.tagPrefix = it
                     viewModel.updateQuery()
                 }

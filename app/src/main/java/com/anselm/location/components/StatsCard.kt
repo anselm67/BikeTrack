@@ -1,6 +1,5 @@
 package com.anselm.location.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -70,7 +69,6 @@ private fun Stats(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Front(titleFormatter: (Long) -> String, statsEntries: List<StatsEntry>) {
     val pagerState = rememberPagerState(
