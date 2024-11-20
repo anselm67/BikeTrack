@@ -11,6 +11,7 @@ import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.asLocalDate
 import com.anselm.location.components.StatsCard
 import com.anselm.location.models.LocalAppViewModel
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 
@@ -36,12 +37,20 @@ private val ANNUAL_FORMATTER = DateTimeFormatterBuilder()
     .optionalEnd()
     .toFormatter()
 
+private val YYYY = DateTimeFormatter.ofPattern("YYYY")
+private val MMYY = DateTimeFormatter.ofPattern("MM/yy")
+private val YYMMDD = DateTimeFormatter.ofPattern("yy-MM-dd")
+
 @Composable
 fun StatsScreen() {
     val appViewModel = LocalAppViewModel.current
     appViewModel
         .updateTitle(title = "Your statistics")
         .setShowOnLockScreen(false)
+
+    val annualStats = app.recordingManager.annualStats()
+    val monthlyStats = app.recordingManager.monthlyStats()
+    val weeklyStats = app.recordingManager.weeklyStats()
 
     Column(
         modifier = Modifier
@@ -52,26 +61,48 @@ fun StatsScreen() {
         StatsCard(
             key = "AnnualStats",
             titleFormatter = {  millis: Long ->  asLocalDate(millis).format(ANNUAL_FORMATTER) },
-            app.recordingManager.annualStats(),
+            annualStats,
             modifier = Modifier
                 .weight(1f)
-                .padding(8.dp)
+                .padding(8.dp),
+            xLabelFormatter = {
+                val index = it.toInt()
+                if (index >= 0 && index < annualStats.size)
+                    YYYY.format(asLocalDate(annualStats[index].timestamp).toLocalDate())
+                else
+                    ""
+            }
         )
         StatsCard(
             key = "MonthlyStats",
             titleFormatter = {  millis: Long ->  asLocalDate(millis).format(MONTHLY_FORMATTER) },
-            app.recordingManager.monthlyStats(),
+            monthlyStats,
             modifier = Modifier
                 .weight(1f)
-                .padding(8.dp)
+                .padding(8.dp),
+            xLabelFormatter = {
+                val index = it.toInt()
+                if (index >= 0 && index < monthlyStats.size)
+                    MMYY.format(asLocalDate(monthlyStats[index].timestamp).toLocalDate())
+                else
+                    ""
+
+            }
         )
         StatsCard(
             key = "WeeklyStats",
             titleFormatter = {  millis: Long ->  asLocalDate(millis).format(WEEKLY_FORMATTER) },
-            app.recordingManager.weeklyStats(),
+            weeklyStats,
             modifier = Modifier
                 .weight(1f)
-                .padding(8.dp)
+                .padding(8.dp),
+            xLabelFormatter = {
+                val index = it.toInt()
+                if (index >= 0 && index < weeklyStats.size)
+                    YYMMDD.format(asLocalDate(weeklyStats[index].timestamp).toLocalDate())
+                else
+                    ""
+            }
         )
     }
 }

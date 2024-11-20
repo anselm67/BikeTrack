@@ -85,7 +85,7 @@ private fun Front(titleFormatter: (Long) -> String, statsEntries: List<StatsEntr
 }
 
 @Composable
-private fun Back(statsEntries: List<StatsEntry>) {
+private fun Back(statsEntries: List<StatsEntry>, xLabelFormatter: (Float) -> String) {
     if ( statsEntries.size < MIN_SAMPLES_FOR_PLOT ) {
         Column(
             modifier = Modifier
@@ -118,6 +118,7 @@ private fun Back(statsEntries: List<StatsEntry>) {
                 circleColor = MaterialTheme.colorScheme.secondary,
                 backgroundColor = MaterialTheme.colorScheme.background,
                 pointWidth = 10f,
+                xLabelFormatter = xLabelFormatter,
             )
         )
     }
@@ -128,7 +129,8 @@ fun StatsCard(
     key: String,
     titleFormatter: (Long) -> String,
     statsEntries: List<StatsEntry>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    xLabelFormatter: (Float) -> String
 ) {
     FlipCard(
         key = key,
@@ -138,7 +140,7 @@ fun StatsCard(
             Front(titleFormatter, statsEntries)
         },
         back = {
-            Back(statsEntries)
+            Back(statsEntries, xLabelFormatter)
         }
     )
 }

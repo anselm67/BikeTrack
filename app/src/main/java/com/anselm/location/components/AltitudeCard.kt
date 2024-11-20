@@ -113,7 +113,8 @@ private fun Back(optionalRecording: Recording?) {
                 colorAreaUnderChart = Color.Green,
                 isCircleVisible = false,
                 circleColor = MaterialTheme.colorScheme.secondary,
-                backgroundColor = MaterialTheme.colorScheme.background
+                backgroundColor = MaterialTheme.colorScheme.background,
+                xLabelFormatter = { "%3.1fkm".format(it)  }
             )
         )
     }

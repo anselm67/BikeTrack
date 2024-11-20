@@ -23,6 +23,7 @@ import com.anselm.location.R
 import com.anselm.location.data.Recording
 import com.anselm.location.data.Sample
 import com.anselm.location.formatIf
+import kotlin.math.floor
 
 private const val MIN_SPEED = 0.0001
 
@@ -107,7 +108,12 @@ private fun Back(optionalRecording: Recording?) {
                 colorAreaUnderChart = Color.Green,
                 isCircleVisible = false,
                 circleColor = MaterialTheme.colorScheme.secondary,
-                backgroundColor = MaterialTheme.colorScheme.background
+                backgroundColor = MaterialTheme.colorScheme.background,
+                xLabelFormatter = {
+                    val hh = floor(it / 60f).toInt()
+                    val mm = it.toInt() % 60
+                    if (hh > 0) "%02dh%02dm".format(hh, mm) else "%02dm".format(mm)
+                },
             )
         )
     }

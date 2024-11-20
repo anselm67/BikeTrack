@@ -48,6 +48,7 @@ data class GraphAppearance(
     val circleColor: Color,
     val backgroundColor: Color,
     val pointWidth: Float = 0f,
+    val xLabelFormatter: (Float) -> String = { "%2.1f".format(it) },
 )
 
 data class Axis(
@@ -56,6 +57,7 @@ data class Axis(
     val stepValue: Float,
     var stepCount: Int,
 )
+
 private fun split(
     minValue: Float,
     maxValue: Float,
@@ -165,7 +167,7 @@ fun Graph(
                 val (ppx, _) = toPlotPixel(xValue, 0f)
                 textPaint.textAlign = Paint.Align.CENTER
                 drawContext.canvas.nativeCanvas.drawText(
-                    "%2.1f".format(xValue),
+                    graphAppearance.xLabelFormatter(xValue),
                     ppx,
                     size.height - 4.dp.toPx() ,
                     textPaint
