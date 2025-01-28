@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Location"
+rootProject.name = "BikeTrack"
 include(":app")
