@@ -100,6 +100,7 @@ private fun Back(statsEntries: List<StatsEntry>, xLabelFormatter: (Float) -> Str
     } else {
         val period = (1..statsEntries.size).map { it.toFloat() }
         val values = statsEntries.map { (it.distance / 1000).toFloat() }
+        val pointWidth = if (values.size > 25) 10f else 0f
         Graph(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,7 +116,7 @@ private fun Back(statsEntries: List<StatsEntry>, xLabelFormatter: (Float) -> Str
                 isCircleVisible = false,
                 circleColor = MaterialTheme.colorScheme.secondary,
                 backgroundColor = MaterialTheme.colorScheme.background,
-                pointWidth = 10f,
+                pointWidth = pointWidth,
                 xLabelFormatter = xLabelFormatter,
             )
         )

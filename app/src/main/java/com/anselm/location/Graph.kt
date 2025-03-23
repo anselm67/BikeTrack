@@ -204,23 +204,11 @@ fun Graph(
                 coordinates.add(PointF(px, py))
             }
 
-            val controlPoints1 = mutableListOf<PointF>()
-            val controlPoints2 = mutableListOf<PointF>()
-
-            for (i in 1 until coordinates.size) {
-                controlPoints1.add(PointF((coordinates[i].x + coordinates[i - 1].x) / 2, coordinates[i - 1].y))
-                controlPoints2.add(PointF((coordinates[i].x + coordinates[i - 1].x) / 2, coordinates[i].y))
-            }
-
             val stroke = Path().apply {
                 reset()
                 moveTo(coordinates.first().x, coordinates.first().y)
                 for (i in 0 until coordinates.size - 1) {
-                    cubicTo(
-                        controlPoints1[i].x, controlPoints1[i].y,
-                        controlPoints2[i].x, controlPoints2[i].y,
-                        coordinates[i + 1].x, coordinates[i + 1].y
-                    )
+                    lineTo(coordinates[i].x, coordinates[i].y)
                 }
             }
 
