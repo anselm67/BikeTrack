@@ -25,10 +25,16 @@ class RecordingTagger(
     fun tag(onDone: () -> Unit) {
         val positions = recording.extractLatLng()
         app.launch {
-            positions.forEach { latlng ->
-                tag(latlng)
+            try {
+                positions.forEach { latlng ->
+                    tag(latlng)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Tagger API failed.", e)
+                app.toast("Geocoding API failed, try again later.")
+            } finally {
+                onDone()
             }
-            onDone()
         }
     }
 
@@ -49,30 +55,27 @@ class RecordingTagger(
 
         Log.d(TAG, url)
 
-        try {
-            app.okHttpClient.newCall(request).execute().use { response ->
-                if ( ! response.isSuccessful)  {
-                    Log.e(TAG, "Call to $url failed (status ${response.code})")
-                    return
-                }
-                val json = response.body?.string()?.let {
-                    Json.parseToJsonElement(it)
-                }
-                val result = json?.jsonObject?.get("results")
-                    ?.jsonArray
-                    ?.get(0)
-                val locality = extractLocality(result)
-                boundsChecker.updateBounds(extractBounds(result))
-
-                locality?.let {
-                    localities.add(it)
-                        recording.addTag(it)
-                }
+        app.okHttpClient.newCall(request).execute().use { response ->
+            if ( ! response.isSuccessful)  {
+                throw IOException("Call to $url failed (status ${response.code})")
             }
-        } catch (e: IOException) {
-            Log.e(TAG, "API Call $url failed.", e)
-         } catch (e: IllegalStateException) {
-            Log.e(TAG, "API Call $url failed.", e)
+            val json = response.body?.string()?.let {
+                Json.parseToJsonElement(it)
+            }
+            val status = json?.jsonObject?.get("status")?.jsonPrimitive?.content
+            if (status != "OK") {
+                throw IllegalStateException("Call to $url failed (status $status)")
+            }
+            val result = json.jsonObject["results"]
+                ?.jsonArray
+                ?.get(0)
+            val locality = extractLocality(result)
+            boundsChecker.updateBounds(extractBounds(result))
+
+            locality?.let {
+                localities.add(it)
+                    recording.addTag(it)
+            }
         }
     }
 
