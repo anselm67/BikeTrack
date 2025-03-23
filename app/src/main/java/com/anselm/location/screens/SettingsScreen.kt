@@ -39,6 +39,7 @@ import com.anselm.location.models.LocalAppViewModel
 import com.anselm.location.models.SettingsScreenModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 private fun DatabaseAction(title: String, onClick: () -> Unit) {
@@ -91,6 +92,8 @@ fun ImportFiles(viewModel: SettingsScreenModel) {
     }
 }
 
+private val ZipDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+
 @Composable
 fun ExportFiles(viewModel: SettingsScreenModel) {
     val recordingManager = app.recordingManager
@@ -118,7 +121,7 @@ fun ExportFiles(viewModel: SettingsScreenModel) {
     )
 
     DatabaseAction(title = "Export Rides") {
-            launcher.launch("${asYYYYMMDD(LocalDate.now())}-rides.zip")
+        launcher.launch("${ZipDateFormatter.format(LocalDate.now())} - rides.zip")
     }
 }
 
