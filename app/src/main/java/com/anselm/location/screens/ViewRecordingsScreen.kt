@@ -112,12 +112,10 @@ private fun DisplayRecordingItem(entry: Entry) {
                         )
                     }
                     Text(
-                        text = "%02d:%02d:%02d".format(
-                            *(entry.lastSample.elapsedTime).toDuration(DurationUnit.MILLISECONDS)
-                                .toComponents { hours, minutes, seconds, _ ->
-                                    arrayOf(hours, minutes, seconds)
-                                }
-                        ),
+                        text = entry.lastSample.elapsedTime.toDuration(DurationUnit.MILLISECONDS)
+                            .toComponents { hours, minutes, seconds, _ ->
+                                "%02d:%02d:%02d".format(hours, minutes, seconds)
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )

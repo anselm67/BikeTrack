@@ -10,12 +10,10 @@ import kotlin.time.toDuration
 @Composable
 fun RunningTime(timeMillis: Long) {
     Text(
-        text = "%02d:%02d:%02d".format(
-            *(timeMillis).toDuration(DurationUnit.MILLISECONDS)
-                .toComponents { hours, minutes, seconds, _ ->
-                    arrayOf(hours, minutes, seconds)
-                }
-        ),
-        style = MaterialTheme.typography.displaySmall,
+        text = timeMillis.toDuration(DurationUnit.MILLISECONDS)
+            .toComponents { hours, minutes, seconds, _ ->
+                "%02d:%02d:%02d".format(hours, minutes, seconds)
+            },
+        style = MaterialTheme.typography.displaySmall
     )
 }
