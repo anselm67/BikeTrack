@@ -6,11 +6,23 @@ import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
+import com.anselm.location.asLocalDate
 import com.anselm.location.startOfMonth
 import com.anselm.location.startOfWeek
 import com.anselm.location.startOfYear
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -310,14 +322,32 @@ class RecordingManager() {
     }
 
     fun annualStats(): List<StatsEntry> {
+        catalog.annualStats.lastOrNull()?.let { lastEntry ->
+            val previous = catalog.prevYearStats()
+            if ( ! previous.isEmpty() ) {
+                lastEntry.previous = previous
+            }
+        }
         return catalog.annualStats
     }
 
     fun monthlyStats(): List<StatsEntry> {
+        catalog.monthlyStats.lastOrNull()?.let { lastEntry ->
+            val previous = catalog.prevMonthStats()
+            if ( ! previous.isEmpty() ) {
+                lastEntry.previous = previous
+            }
+        }
         return catalog.monthlyStats
     }
 
     fun weeklyStats(): List<StatsEntry> {
+        catalog.weeklyStats.lastOrNull()?.let { lastEntry ->
+            val previous = catalog.prevWeekStats()
+            if ( ! previous.isEmpty() ) {
+                lastEntry.previous = previous
+            }
+        }
         return catalog.weeklyStats
     }
 
@@ -440,6 +470,41 @@ private data class Catalog(
     val monthlyStats: MutableList<StatsEntry> = mutableListOf(),
     val annualStats: MutableList<StatsEntry> = mutableListOf(),
 ) {
+    private fun lastYear(): Pair<Long, Long> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val now = Clock.System.todayIn(timeZone)
+        return Pair(
+            LocalDate(now.year - 1, Month.JANUARY, 1)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds(),
+            LocalDate(now.year -1, now.month, now.dayOfMonth)
+                .plus(1, DateTimeUnit.DAY)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds()
+        )
+    }
+
+    private fun lastMonth(): Pair<Long, Long> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val prevMonth = Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.MONTH)
+        return Pair(
+            LocalDate(prevMonth.year, prevMonth.month, 1)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds(),
+            LocalDate(prevMonth.year, prevMonth.month, prevMonth.dayOfMonth)
+                .plus(1, DateTimeUnit.DAY)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds()
+        )
+    }
+
+    private fun lastWeek() : Pair<Long, Long> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val now = Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.WEEK)
+        return Pair(
+            now.minus(now.dayOfWeek.isoDayNumber, DateTimeUnit.DAY)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds(),
+            now.plus(1, DateTimeUnit.DAY)
+                .atStartOfDayIn(timeZone).toEpochMilliseconds()
+        )
+    }
+
     fun recomputeStatistics() {
         val byWeek = mutableMapOf<Long, StatsEntry>()
         val byMonth = mutableMapOf<Long, StatsEntry>()
@@ -466,7 +531,31 @@ private data class Catalog(
             }
         }
     }
+
+    fun withinStats(interval: Pair<Long, Long>): StatsEntry {
+        val stats = StatsEntry()
+        for (ride in rides) {
+            if ( ride.time in interval.first until interval.second) {
+                stats.aggregate(ride.lastSample)
+            }
+        }
+        return stats
+    }
+
+    fun prevYearStats(): StatsEntry {
+        return withinStats(lastYear())
+    }
+
+    fun prevMonthStats(): StatsEntry {
+        return withinStats(lastMonth())
+    }
+
+    fun prevWeekStats(): StatsEntry {
+        return withinStats(lastWeek())
+    }
+
 }
+
 
 @Serializable
 class Entry (
@@ -490,7 +579,8 @@ class StatsEntry(
     var distance: Double = 0.0,
     var elapsedTime: Long = 0L,
     var climb: Double = 0.0,
-    var descent: Double = 0.0
+    var descent: Double = 0.0,
+    var previous: StatsEntry? = null,
 ) {
     fun aggregate(sample: Sample) : StatsEntry {
         this.distance += sample.totalDistance
@@ -498,5 +588,9 @@ class StatsEntry(
         this.climb += sample.climb
         this.descent += sample.descent
         return this
+    }
+
+    fun isEmpty() : Boolean {
+        return distance == 0.0 && elapsedTime == 0L
     }
 }

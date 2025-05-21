@@ -27,6 +27,7 @@ private fun Stats(
     titleFormatter: (Long) -> String,
     statsEntry: StatsEntry,
 ) {
+    val previous = statsEntry.previous
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceAround,
@@ -39,6 +40,18 @@ private fun Stats(
                 titleFormatter(statsEntry.timestamp),
                 style = MaterialTheme.typography.displaySmall,
             )
+        }
+        if ( previous != null ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    "Previous: %.2f in ".format(previous.distance / 1000.0),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                RunningTime(previous.elapsedTime, style = MaterialTheme.typography.bodyMedium)
+            }
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
