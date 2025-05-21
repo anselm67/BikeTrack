@@ -6,7 +6,6 @@ import android.util.Log
 import com.anselm.location.LocationApplication.Companion.app
 import com.anselm.location.TAG
 import com.anselm.location.UPDATE_PERIOD_MILLISECONDS
-import com.anselm.location.asLocalDate
 import com.anselm.location.startOfMonth
 import com.anselm.location.startOfWeek
 import com.anselm.location.startOfYear
@@ -14,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
