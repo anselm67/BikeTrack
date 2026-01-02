@@ -11,7 +11,6 @@ import com.anselm.location.startOfWeek
 import com.anselm.location.startOfYear
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -470,11 +469,11 @@ private data class Catalog(
 ) {
     private fun lastYear(): Pair<Long, Long> {
         val timeZone = TimeZone.currentSystemDefault()
-        val now = Clock.System.todayIn(timeZone)
+        val now = kotlin.time.Clock.System.todayIn(timeZone)
         return Pair(
             LocalDate(now.year - 1, Month.JANUARY, 1)
                 .atStartOfDayIn(timeZone).toEpochMilliseconds(),
-            LocalDate(now.year -1, now.month, now.dayOfMonth)
+            LocalDate(now.year -1, now.month, now.day)
                 .plus(1, DateTimeUnit.DAY)
                 .atStartOfDayIn(timeZone).toEpochMilliseconds()
         )
@@ -482,11 +481,11 @@ private data class Catalog(
 
     private fun lastMonth(): Pair<Long, Long> {
         val timeZone = TimeZone.currentSystemDefault()
-        val prevMonth = Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.MONTH)
+        val prevMonth = kotlin.time.Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.MONTH)
         return Pair(
             LocalDate(prevMonth.year, prevMonth.month, 1)
                 .atStartOfDayIn(timeZone).toEpochMilliseconds(),
-            LocalDate(prevMonth.year, prevMonth.month, prevMonth.dayOfMonth)
+            LocalDate(prevMonth.year, prevMonth.month, prevMonth.day)
                 .plus(1, DateTimeUnit.DAY)
                 .atStartOfDayIn(timeZone).toEpochMilliseconds()
         )
@@ -494,7 +493,7 @@ private data class Catalog(
 
     private fun lastWeek() : Pair<Long, Long> {
         val timeZone = TimeZone.currentSystemDefault()
-        val now = Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.WEEK)
+        val now = kotlin.time.Clock.System.todayIn(timeZone).minus(1, DateTimeUnit.WEEK)
         return Pair(
             now.minus(now.dayOfWeek.isoDayNumber, DateTimeUnit.DAY)
                 .atStartOfDayIn(timeZone).toEpochMilliseconds(),

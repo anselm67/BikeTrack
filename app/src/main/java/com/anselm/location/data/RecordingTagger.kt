@@ -59,10 +59,10 @@ class RecordingTagger(
             if ( ! response.isSuccessful)  {
                 throw IOException("Call to $url failed (status ${response.code})")
             }
-            val json = response.body?.string()?.let {
+            val json = response.body.string().let {
                 Json.parseToJsonElement(it)
             }
-            val status = json?.jsonObject?.get("status")?.jsonPrimitive?.content
+            val status = json.jsonObject["status"]?.jsonPrimitive?.content
             if (status != "OK") {
                 throw IllegalStateException("Call to $url failed (status $status)")
             }
